@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Bot, BookOpen, History, ExternalLink, FileText } from "lucide-react"
+import { Bot, BookOpen, History, ExternalLink, FileText } from "lucide-react"
 import Navbar from "../components/Navbar/Navbar"
 import styles from "./chatbot.module.css"
 
