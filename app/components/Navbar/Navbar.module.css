@@ -69,47 +69,98 @@
   color: white !important;
 }
 
+.menuButton {
+  display: none;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.menuButton:hover {
+  color: #9333ea;
+}
+
+.closeButton {
+  display: none;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #9333ea;
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
 @media (max-width: 768px) {
   .container {
-    padding: 0 1rem;
+    padding: 0 1.5rem;
+  }
+
+  .menuButton {
+    display: block;
   }
 
   .menu {
-    gap: 1rem;
+    position: fixed;
+    top: 0;
+    right: -100%;
+    height: 100vh;
+    width: 250px;
+    background: white;
+    flex-direction: column;
+    padding: 5rem 2rem 2rem;
+    gap: 1.5rem;
+    transition: right 0.3s ease-in-out;
+    z-index: 45;
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
   }
 
-  .menu a {
-    font-size: 0.9rem;
+  .closeButton {
+    display: block;
   }
 
-  .signUp {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
+  .menuOpen {
+    right: 0;
+  }
+
+  .overlay {
+    display: block;
   }
 }
 
 @media (max-width: 640px) {
   .container {
-    flex-direction: column;
-    height: auto;
-    padding: 1rem;
-  }
-
-  .menu {
-    flex-direction: column;
-    width: 100%;
-    gap: 0.5rem;
-    margin-top: 1rem;
+    height: 64px;
   }
 
   .menu a {
-    display: block;
-    padding: 0.5rem 0;
-    text-align: center;
+    font-size: 1rem;
   }
 
   .signUp {
-    width: 100%;
+    width: auto;
+    text-align: left;
+    padding: 0.75rem 1.5rem;
   }
 }
 
