@@ -1,0 +1,115 @@
+.navbar {
+  border-bottom: 1px solid #eee;
+  background: white;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo span {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.menu a {
+  text-decoration: none;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.menu a:hover {
+  color: #9333ea;
+}
+
+.menu a.active {
+  color: #9333ea;
+  font-weight: 500;
+}
+
+.profile {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.signUp {
+  background: #9333ea;
+  color: white !important;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: background-color 0.2s !important;
+}
+
+.signUp:hover {
+  background: #7928ca !important;
+  color: white !important;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+
+  .menu {
+    gap: 1rem;
+  }
+
+  .menu a {
+    font-size: 0.9rem;
+  }
+
+  .signUp {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    padding: 1rem;
+  }
+
+  .menu {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .menu a {
+    display: block;
+    padding: 0.5rem 0;
+    text-align: center;
+  }
+
+  .signUp {
+    width: 100%;
+  }
+}
+
