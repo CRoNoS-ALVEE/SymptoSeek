@@ -35,6 +35,6 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-## Deploy on Vercel
+## Deployed on Vercel
 
 Have a look. https://sympto-seek.vercel.app/
