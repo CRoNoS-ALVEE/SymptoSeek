@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Bot, BookOpen, History, ExternalLink, FileText } from "lucide-react"
+import { Bot, BookOpen, History, ExternalLink, FileText } from "lucide-react"
 import Navbar from "../components/Navbar/Navbar"
 import styles from "./chatbot.module.css"
 
@@ -17,7 +17,7 @@ export default function ChatbotPage() {
   const [inputMessage, setInputMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<NodeJS.Timeout>()
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -58,7 +58,7 @@ export default function ChatbotPage() {
         },
       ])
       setIsTyping(false)
-      typingTimeoutRef.current = undefined
+      typingTimeoutRef.current = undefined as unknown as NodeJS.Timeout
     }, 2000)
   }
 
