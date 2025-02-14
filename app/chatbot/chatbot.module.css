@@ -8,7 +8,7 @@
 .content {
   display: flex;
   flex: 1;
-  gap: 2rem;
+  gap: 1rem;
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
@@ -302,18 +302,61 @@
 @media (max-width: 768px) {
   .content {
     flex-direction: column;
-    padding: 1rem;
+    padding: 0.5rem;
+    gap: 0.5rem;
   }
 
   .sidebar {
     width: 100%;
+    order: 2;
+  }
+
+  .chatContainer {
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .header {
+    padding: 1rem;
+  }
+
+  .header h2 {
+    font-size: 1.125rem;
   }
 
   .message {
-    max-width: 85%;
+    max-width: 90%;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
   }
 
   .inputContainer {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .input {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .button {
+    padding: 0.6em 1em;
+    font-size: 0.875rem;
+  }
+
+  .section {
     padding: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .messages {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .botAvatar {
+    width: 32px;
+    height: 32px;
   }
 }

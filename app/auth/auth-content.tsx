@@ -1,11 +1,15 @@
 "use client"
 
+import { config } from '@fortawesome/fontawesome-svg-core'
+import '@fortawesome/fontawesome-svg-core/styles.css'
 import { useState } from "react"
 import { useGoogleLogin } from "@react-oauth/google"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUser, faLock, faEnvelope } from "@fortawesome/free-solid-svg-icons"
 import { faGoogle, faMicrosoft, faTwitter } from "@fortawesome/free-brands-svg-icons"
 import styles from "./auth.module.css"
+
+config.autoAddCss = false
 
 export default function AuthContent() {
   const [isSignUpMode, setIsSignUpMode] = useState(false)
