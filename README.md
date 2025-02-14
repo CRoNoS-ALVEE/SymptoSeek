@@ -32,4 +32,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deployed on Vercel
 
-Have a look. https://sympto-seek.vercel.app/
+Have a look. 
+
+https://sympto-seek.vercel.app/
