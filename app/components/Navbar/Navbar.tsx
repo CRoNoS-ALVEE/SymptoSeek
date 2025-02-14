@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import styles from "./Navbar.module.css"
@@ -9,13 +9,23 @@ import styles from "./Navbar.module.css"
 export default function Navbar() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
   return (
-    <nav className={styles.navbar}>
+    <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ""}`}>
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -37,7 +47,7 @@ export default function Navbar() {
         <button className={styles.menuButton} onClick={toggleMenu}>
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-        <div className={`${styles.menu} ${isMenuOpen ? styles.menuOpen : ''}`}>
+        <div className={`${styles.menu} ${isMenuOpen ? styles.menuOpen : ""}`}>
           <Link href="/" className={pathname === "/" ? styles.active : ""}>
             Home
           </Link>
