@@ -12,7 +12,7 @@ export default function Testimonials() {
         <div className={styles.grid}>
           <div className={styles.testimonial}>
             <p className={styles.content}>
-              "SymptoSeek helped me understand my symptoms when I was unsure whether to see a doctor. The AI provided clear insights that helped me make an informed decision."
+              &ldquo;SymptoSeek helped me understand my symptoms when I was unsure whether to see a doctor. The AI provided clear insights that helped me make an informed decision.&rdquo;
             </p>
             <div className={styles.author}>
               <div className={styles.avatar}>
@@ -26,7 +26,7 @@ export default function Testimonials() {
           </div>
           <div className={styles.testimonial}>
             <p className={styles.content}>
-              "The accuracy of the symptom analysis is impressive. It's like having a knowledgeable healthcare companion available 24/7."
+              &ldquo;The accuracy of the symptom analysis is impressive. It&apos;s like having a knowledgeable healthcare companion available 24/7.&rdquo;
             </p>
             <div className={styles.author}>
               <div className={styles.avatar}>
@@ -40,7 +40,7 @@ export default function Testimonials() {
           </div>
           <div className={styles.testimonial}>
             <p className={styles.content}>
-              "As someone with chronic conditions, having access to AI-powered health insights has been invaluable for managing my day-to-day health."
+              &ldquo;As someone with chronic conditions, having access to AI-powered health insights has been invaluable for managing my day-to-day health.&rdquo;
             </p>
             <div className={styles.author}>
               <div className={styles.avatar}>

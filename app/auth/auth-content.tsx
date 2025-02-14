@@ -4,6 +4,7 @@ import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import { useState } from "react"
 import { useGoogleLogin } from "@react-oauth/google"
+import Image from "next/image"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUser, faLock, faEnvelope } from "@fortawesome/free-solid-svg-icons"
 import { faGoogle, faMicrosoft, faTwitter } from "@fortawesome/free-brands-svg-icons"
@@ -111,10 +112,13 @@ export default function AuthContent() {
                 Sign up
               </button>
             </div>
-            <img
+            <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/log-k7snnCr50CZaS0nowddBS8zQWSl4Dd.svg"
                 className={styles.image}
                 alt="Sign In illustration"
+                width={400}
+                height={400}
+                priority
             />
           </div>
           <div className={`${styles.panel} ${styles.rightPanel}`}>
@@ -125,10 +129,13 @@ export default function AuthContent() {
                 Sign in
               </button>
             </div>
-            <img
+            <Image
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/register-0OxCKpnMUkcjl19rsUa9ymhgx8h2dU.svg"
                 className={styles.image}
                 alt="Sign Up illustration"
+                width={400}
+                height={400}
+                priority
             />
           </div>
         </div>

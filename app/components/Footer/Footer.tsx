@@ -1,3 +1,4 @@
+import Link from "next/link"
 import styles from "./Footer.module.css"
 
 export default function Footer() {
@@ -8,13 +9,13 @@ export default function Footer() {
           <h4>Explore</h4>
           <ul>
             <li>
-              <a href="/">Home</a>
+              <Link href="/">Home</Link>
             </li>
             <li>
-              <a href="/chatbot">Chatbot</a>
+              <Link href="/chatbot">Chatbot</Link>
             </li>
             <li>
-              <a href="/recommendations">Recommendations</a>
+              <Link href="/recommendations">Recommendations</Link>
             </li>
           </ul>
         </div>

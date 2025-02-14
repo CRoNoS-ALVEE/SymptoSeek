@@ -25,38 +25,38 @@ export default function Navbar() {
   }
 
   return (
-      <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ""}`}>
-        <div className={styles.container}>
-          <Link href="/" className={styles.logo}>
-            <div className={styles.logoIcon}>
-              <Stethoscope size={24} />
-            </div>
-            <span>SymptoSeek</span>
-          </Link>
-          <button className={styles.menuButton} onClick={toggleMenu}>
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          <div className={`${styles.menu} ${isMenuOpen ? styles.menuOpen : ""}`}>
-            <Link href="/" className={pathname === "/" ? styles.active : ""}>
-              Home
-            </Link>
-            <Link href="/chatbot" className={pathname === "/chatbot" ? styles.active : ""}>
-              Chatbot
-            </Link>
-            <Link href="/recommendations" className={pathname === "/recommendations" ? styles.active : ""}>
-              Recommendations
-            </Link>
-            <Link href="/auth" className={styles.signUp}>
-              Sign Up
-            </Link>
-            <button className={styles.closeButton} onClick={toggleMenu}>
-              <X size={24} />
-            </button>
+    <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ""}`}>
+      <div className={styles.container}>
+        <Link href="/" className={styles.logo}>
+          <div className={styles.logoIcon}>
+            <Stethoscope size={24} />
           </div>
-          {isMenuOpen && <div className={styles.overlay} onClick={toggleMenu}></div>
-          }
+          <span>SymptoSeek</span>
+        </Link>
+        <button className={styles.menuButton} onClick={toggleMenu}>
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        <div className={`${styles.menu} ${isMenuOpen ? styles.menuOpen : ""}`}>
+          <Link href="/" className={pathname === "/" ? styles.active : ""}>
+            Home
+          </Link>
+          <Link href="/chatbot" className={pathname === "/chatbot" ? styles.active : ""}>
+            Chatbot
+          </Link>
+          <Link href="/recommendations" className={pathname === "/recommendations" ? styles.active : ""}>
+            Recommendations
+          </Link>
+          <Link href="/auth" className={styles.signUp}>
+            Sign Up
+          </Link>
+          <button className={styles.closeButton} onClick={toggleMenu}>
+            <X size={24} />
+          </button>
         </div>
-      </nav>
+        {isMenuOpen && <div className={styles.overlay} onClick={toggleMenu}></div>
+        }
+      </div>
+    </nav>
   )
 }
 
