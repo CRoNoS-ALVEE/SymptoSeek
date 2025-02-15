@@ -4,8 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: 'SymptoSeek',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  description: 'Seek the perfect doctor for your symptoms',
 }
 
 export default function RootLayout({
