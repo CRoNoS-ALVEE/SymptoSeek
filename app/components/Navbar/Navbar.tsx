@@ -1,27 +1,50 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
-import { Menu, X, Stethoscope } from "lucide-react"
+import { Menu, X, Stethoscope, User, Settings, LogOut } from "lucide-react"
+import Image from "next/image"
 import styles from "./Navbar.module.css"
 
-export default function Navbar() {
+interface NavbarProps {
+  isLoggedIn?: boolean
+  userImage?: string
+}
+
+export default function Navbar({ isLoggedIn, userImage }: NavbarProps) {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0)
     }
 
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false)
+      }
+    }
+
     window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
+    document.addEventListener("mousedown", handleClickOutside)
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
   }, [])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  const toggleProfile = () => {
+    setIsProfileOpen(!isProfileOpen)
   }
 
   return (
@@ -43,18 +66,48 @@ export default function Navbar() {
           <Link href="/chatbot" className={pathname === "/chatbot" ? styles.active : ""}>
             Chatbot
           </Link>
-          <Link href="/recommendations" className={pathname === "/recommendations" ? styles.active : ""}>
-            Recommendations
+          <Link href="/doctors" className={pathname === "/doctors" ? styles.active : ""}>
+            Doctors
           </Link>
-          <Link href="/auth" className={styles.signUp}>
-            Sign Up
-          </Link>
+          {isLoggedIn ? ( 
+            <div className={styles.profileContainer} ref={profileRef}>
+              <button onClick={toggleProfile} className={styles.profileButton}>
+                <div className={styles.profilePicture}>
+                  <Image
+                    src={userImage || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100"}
+                    alt="Profile"
+                    width={32}
+                    height={32}
+                  />
+                </div>
+              </button>
+              {isProfileOpen && (
+                <div className={styles.profileDropdown}>
+                  <Link href="/dashboard" className={styles.dropdownItem}>
+                    <User size={16} />
+                    <span>Profile</span>
+                  </Link>
+                  <Link href="/settings" className={styles.dropdownItem}>
+                    <Settings size={16} />
+                    <span>Settings</span>
+                  </Link>
+                  <button onClick={() => {}} className={styles.dropdownItem}>
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/auth" className={styles.signUp}>
+              Sign Up
+            </Link>
+          )}
           <button className={styles.closeButton} onClick={toggleMenu}>
             <X size={24} />
           </button>
         </div>
-        {isMenuOpen && <div className={styles.overlay} onClick={toggleMenu}></div>
-        }
+        {isMenuOpen && <div className={styles.overlay} onClick={toggleMenu}></div>}
       </div>
     </nav>
   )

@@ -15,7 +15,7 @@ export default function Footer() {
               <Link href="/chatbot">Chatbot</Link>
             </li>
             <li>
-              <Link href="/recommendations">Recommendations</Link>
+              <Link href="/doctors">Doctors</Link>
             </li>
           </ul>
         </div>

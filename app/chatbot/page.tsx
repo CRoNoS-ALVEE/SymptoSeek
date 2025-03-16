@@ -20,7 +20,7 @@ export default function ChatbotPage() {
   const [inputMessage, setInputMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const typingTimeoutRef = useRef<number>()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -32,9 +32,7 @@ export default function ChatbotPage() {
 
   useEffect(() => {
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
+      window.clearTimeout(typingTimeoutRef.current)
     }
   }, [])
 
@@ -46,11 +44,9 @@ export default function ChatbotPage() {
     setInputMessage("")
     setIsTyping(true)
 
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current)
-    }
+    window.clearTimeout(typingTimeoutRef.current)
 
-    typingTimeoutRef.current = setTimeout(() => {
+    typingTimeoutRef.current = window.setTimeout(() => {
       setMessages((prev) => [
         ...prev,
         {
@@ -59,7 +55,6 @@ export default function ChatbotPage() {
         },
       ])
       setIsTyping(false)
-      typingTimeoutRef.current = null
     }, 2000)
   }
 
