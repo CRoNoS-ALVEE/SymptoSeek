@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
-import { MapPin, Clock, Star, Phone, Mail, Building, Search } from "lucide-react"
+import { MapPin, Clock, Star, Phone, Mail, Building } from "lucide-react"
 import styles from "./doctors.module.css"
 
 interface Doctor {
