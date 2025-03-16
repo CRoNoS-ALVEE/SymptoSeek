@@ -3,8 +3,9 @@
 import { useCallback } from "react"
 import Particles from "react-tsparticles"
 import { loadSlim } from "tsparticles-slim"
+import Link from "next/link"
 import type { Engine } from "tsparticles-engine"
-import { Calendar, Clock, MessageSquare, Stethoscope, User } from "lucide-react"
+import { Calendar, Clock, MessageSquare, Stethoscope, User, Plus } from "lucide-react"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
@@ -17,7 +18,7 @@ export default function DashboardContent() {
   const stats = [
     { value: "5", label: "Upcoming Appointments" },
     { value: "12", label: "Past Consultations" },
-    { value: "3", label: "Active Prescriptions" },
+    { value: "3", label: "Active Plans", link: "/plans" },
     { value: "85%", label: "Health Score" },
   ]
 
@@ -126,10 +127,21 @@ export default function DashboardContent() {
 
         <div className={styles.statsGrid}>
           {stats.map((stat, index) => (
-            <div key={index} className={styles.statCard}>
+            <Link 
+              key={index} 
+              href={stat.link || "#"} 
+              className={styles.statCard}
+              style={{ textDecoration: 'none' }}
+            >
               <div className={styles.statValue}>{stat.value}</div>
               <div className={styles.statLabel}>{stat.label}</div>
-            </div>
+              {stat.link && (
+                <div className={styles.statAction}>
+                  <Plus size={16} />
+                  View Plans
+                </div>
+              )}
+            </Link>
           ))}
         </div>
 
@@ -140,7 +152,7 @@ export default function DashboardContent() {
               <div key={index} className={styles.activityItem}>
                 <div className={styles.activityIcon}>{activity.icon}</div>
                 <div className={styles.activityContent}>
-                  <div className={styles.activityTitle}>{activity.title}</div>
+                  <Link href="/profile" className={styles.activityTitle}>{activity.title}</Link>
                   <div className={styles.activityTime}>{activity.time}</div>
                 </div>
               </div>

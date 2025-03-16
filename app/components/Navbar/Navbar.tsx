@@ -83,7 +83,7 @@ export default function Navbar({ isLoggedIn, userImage }: NavbarProps) {
               </button>
               {isProfileOpen && (
                 <div className={styles.profileDropdown}>
-                  <Link href="/dashboard" className={styles.dropdownItem}>
+                  <Link href="/profile" className={styles.dropdownItem}>
                     <User size={16} />
                     <span>Profile</span>
                   </Link>
