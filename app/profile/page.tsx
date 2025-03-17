@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
 import Link from "next/link"
 import Image from "next/image"
+import { useState, type ReactNode } from "react"
 import {
   LayoutDashboard,
   FileText,
@@ -21,15 +22,52 @@ import {
   Footprints,
   Scale,
   Timer,
-  Dumbbell,
   Edit,
+  Menu,
 } from "lucide-react"
 import styles from "./profile.module.css"
 
+interface NavItemProps {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+
+const NavItem = ({ href, children, className, onClick }: NavItemProps) => {
+  const classes = `${styles.navItem} ${className || ''}`
+
+  if (href) {
+    return (
+        <Link href={href} className={classes}>
+          {children}
+        </Link>
+    )
+  }
+
+  return (
+      <button type="button" className={classes} onClick={onClick}>
+        {children}
+      </button>
+  )
+}
+
 export default function ProfilePage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
       <div className={styles.container}>
-        <aside className={styles.sidebar}>
+        <button
+            type="button"
+            className={styles.menuButton}
+            onClick={toggleSidebar}>
+          <Menu size={24} />
+        </button>
+        <div className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
           <Link href="/" className={styles.mainLogo}>
             <div className={styles.logoIcon}>
               <Stethoscope size={24} />
@@ -37,40 +75,40 @@ export default function ProfilePage() {
             <span>SymptoSeek</span>
           </Link>
 
-          <nav>
-            <Link href="/dashboard" className={styles.navItem}>
+          <nav className={styles.navigation}>
+            <NavItem href="/dashboard">
               <LayoutDashboard size={20} />
               Dashboard
-            </Link>
-            <Link href="/reports" className={styles.navItem}>
+            </NavItem>
+            <NavItem href="/reports">
               <FileText size={20} />
               Reports
-            </Link>
-            <Link href="/plans" className={styles.navItem}>
+            </NavItem>
+            <NavItem href="/plans">
               <Calendar size={20} />
               Plans
-            </Link>
-            <Link href="/reminders" className={styles.navItem}>
+            </NavItem>
+            <NavItem href="/reminders">
               <Bell size={20} />
               Reminders
-            </Link>
-            <Link href="/profile" className={`${styles.navItem} ${styles.active}`}>
+            </NavItem>
+            <NavItem href="/profile" className={styles.active}>
               <User size={20} />
               Profile
-            </Link>
+            </NavItem>
           </nav>
 
           <div className={styles.bottomNav}>
-            <Link href="/settings" className={styles.navItem}>
+            <NavItem href="/settings">
               <Settings size={20} />
               Settings
-            </Link>
-            <button className={`${styles.navItem} ${styles.logoutButton}`}>
+            </NavItem>
+            <NavItem onClick={() => console.log('Logout clicked')} className={styles.logoutButton}>
               <LogOut size={20} />
               Log out
-            </button>
+            </NavItem>
           </div>
-        </aside>
+        </div>
 
         <main className={styles.main}>
           <div className={styles.header}>
