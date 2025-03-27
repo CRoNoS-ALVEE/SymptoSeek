@@ -98,7 +98,7 @@ export default function AuthContent() {
 
       if (result.status === 201) {
         console.log("Sign-up successful")
-        router.push("/login")
+        router.push("/auth") // Redirect to login page
       } else {
         setError("Sign-up failed. Please try again.")
       }

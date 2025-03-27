@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -32,15 +32,133 @@ const tabs = [
 export default function EditProfilePage() {
   const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200")
   const [activeTab, setActiveTab] = useState<TabId>("personal")
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    zipCode: "",
+    city: "",
+    state: "",
+    country: "",
+    bio: "",
+    gender: "",
+    age: "",
+    profilePic: ""
+  })
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string)
+  // Fetch initial user data
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/profile", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile data")
+        }
+
+        const data = await response.json()
+        const [firstName, lastName] = data.name.split(" ") // Split name into first and last name
+        setFormData({
+          firstName,
+          lastName,
+          email: data.email, // Set email from backend
+          phone: data.phone,
+          address: data.address,
+          zipCode: data.zip_code,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+          bio: data.bio,
+          gender: data.gender,
+          age: data.age,
+          profilePic: data.profile_pic,
+        })
+        setProfileImage(data.profile_pic)
+      } catch (error) {
+        console.error("Error fetching profile data:", error)
       }
-      reader.readAsDataURL(file)
+    }
+
+    fetchProfileData()
+  }, [])
+
+// Handle Image Upload to Cloudinary
+const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "your_upload_preset"); // Change this to your Cloudinary preset
+
+  try {
+    const res = await fetch("https://api.cloudinary.com/v1_1/dslepn2og/image/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (data.secure_url) {
+      setProfileImage(data.secure_url);
+      setFormData((prev) => ({ ...prev, profilePic: data.secure_url }));
+    }
+  } catch (error) {
+    console.error("Image upload failed:", error);
+  }
+};
+
+
+  // Handle form field changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData({ ...formData, [name]: value })
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    try {
+      const data = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email, // Email is not editable, so it remains the same
+        bio: formData.bio,
+        gender: formData.gender,
+        age: formData.age,
+        phone: formData.phone,
+        address: formData.address,
+        zip_code: formData.zipCode,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        profile_pic: formData.profilePic,
+      }
+
+      const response = await fetch("http://localhost:5000/api/auth/profile/edit", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile")
+      }
+
+      const updatedUser = await response.json()
+      console.log("Profile updated successfully:", updatedUser)
+      alert("Profile updated successfully!")
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      alert("Failed to update profile")
     }
   }
 
@@ -110,7 +228,7 @@ export default function EditProfilePage() {
           ))}
         </div>
 
-        <form className={styles.editForm}>
+        <form className={styles.editForm} onSubmit={handleSubmit}>
           {activeTab === "personal" && (
             <>
               <div className={styles.imageSection}>
@@ -121,7 +239,7 @@ export default function EditProfilePage() {
                     width={120}
                     height={120}
                     className={styles.profileImage}
-                  />
+                  /> 
                   <label className={styles.uploadButton}>
                     <Camera size={20} />
                     Change Photo
@@ -143,7 +261,9 @@ export default function EditProfilePage() {
                     <label>First Name</label>
                     <input
                       type="text"
-                      defaultValue="Samantha"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
                       placeholder="Enter first name"
                     />
                   </div>
@@ -152,7 +272,9 @@ export default function EditProfilePage() {
                     <label>Last Name</label>
                     <input
                       type="text"
-                      defaultValue="Harkness"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
                       placeholder="Enter last name"
                     />
                   </div>
@@ -162,8 +284,11 @@ export default function EditProfilePage() {
                   <label>Email</label>
                   <input
                     type="email"
-                    defaultValue="sam85@gmail.com"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="Enter email address"
+                    disabled // Disable the email field
                   />
                 </div>
 
@@ -171,9 +296,49 @@ export default function EditProfilePage() {
                   <label>Phone Number</label>
                   <input
                     type="tel"
-                    defaultValue="+123 456 789 000"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
                     placeholder="Enter phone number"
                   />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Bio</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    placeholder="Enter your bio"
+                    className={styles.textarea}
+                  />
+                </div>
+
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label>Gender</label>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Age</label>
+                    <input
+                      type="number"
+                      name="age"
+                      value={formData.age}
+                      onChange={handleChange}
+                      placeholder="Enter age"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -184,7 +349,9 @@ export default function EditProfilePage() {
                   <label>Address</label>
                   <input
                     type="text"
-                    defaultValue="123 Main Street"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
                     placeholder="Enter street address"
                   />
                 </div>
@@ -194,7 +361,9 @@ export default function EditProfilePage() {
                     <label>ZIP Code</label>
                     <input
                       type="text"
-                      defaultValue="5678"
+                      name="zipCode"
+                      value={formData.zipCode}
+                      onChange={handleChange}
                       placeholder="Enter ZIP code"
                     />
                   </div>
@@ -203,7 +372,9 @@ export default function EditProfilePage() {
                     <label>City</label>
                     <input
                       type="text"
-                      defaultValue="San Francisco"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
                       placeholder="Enter city"
                     />
                   </div>
@@ -214,7 +385,9 @@ export default function EditProfilePage() {
                     <label>State</label>
                     <input
                       type="text"
-                      defaultValue="California"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
                       placeholder="Enter state"
                     />
                   </div>
@@ -223,7 +396,9 @@ export default function EditProfilePage() {
                     <label>Country</label>
                     <input
                       type="text"
-                      defaultValue="United States of America"
+                      name="country"
+                      value={formData.country}
+                      onChange={handleChange}
                       placeholder="Enter country"
                     />
                   </div>

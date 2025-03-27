@@ -100,7 +100,7 @@ export default function Navbar({ isLoggedIn, userImage }: NavbarProps) {
             </div>
           ) : (
             <Link href="/auth" className={styles.signUp}>
-              Sign Up
+              Sign In
             </Link>
           )}
           <button className={styles.closeButton} onClick={toggleMenu}>
