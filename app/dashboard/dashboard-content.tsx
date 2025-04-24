@@ -46,121 +46,121 @@ export default function DashboardContent() {
   ]
 
   return (
-    <div className={styles.container}>
-      <Navbar isLoggedIn={true} userImage="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" />
-      <main className={styles.main}>
-        <section className={styles.welcomeSection}>
-          <Particles
-            className={styles.particles}
-            init={particlesInit}
-            options={{
-              fullScreen: { enable: false },
-              background: {
-                color: {
-                  value: "transparent",
-                },
-              },
-              fpsLimit: 120,
-              interactivity: {
-                events: {
-                  onHover: {
-                    enable: true,
-                    mode: "repulse",
+      <div className={styles.container}>
+        <Navbar isLoggedIn={true} userImage="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" />
+        <main className={styles.main}>
+          <section className={styles.welcomeSection}>
+            <Particles
+                className={styles.particles}
+                init={particlesInit}
+                options={{
+                  fullScreen: { enable: false },
+                  background: {
+                    color: {
+                      value: "transparent",
+                    },
                   },
-                  resize: true,
-                },
-                modes: {
-                  repulse: {
-                    distance: 100,
-                    duration: 0.4,
+                  fpsLimit: 120,
+                  interactivity: {
+                    events: {
+                      onHover: {
+                        enable: true,
+                        mode: "repulse",
+                      },
+                      resize: true,
+                    },
+                    modes: {
+                      repulse: {
+                        distance: 100,
+                        duration: 0.4,
+                      },
+                    },
                   },
-                },
-              },
-              particles: {
-                color: {
-                  value: "#9333EA",
-                },
-                links: {
-                  color: "#9333EA",
-                  distance: 150,
-                  enable: true,
-                  opacity: 0.2,
-                  width: 1,
-                },
-                move: {
-                  direction: "none",
-                  enable: true,
-                  outModes: {
-                    default: "bounce",
+                  particles: {
+                    color: {
+                      value: "#9333EA",
+                    },
+                    links: {
+                      color: "#9333EA",
+                      distance: 150,
+                      enable: true,
+                      opacity: 0.2,
+                      width: 1,
+                    },
+                    move: {
+                      direction: "none",
+                      enable: true,
+                      outModes: {
+                        default: "bounce",
+                      },
+                      random: false,
+                      speed: 2,
+                      straight: false,
+                    },
+                    number: {
+                      density: {
+                        enable: true,
+                        area: 800,
+                      },
+                      value: 50,
+                    },
+                    opacity: {
+                      value: 0.2,
+                    },
+                    shape: {
+                      type: "circle",
+                    },
+                    size: {
+                      value: { min: 1, max: 3 },
+                    },
                   },
-                  random: false,
-                  speed: 2,
-                  straight: false,
-                },
-                number: {
-                  density: {
-                    enable: true,
-                    area: 800,
-                  },
-                  value: 50,
-                },
-                opacity: {
-                  value: 0.2,
-                },
-                shape: {
-                  type: "circle",
-                },
-                size: {
-                  value: { min: 1, max: 3 },
-                },
-              },
-              detectRetina: true,
-            }}
-          />
-          <div className={styles.welcomeContent}>
-            <h1 className={styles.welcomeTitle}>Welcome back, John!</h1>
-            <p className={styles.welcomeText}>
-              Track your health journey and manage your appointments all in one place
-            </p>
-          </div>
-        </section>
+                  detectRetina: true,
+                }}
+            />
+            <div className={styles.welcomeContent}>
+              <h1 className={styles.welcomeTitle}>Welcome back, John!</h1>
+              <p className={styles.welcomeText}>
+                Track your health journey and manage your appointments all in one place
+              </p>
+            </div>
+          </section>
 
-        <div className={styles.statsGrid}>
-          {stats.map((stat, index) => (
-            <Link 
-              key={index} 
-              href={stat.link || "#"} 
-              className={styles.statCard}
-              style={{ textDecoration: 'none' }}
-            >
-              <div className={styles.statValue}>{stat.value}</div>
-              <div className={styles.statLabel}>{stat.label}</div>
-              {stat.link && (
-                <div className={styles.statAction}>
-                  <Plus size={16} />
-                  View Plans
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
-
-        <section className={styles.recentActivity}>
-          <h2 className={styles.sectionTitle}>Recent Activity</h2>
-          <div className={styles.activityList}>
-            {recentActivity.map((activity, index) => (
-              <div key={index} className={styles.activityItem}>
-                <div className={styles.activityIcon}>{activity.icon}</div>
-                <div className={styles.activityContent}>
-                  <Link href="/profile" className={styles.activityTitle}>{activity.title}</Link>
-                  <div className={styles.activityTime}>{activity.time}</div>
-                </div>
-              </div>
+          <div className={styles.statsGrid}>
+            {stats.map((stat, index) => (
+                <Link
+                    key={index}
+                    href={stat.link || "#"}
+                    className={styles.statCard}
+                    style={{ textDecoration: 'none' }}
+                >
+                  <div className={styles.statValue}>{stat.value}</div>
+                  <div className={styles.statLabel}>{stat.label}</div>
+                  {stat.link && (
+                      <div className={styles.statAction}>
+                        <Plus size={16} />
+                        View Plans
+                      </div>
+                  )}
+                </Link>
             ))}
           </div>
-        </section>
-      </main>
-      <Footer />
-    </div>
+
+          <section className={styles.recentActivity}>
+            <h2 className={styles.sectionTitle}>Recent Activity</h2>
+            <div className={styles.activityList}>
+              {recentActivity.map((activity, index) => (
+                  <div key={index} className={styles.activityItem}>
+                    <div className={styles.activityIcon}>{activity.icon}</div>
+                    <div className={styles.activityContent}>
+                      <Link href="/profile" className={styles.activityTitle}>{activity.title}</Link>
+                      <div className={styles.activityTime}>{activity.time}</div>
+                    </div>
+                  </div>
+              ))}
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </div>
   )
 }
