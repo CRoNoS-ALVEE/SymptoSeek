@@ -349,18 +349,22 @@
 }
 
 .closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
   background: none;
   border: none;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0.5rem;
   border-radius: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
   transition: all 0.2s ease;
+  z-index: 2;
+  color: #6b7280;
 }
 
 .closeButton:hover {
   background: #f3f4f6;
-  color: #dc2626;
+  color: #9333ea;
 }
 
 .modalContent {
@@ -461,6 +465,75 @@
   background: #7928ca;
 }
 
+.formSection {
+  margin-bottom: 1.5rem;
+}
+
+.formSection label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+}
+
+.arrayField {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.arrayField input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.removeButton {
+  padding: 0.5rem;
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeButton:hover {
+  background: #fecaca;
+}
+
+.addFieldButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f3e8ff;
+  color: #9333ea;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.addFieldButton:hover {
+  background: #e9d5ff;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
   .menuToggle {
     display: block;
@@ -497,6 +570,10 @@
   }
 
   .doctorsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formRow {
     grid-template-columns: 1fr;
   }
 }
