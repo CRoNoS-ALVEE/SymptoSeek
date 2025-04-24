@@ -1,6 +1,7 @@
 "use client"
 
-import { Calendar, Clock, Plus, LayoutDashboard, FileText, Bell, User, Settings, LogOut, Stethoscope } from "lucide-react"
+import { useState } from 'react'
+import { Calendar, Clock, Plus, LayoutDashboard, FileText, Bell, User, Settings, LogOut, Stethoscope, Menu } from "lucide-react"
 import Link from "next/link"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
@@ -43,9 +44,18 @@ const plans: Plan[] = [
 ]
 
 export default function PlansPage() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
   return (
     <div className={styles.container}>
-      <aside className={styles.sidebar}>
+      <button 
+        className={styles.menuButton} 
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+        <Menu size={24} />
+      </button>
+
+      <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
         <Link href="/" className={styles.mainLogo}>
           <div className={styles.logoIcon}>
             <Stethoscope size={24} />

@@ -16,7 +16,29 @@
   position: fixed;
   height: 100vh;
   transition: transform 0.3s ease-in-out;
-  z-index: 50;
+  z-index: 90;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 240px;
+    padding: 1rem;
+  }
+
+  .sidebarHeader {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+  }
+
+  .sidebarLink {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .logoutButton {
+    padding: 0.625rem 0.75rem;
+  }
 }
 
 .menuToggle {
@@ -24,7 +46,7 @@
   position: fixed;
   top: 1rem;
   left: 1rem;
-  z-index: 60;
+  z-index: 100;
   background: white;
   border: none;
   padding: 0.5rem;
@@ -91,19 +113,21 @@
 }
 
 .logoutButton {
-  margin-top: auto;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   color: #dc2626;
-  background: none;
-  border: none;
+  text-decoration: none;
   border-radius: 0.5rem;
-  cursor: pointer;
   transition: all 0.2s ease;
+  margin-top: auto;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
   width: 100%;
-  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
 }
 
 .logoutButton:hover {
@@ -157,6 +181,102 @@
   box-shadow: 0 4px 6px rgba(147, 51, 234, 0.1);
 }
 
+.notificationButton {
+  position: relative;
+  z-index: 110;
+  width: fit-content;
+}
+
+.notificationDropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 1rem;
+  width: 320px;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 110;
+  overflow: hidden;
+  max-width: calc(100vw - 2rem);
+}
+
+.notificationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.notificationHeader h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.notificationList {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.notificationItem:hover {
+  background: #f3f4f6;
+}
+
+.notificationIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 0.5rem;
+  background: #f3e8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+  flex-shrink: 0;
+}
+
+.notificationContent {
+  flex: 1;
+}
+
+.notificationTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.notificationTime {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: #ef4444;
+  border-radius: 50%;
+  color: white;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -171,6 +291,16 @@
 }
 
 @media (max-width: 768px) {
+  .notificationDropdown {
+    position: fixed;
+    top: 4rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-height: calc(100vh - 5rem);
+    overflow-y: auto;
+  }
+
   .menuToggle {
     display: block;
   }
@@ -198,7 +328,11 @@
 
   .headerActions {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: flex-end;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
   }
 
   .stats {
@@ -226,6 +360,7 @@
     margin-left: 0;
   }
 }
+
 .statCard {
   background: white;
   padding: 1.5rem;

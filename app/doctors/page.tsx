@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
-import { MapPin, Clock, Star, Phone, Mail, Building, Search } from "lucide-react"
+import { MapPin, Clock, Star, Phone, Mail, Building, Search, X, Calendar, Award, Stethoscope } from "lucide-react"
 import styles from "./doctors.module.css"
 
 interface Doctor {
@@ -17,7 +17,10 @@ interface Doctor {
   hospital: string
   image: string
   email: string
-  phone: string
+  phone: string,
+  education: string[],
+  specializations: string[],
+  languages: string[],
 }
 
 const doctors: Doctor[] = [
@@ -32,7 +35,10 @@ const doctors: Doctor[] = [
     hospital: "Heart Care Center",
     image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400",
     email: "sarah.johnson@example.com",
-    phone: "(555) 123-4567"
+    phone: "(555) 123-4567",
+    education: ["MD from Harvard Medical School", "Cardiology Fellowship at Mayo Clinic"],
+    specializations: ["Interventional Cardiology", "Heart Failure Management", "Preventive Cardiology"],
+    languages: ["English", "Spanish"],
   },
   {
     id: 2,
@@ -45,7 +51,10 @@ const doctors: Doctor[] = [
     hospital: "Brain & Spine Institute",
     image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400",
     email: "michael.chen@example.com",
-    phone: "(555) 234-5678"
+    phone: "(555) 234-5678",
+    education: ["MD from Stanford University", "Neurology Residency at Johns Hopkins"],
+    specializations: ["General Neurology", "Stroke Care", "Headache Management"],
+    languages: ["English", "Mandarin"],
   },
   {
     id: 3,
@@ -58,7 +67,10 @@ const doctors: Doctor[] = [
     hospital: "Children's Medical Center",
     image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=400",
     email: "emily.rodriguez@example.com",
-    phone: "(555) 345-6789"
+    phone: "(555) 345-6789",
+    education: ["MD from UCLA", "Pediatrics Residency at Boston Children's Hospital"],
+    specializations: ["General Pediatrics", "Developmental Pediatrics", "Adolescent Medicine"],
+    languages: ["English", "Spanish"],
   },
   {
     id: 4,
@@ -71,7 +83,10 @@ const doctors: Doctor[] = [
     hospital: "Skin Care Clinic",
     image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400",
     email: "james.wilson@example.com",
-    phone: "(555) 456-7890"
+    phone: "(555) 456-7890",
+    education: ["MD from USC", "Dermatology Residency at NYU"],
+    specializations: ["Medical Dermatology", "Cosmetic Dermatology"],
+    languages: ["English"],
   },
   {
     id: 5,
@@ -84,7 +99,10 @@ const doctors: Doctor[] = [
     hospital: "Mental Wellness Center",
     image: "https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&q=80&w=400",
     email: "lisa.thompson@example.com",
-    phone: "(555) 567-8901"
+    phone: "(555) 567-8901",
+    education: ["MD from Yale", "Psychiatry Residency at Columbia"],
+    specializations: ["Adult Psychiatry", "Anxiety Disorders", "Depression"],
+    languages: ["English", "French"],
   },
   {
     id: 6,
@@ -97,11 +115,15 @@ const doctors: Doctor[] = [
     hospital: "Joint & Bone Center",
     image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400",
     email: "david.kim@example.com",
-    phone: "(555) 678-9012"
+    phone: "(555) 678-9012",
+    education: ["MD from University of Washington", "Orthopedic Surgery Residency at UCSF"],
+    specializations: ["Sports Medicine", "Joint Replacement", "Trauma Surgery"],
+    languages: ["English", "Korean"],
   }
 ]
 
 export default function DoctorsPage() {
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSpecialty, setSelectedSpecialty] = useState("")
   const [selectedLocation, setSelectedLocation] = useState("")
@@ -226,7 +248,15 @@ export default function DoctorsPage() {
                       </div>
                     </div>
                   </div>
-                  <button className={styles.bookButton}>Book Appointment</button>
+                  <div className={styles.cardActions}>
+                    <button 
+                      className={styles.viewButton}
+                      onClick={() => setSelectedDoctor(doctor)}
+                    >
+                      View Details
+                    </button>
+                    <button className={styles.bookButton}>Book Appointment</button>
+                  </div>
                 </div>
               </div>
             ))
@@ -238,6 +268,92 @@ export default function DoctorsPage() {
         </div>
       </main>
       <Footer />
+      
+      {selectedDoctor && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedDoctor(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setSelectedDoctor(null)}
+            >
+              <X size={24} />
+            </button>
+            
+            <div className={styles.modalHeader}>
+              <img 
+                src={selectedDoctor.image} 
+                alt={selectedDoctor.name} 
+                className={styles.modalImage}
+              />
+              <div className={styles.modalHeaderContent}>
+                <h2>{selectedDoctor.name}</h2>
+                <p className={styles.specialty}>{selectedDoctor.specialty}</p>
+                <div className={styles.rating}>
+                  <Star size={20} fill="currentColor" />
+                  <span>{selectedDoctor.rating}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className={styles.modalContent}>
+              <div className={styles.infoSection}>
+                <h3>
+                  <Award size={20} />
+                  Education & Training
+                </h3>
+                <ul>
+                  {selectedDoctor.education.map((edu, index) => (
+                    <li key={index}>{edu}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className={styles.infoSection}>
+                <h3>
+                  <Stethoscope size={20} />
+                  Specializations
+                </h3>
+                <ul>
+                  {selectedDoctor.specializations.map((spec, index) => (
+                    <li key={index}>{spec}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className={styles.infoSection}>
+                <h3>
+                  <Calendar size={20} />
+                  Availability
+                </h3>
+                <p>{selectedDoctor.availability}</p>
+              </div>
+              
+              <div className={styles.contactInfo}>
+                <div className={styles.contactItem}>
+                  <Building size={20} />
+                  <span>{selectedDoctor.hospital}</span>
+                </div>
+                <div className={styles.contactItem}>
+                  <MapPin size={20} />
+                  <span>{selectedDoctor.location}</span>
+                </div>
+                <div className={styles.contactItem}>
+                  <Mail size={20} />
+                  <span>{selectedDoctor.email}</span>
+                </div>
+                <div className={styles.contactItem}>
+                  <Phone size={20} />
+                  <span>{selectedDoctor.phone}</span>
+                </div>
+              </div>
+              
+              <button className={styles.modalBookButton}>
+                Book Appointment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

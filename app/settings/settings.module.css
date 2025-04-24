@@ -74,6 +74,12 @@
   background-position: right center;
 }
 
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .navItem {
   display: flex;
   align-items: center;
@@ -117,33 +123,147 @@
 }
 
 .header {
+  margin-bottom: 2rem;
   padding-top: 4rem;
   position: relative;
   z-index: 40;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
 }
 
-.title {
+.header h1 {
   font-size: 2rem;
   font-weight: 700;
   color: #111827;
   margin-bottom: 0.5rem;
 }
 
-.subtitle {
+.header p {
   color: #6b7280;
   font-size: 1.125rem;
 }
 
-.addButton {
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.settingSection {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: #9333ea;
+}
+
+.sectionHeader h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.settingGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settingLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.select {
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #111827;
+  background: white;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.1);
+}
+
+.toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.toggleLabel {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.toggleSwitch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #e5e7eb;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.toggleSwitch:before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.toggle input {
+  display: none;
+}
+
+.toggle input:checked + .toggleSwitch {
   background: #9333ea;
-  color: white;
+}
+
+.toggle input:checked + .toggleSwitch:before {
+  transform: translateX(16px);
+}
+
+.dangerZone {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #fee2e2;
+}
+
+.dangerZone h2 {
+  color: #dc2626;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.dangerButton {
+  background: #fee2e2;
+  color: #dc2626;
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -152,90 +272,8 @@
   transition: all 0.2s ease;
 }
 
-.addButton:hover {
-  background: #7928ca;
-}
-
-.content {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.planCard {
-  background: white;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-  border-top: 4px solid #9333ea;
-}
-
-.planCard:hover {
-  transform: translateY(-2px);
-}
-
-.planCard.completed {
-  border-top-color: #10b981;
-}
-
-.planCard.cancelled {
-  border-top-color: #ef4444;
-}
-
-.planHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.planTitle {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.planStatus {
-  text-transform: capitalize;
-  font-size: 0.875rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: #f3e8ff;
-  color: #9333ea;
-}
-
-.planCard.completed .planStatus {
-  background: #d1fae5;
-  color: #10b981;
-}
-
-.planCard.cancelled .planStatus {
-  background: #fee2e2;
-  color: #ef4444;
-}
-
-.planDetails {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.planInfo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.planType {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: #f3f4f6;
-  color: #4b5563;
-  border-radius: 9999px;
-  font-size: 0.875rem;
+.dangerButton:hover {
+  background: #fecaca;
 }
 
 .menuButton {
@@ -252,10 +290,6 @@
   backdrop-filter: blur(8px);
   color: #4b5563;
   transition: all 0.2s ease;
-  width: 40px;
-  display: none;
-  align-items: center;
-  justify-content: center;
 }
 
 .menuButton:hover {
@@ -283,29 +317,14 @@
 
   .main {
     margin-left: 0;
-  }
-
-  .main {
     padding: 1rem;
   }
 
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .title {
+  .header h1 {
     font-size: 1.5rem;
   }
 
-  .subtitle {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .content {
+  .settingsGrid {
     grid-template-columns: 1fr;
   }
 }

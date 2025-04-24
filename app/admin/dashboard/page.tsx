@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
-  Users,
   Activity,
   Heart,
   Stethoscope,
@@ -15,9 +15,9 @@ import {
   Settings,
   Bell,
   Menu,
-  Calendar,
-  MessageSquare,
-  FileText
+  FileText,
+  User,
+  Calendar
 } from "lucide-react"
 import styles from "./dashboard.module.css"
 
@@ -39,6 +39,28 @@ export default function AdminDashboard() {
   const router = useRouter()
   const [isClient, setIsClient] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+
+  const notifications = [
+    {
+      id: 1,
+      title: "New doctor registration request",
+      time: "5 minutes ago",
+      icon: <User size={16} />
+    },
+    {
+      id: 2,
+      title: "System maintenance scheduled",
+      time: "1 hour ago",
+      icon: <Settings size={16} />
+    },
+    {
+      id: 3,
+      title: "New appointment request",
+      time: "2 hours ago",
+      icon: <Calendar size={16} />
+    }
+  ]
 
   useEffect(() => {
     setIsClient(true)
@@ -53,33 +75,33 @@ export default function AdminDashboard() {
       title: "Total Users",
       value: "5,234",
       change: 12.5,
-      icon: <Users className={styles.statIcon} />
+      icon: <Heart className={styles.statIcon} />
     },
     {
-      title: "Active Consultations",
+      title: "Active Doctors",
       value: "156",
       change: 8.3,
       icon: <Stethoscope className={styles.statIcon} />
     },
     {
-      title: "Health Analyses",
+      title: "Total Appointments",
       value: "2,856",
       change: 8.7,
       icon: <Activity className={styles.statIcon} />
     },
     {
-      title: "Success Rate",
+      title: "Satisfaction Rate",
       value: "95%",
       change: 15.3,
-      icon: <Heart className={styles.statIcon} />
+      icon: <BarChart3 className={styles.statIcon} />
     }
   ]
 
   const recentActivity: RecentActivity[] = [
-    { id: 1, action: "New symptom analysis completed", user: "Dr. Sarah Johnson", time: "5 minutes ago" },
-    { id: 2, action: "Health consultation scheduled", user: "Dr. Michael Chen", time: "15 minutes ago" },
-    { id: 3, action: "AI diagnosis review", user: "Dr. Emily Rodriguez", time: "1 hour ago" },
-    { id: 4, action: "Patient feedback received", user: "Dr. James Wilson", time: "2 hours ago" }
+    { id: 1, action: "New doctor registered", user: "Dr. Sarah Johnson", time: "5 minutes ago" },
+    { id: 2, action: "Appointment confirmed", user: "Dr. Michael Chen", time: "15 minutes ago" },
+    { id: 3, action: "Doctor schedule updated", user: "Dr. Emily Rodriguez", time: "1 hour ago" },
+    { id: 4, action: "New report generated", user: "Dr. James Wilson", time: "2 hours ago" }
   ]
 
   const handleLogout = () => {
@@ -105,34 +127,26 @@ export default function AdminDashboard() {
         </div>
         
         <nav className={styles.sidebarNav}>
-          <a href="#" className={`${styles.sidebarLink} ${styles.active}`}>
+          <Link href="/admin/dashboard" className={`${styles.sidebarLink} ${styles.active}`}>
             <BarChart3 size={20} />
             Overview
-          </a>
-          <a href="#" className={styles.sidebarLink}>
-            <Users size={20} />
-            Patients
-          </a>
-          <a href="#" className={styles.sidebarLink}>
-            <Heart size={20} />
-            Health Analysis
-          </a>
-          <a href="#" className={styles.sidebarLink}>
-            <Calendar size={20} />
+          </Link>
+          <Link href="/admin/doctors" className={styles.sidebarLink}>
+            <Stethoscope size={20} />
+            Doctors
+          </Link>
+          <Link href="/admin/appointments" className={styles.sidebarLink}>
+            <Activity size={20} />
             Appointments
-          </a>
-          <a href="#" className={styles.sidebarLink}>
-            <MessageSquare size={20} />
-            Consultations
-          </a>
-          <a href="#" className={styles.sidebarLink}>
+          </Link>
+          <Link href="/admin/reports" className={styles.sidebarLink}>
             <FileText size={20} />
             Reports
-          </a>
-          <a href="#" className={styles.sidebarLink}>
+          </Link>
+          <Link href="/admin/settings" className={styles.sidebarLink}>
             <Settings size={20} />
             Settings
-          </a>
+          </Link>
         </nav>
 
         <button onClick={handleLogout} className={styles.logoutButton}>
@@ -145,12 +159,43 @@ export default function AdminDashboard() {
         <header className={styles.header}>
           <h1>Admin Overview</h1>
           <div className={styles.headerActions}>
-            <button className={styles.iconButton}>
+            <div className={styles.notificationButton}>
+              <button 
+                className={styles.iconButton}
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
               <Bell size={20} />
-            </button>
-            <button className={styles.iconButton}>
+                <span className={styles.notificationBadge}>3</span>
+              </button>
+              
+              {showNotifications && (
+                <div className={styles.notificationDropdown}>
+                  <div className={styles.notificationHeader}>
+                    <h3>Notifications</h3>
+                  </div>
+                  <div className={styles.notificationList}>
+                    {notifications.map((notification) => (
+                      <div key={notification.id} className={styles.notificationItem}>
+                        <div className={styles.notificationIcon}>
+                          {notification.icon}
+                        </div>
+                        <div className={styles.notificationContent}>
+                          <div className={styles.notificationTitle}>
+                            {notification.title}
+                          </div>
+                          <div className={styles.notificationTime}>
+                            {notification.time}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <Link href="/admin/settings" className={styles.iconButton}>
               <Settings size={20} />
-            </button>
+            </Link>
           </div>
         </header>
 
