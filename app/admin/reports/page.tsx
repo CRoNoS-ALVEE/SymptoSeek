@@ -18,6 +18,7 @@ import {
   LogOut
 } from "lucide-react"
 import styles from "./reports.module.css"
+import {router} from "next/client";
 
 interface Report {
   id: number
@@ -74,8 +75,9 @@ export default function ReportsPage() {
     router.push("/admin/auth")
   }
 
-  const types = [...new Set(reports.map(report => report.type))]
-  const statuses = [...new Set(reports.map(report => report.status))]
+  const types = Array.from(new Set(reports.map(report => report.type)));
+  const statuses = Array.from(new Set(reports.map(report => report.status)));
+
 
   const filteredReports = reports.filter(report => {
     const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -104,8 +104,8 @@ export default function DoctorsPage() {
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
-  const specialties = [...new Set(doctors.map(doctor => doctor.specialty))]
-  const statuses = [...new Set(doctors.map(doctor => doctor.status))]
+  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)));
+  const statuses = Array.from(new Set(doctors.map(doctor => doctor.status)));
 
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

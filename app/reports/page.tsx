@@ -72,8 +72,8 @@ export default function ReportsPage() {
     return matchesType && matchesStatus
   })
 
-  const types = [...new Set(reports.map(report => report.type))]
-  const statuses = [...new Set(reports.map(report => report.status))]
+  const types = Array.from(new Set(reports.map(report => report.type)));
+  const statuses = Array.from(new Set(reports.map(report => report.status)));
 
   return (
     <div className={styles.container}>

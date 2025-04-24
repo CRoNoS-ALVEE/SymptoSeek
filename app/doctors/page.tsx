@@ -129,9 +129,10 @@ export default function DoctorsPage() {
   const [selectedLocation, setSelectedLocation] = useState("")
   const [selectedAvailability, setSelectedAvailability] = useState("")
 
-  const specialties = [...new Set(doctors.map(doctor => doctor.specialty))]
-  const locations = [...new Set(doctors.map(doctor => doctor.location))]
-  const availabilities = [...new Set(doctors.map(doctor => doctor.availability))]
+  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)))
+  const locations = Array.from(new Set(doctors.map(doctor => doctor.location)))
+  const availabilities = Array.from(new Set(doctors.map(doctor => doctor.availability)))
+
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter(doctor => {
