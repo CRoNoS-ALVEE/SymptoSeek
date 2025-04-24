@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import Link from "next/link"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
 import { MapPin, Clock, Star, Phone, Mail, Building, Search, X, Calendar, Award, Stethoscope } from "lucide-react"
@@ -128,11 +129,12 @@ export default function DoctorsPage() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("")
   const [selectedLocation, setSelectedLocation] = useState("")
   const [selectedAvailability, setSelectedAvailability] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const doctorsPerPage = 6
 
-  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)))
-  const locations = Array.from(new Set(doctors.map(doctor => doctor.location)))
-  const availabilities = Array.from(new Set(doctors.map(doctor => doctor.availability)))
-
+  const specialties = [...new Set(doctors.map(doctor => doctor.specialty))]
+  const locations = [...new Set(doctors.map(doctor => doctor.location))]
+  const availabilities = [...new Set(doctors.map(doctor => doctor.availability))]
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter(doctor => {
@@ -147,6 +149,12 @@ export default function DoctorsPage() {
       return matchesSearch && matchesSpecialty && matchesLocation && matchesAvailability
     })
   }, [searchTerm, selectedSpecialty, selectedLocation, selectedAvailability])
+
+  // Get current doctors
+  const indexOfLastDoctor = currentPage * doctorsPerPage
+  const indexOfFirstDoctor = indexOfLastDoctor - doctorsPerPage
+  const currentDoctors = filteredDoctors.slice(indexOfFirstDoctor, indexOfLastDoctor)
+  const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage)
 
   return (
     <div className={styles.container}>
@@ -214,8 +222,8 @@ export default function DoctorsPage() {
         </section>
 
         <div className={styles.doctorsGrid}>
-          {filteredDoctors.length > 0 ? (
-            filteredDoctors.map(doctor => (
+          {currentDoctors.length > 0 ? (
+            currentDoctors.map(doctor => (
               <div key={doctor.id} className={styles.doctorCard}>
                 <img src={doctor.image} alt={doctor.name} className={styles.doctorImage} />
                 <div className={styles.doctorInfo}>
@@ -256,7 +264,9 @@ export default function DoctorsPage() {
                     >
                       View Details
                     </button>
-                    <button className={styles.bookButton}>Book Appointment</button>
+                    <Link href={`/doctors/${doctor.id}/book`} className={styles.bookButton}>
+                      Book Appointment
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -267,6 +277,36 @@ export default function DoctorsPage() {
             </div>
           )}
         </div>
+        
+        {filteredDoctors.length > 0 && (
+          <div className={styles.pagination}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={styles.paginationButton}
+            >
+              Previous
+            </button>
+            <div className={styles.pageNumbers}>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                <button
+                  key={number}
+                  onClick={() => setCurrentPage(number)}
+                  className={`${styles.pageNumber} ${currentPage === number ? styles.active : ''}`}
+                >
+                  {number}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={styles.paginationButton}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </main>
       <Footer />
       
@@ -347,10 +387,9 @@ export default function DoctorsPage() {
                   <span>{selectedDoctor.phone}</span>
                 </div>
               </div>
-              
-              <button className={styles.modalBookButton}>
+              <Link href={`/doctors/${selectedDoctor.id}/book`} className={styles.modalBookButton}>
                 Book Appointment
-              </button>
+              </Link>
             </div>
           </div>
         </div>

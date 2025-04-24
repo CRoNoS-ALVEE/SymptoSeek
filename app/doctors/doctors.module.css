@@ -160,39 +160,48 @@
 .cardActions {
   display: flex;
   gap: 1rem;
-  margin-top: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
 }
 
 .viewButton {
-  flex: 1;
-  padding: 0.75rem;
+  padding: 0.5rem 1rem;
+  min-width: 120px;
   background: #f3e8ff;
   color: #9333ea;
   border: none;
   border-radius: 0.5rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
   transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .viewButton:hover {
   background: #e9d5ff;
+  transform: translateY(-1px);
 }
 
 .bookButton {
-  flex: 1;
-  padding: 0.75rem;
+  padding: 0.5rem 1rem;
+  min-width: 120px;
   background: linear-gradient(135deg, #9333ea 0%, #7928ca 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
-  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
   transition: opacity 0.3s ease;
+  font-weight: 500;
 }
 
 .bookButton:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .modalOverlay {
@@ -327,6 +336,8 @@
   border-radius: 0.5rem;
   font-weight: 500;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
   transition: all 0.3s ease;
 }
 
@@ -378,4 +389,67 @@
   .contactInfo {
     grid-template-columns: 1fr;
   }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pageNumber {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  color: #4b5563;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pageNumber:hover {
+  border-color: #9333ea;
+  color: #9333ea;
+}
+
+.pageNumber.active {
+  background: #9333ea;
+  color: white;
+  border-color: #9333ea;
+}
+
+.paginationButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: white;
+  color: #4b5563;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  border-color: #9333ea;
+  color: #9333ea;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
