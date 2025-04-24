@@ -20,6 +20,7 @@ import {
   LogOut
 } from "lucide-react"
 import styles from "./appointments.module.css"
+import {router} from "next/client";
 
 interface Appointment {
   id: number
@@ -80,8 +81,9 @@ export default function AppointmentsPage() {
     router.push("/admin/auth")
   }
 
-  const types = [...new Set(appointments.map(appointment => appointment.type))]
-  const statuses = [...new Set(appointments.map(appointment => appointment.status))]
+  const types = Array.from(new Set(appointments.map(appointment => appointment.type)))
+  const statuses = Array.from(new Set(appointments.map(appointment => appointment.status)))
+
 
   const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
