@@ -132,16 +132,16 @@ export default function DoctorsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const doctorsPerPage = 6
 
-  const specialties = [...new Set(doctors.map(doctor => doctor.specialty))]
-  const locations = [...new Set(doctors.map(doctor => doctor.location))]
-  const availabilities = [...new Set(doctors.map(doctor => doctor.availability))]
+  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)))
+  const locations = Array.from(new Set(doctors.map(doctor => doctor.location)))
+  const availabilities = Array.from(new Set(doctors.map(doctor => doctor.availability)))
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter(doctor => {
       const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.hospital.toLowerCase().includes(searchTerm.toLowerCase())
-      
+          doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          doctor.hospital.toLowerCase().includes(searchTerm.toLowerCase())
+
       const matchesSpecialty = !selectedSpecialty || doctor.specialty === selectedSpecialty
       const matchesLocation = !selectedLocation || doctor.location === selectedLocation
       const matchesAvailability = !selectedAvailability || doctor.availability === selectedAvailability
@@ -157,243 +157,243 @@ export default function DoctorsPage() {
   const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage)
 
   return (
-    <div className={styles.container}>
-      <Navbar />
-      <main className={styles.main}>
-        <div className={styles.header}>
-          <h1>Find the Right Doctor</h1>
-          <p>Connect with qualified healthcare professionals based on your needs</p>
-        </div>
-
-        <section className={styles.searchSection}>
-          <div className={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="Search by name, specialty, or hospital..."
-              className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      <div className={styles.container}>
+        <Navbar />
+        <main className={styles.main}>
+          <div className={styles.header}>
+            <h1>Find the Right Doctor</h1>
+            <p>Connect with qualified healthcare professionals based on your needs</p>
           </div>
 
-          <div className={styles.filterSection}>
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Specialty</label>
-              <select
-                className={styles.select}
-                value={selectedSpecialty}
-                onChange={(e) => setSelectedSpecialty(e.target.value)}
-              >
-                <option value="">All Specialties</option>
-                {specialties.map(specialty => (
-                  <option key={specialty} value={specialty}>{specialty}</option>
-                ))}
-              </select>
+          <section className={styles.searchSection}>
+            <div className={styles.searchBar}>
+              <input
+                  type="text"
+                  placeholder="Search by name, specialty, or hospital..."
+                  className={styles.searchInput}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
 
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Location</label>
-              <select
-                className={styles.select}
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-              >
-                <option value="">All Locations</option>
-                {locations.map(location => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
-            </div>
+            <div className={styles.filterSection}>
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Specialty</label>
+                <select
+                    className={styles.select}
+                    value={selectedSpecialty}
+                    onChange={(e) => setSelectedSpecialty(e.target.value)}
+                >
+                  <option value="">All Specialties</option>
+                  {specialties.map(specialty => (
+                      <option key={specialty} value={specialty}>{specialty}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className={styles.filterGroup}>
-              <label className={styles.filterLabel}>Availability</label>
-              <select
-                className={styles.select}
-                value={selectedAvailability}
-                onChange={(e) => setSelectedAvailability(e.target.value)}
-              >
-                <option value="">Any Availability</option>
-                {availabilities.map(availability => (
-                  <option key={availability} value={availability}>{availability}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section>
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Location</label>
+                <select
+                    className={styles.select}
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                >
+                  <option value="">All Locations</option>
+                  {locations.map(location => (
+                      <option key={location} value={location}>{location}</option>
+                  ))}
+                </select>
+              </div>
 
-        <div className={styles.doctorsGrid}>
-          {currentDoctors.length > 0 ? (
-            currentDoctors.map(doctor => (
-              <div key={doctor.id} className={styles.doctorCard}>
-                <img src={doctor.image} alt={doctor.name} className={styles.doctorImage} />
-                <div className={styles.doctorInfo}>
-                  <h2 className={styles.doctorName}>{doctor.name}</h2>
-                  <p className={styles.doctorSpecialty}>{doctor.specialty}</p>
-                  <div className={styles.doctorDetails}>
-                    <div className={styles.detailItem}>
-                      <MapPin size={16} />
-                      {doctor.location}
-                    </div>
-                    <div className={styles.detailItem}>
-                      <Clock size={16} />
-                      {doctor.experience} experience
-                    </div>
-                    <div className={styles.detailItem}>
-                      <Building size={16} />
-                      {doctor.hospital}
-                    </div>
-                    <div className={styles.detailItem}>
-                      <Mail size={16} />
-                      {doctor.email}
-                    </div>
-                    <div className={styles.detailItem}>
-                      <Phone size={16} />
-                      {doctor.phone}
-                    </div>
-                    <div className={styles.detailItem}>
-                      <div className={styles.rating}>
-                        <Star size={16} fill="currentColor" />
-                        {doctor.rating}
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Availability</label>
+                <select
+                    className={styles.select}
+                    value={selectedAvailability}
+                    onChange={(e) => setSelectedAvailability(e.target.value)}
+                >
+                  <option value="">Any Availability</option>
+                  {availabilities.map(availability => (
+                      <option key={availability} value={availability}>{availability}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <div className={styles.doctorsGrid}>
+            {currentDoctors.length > 0 ? (
+                currentDoctors.map(doctor => (
+                    <div key={doctor.id} className={styles.doctorCard}>
+                      <img src={doctor.image} alt={doctor.name} className={styles.doctorImage} />
+                      <div className={styles.doctorInfo}>
+                        <h2 className={styles.doctorName}>{doctor.name}</h2>
+                        <p className={styles.doctorSpecialty}>{doctor.specialty}</p>
+                        <div className={styles.doctorDetails}>
+                          <div className={styles.detailItem}>
+                            <MapPin size={16} />
+                            {doctor.location}
+                          </div>
+                          <div className={styles.detailItem}>
+                            <Clock size={16} />
+                            {doctor.experience} experience
+                          </div>
+                          <div className={styles.detailItem}>
+                            <Building size={16} />
+                            {doctor.hospital}
+                          </div>
+                          <div className={styles.detailItem}>
+                            <Mail size={16} />
+                            {doctor.email}
+                          </div>
+                          <div className={styles.detailItem}>
+                            <Phone size={16} />
+                            {doctor.phone}
+                          </div>
+                          <div className={styles.detailItem}>
+                            <div className={styles.rating}>
+                              <Star size={16} fill="currentColor" />
+                              {doctor.rating}
+                            </div>
+                          </div>
+                        </div>
+                        <div className={styles.cardActions}>
+                          <button
+                              className={styles.viewButton}
+                              onClick={() => setSelectedDoctor(doctor)}
+                          >
+                            View Details
+                          </button>
+                          <Link href={`/doctors/${doctor.id}/book`} className={styles.bookButton}>
+                            Book Appointment
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className={styles.cardActions}>
-                    <button 
-                      className={styles.viewButton}
-                      onClick={() => setSelectedDoctor(doctor)}
-                    >
-                      View Details
-                    </button>
-                    <Link href={`/doctors/${doctor.id}/book`} className={styles.bookButton}>
-                      Book Appointment
-                    </Link>
-                  </div>
+                ))
+            ) : (
+                <div className={styles.noResults}>
+                  No doctors found matching your criteria
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className={styles.noResults}>
-              No doctors found matching your criteria
-            </div>
-          )}
-        </div>
-        
-        {filteredDoctors.length > 0 && (
-          <div className={styles.pagination}>
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className={styles.paginationButton}
-            >
-              Previous
-            </button>
-            <div className={styles.pageNumbers}>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+            )}
+          </div>
+
+          {filteredDoctors.length > 0 && (
+              <div className={styles.pagination}>
                 <button
-                  key={number}
-                  onClick={() => setCurrentPage(number)}
-                  className={`${styles.pageNumber} ${currentPage === number ? styles.active : ''}`}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className={styles.paginationButton}
                 >
-                  {number}
+                  Previous
                 </button>
-              ))}
+                <div className={styles.pageNumbers}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                      <button
+                          key={number}
+                          onClick={() => setCurrentPage(number)}
+                          className={`${styles.pageNumber} ${currentPage === number ? styles.active : ''}`}
+                      >
+                        {number}
+                      </button>
+                  ))}
+                </div>
+                <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className={styles.paginationButton}
+                >
+                  Next
+                </button>
+              </div>
+          )}
+        </main>
+        <Footer />
+
+        {selectedDoctor && (
+            <div className={styles.modalOverlay} onClick={() => setSelectedDoctor(null)}>
+              <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                <button
+                    className={styles.closeButton}
+                    onClick={() => setSelectedDoctor(null)}
+                >
+                  <X size={24} />
+                </button>
+
+                <div className={styles.modalHeader}>
+                  <img
+                      src={selectedDoctor.image}
+                      alt={selectedDoctor.name}
+                      className={styles.modalImage}
+                  />
+                  <div className={styles.modalHeaderContent}>
+                    <h2>{selectedDoctor.name}</h2>
+                    <p className={styles.specialty}>{selectedDoctor.specialty}</p>
+                    <div className={styles.rating}>
+                      <Star size={20} fill="currentColor" />
+                      <span>{selectedDoctor.rating}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.modalContent}>
+                  <div className={styles.infoSection}>
+                    <h3>
+                      <Award size={20} />
+                      Education & Training
+                    </h3>
+                    <ul>
+                      {selectedDoctor.education.map((edu, index) => (
+                          <li key={index}>{edu}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className={styles.infoSection}>
+                    <h3>
+                      <Stethoscope size={20} />
+                      Specializations
+                    </h3>
+                    <ul>
+                      {selectedDoctor.specializations.map((spec, index) => (
+                          <li key={index}>{spec}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className={styles.infoSection}>
+                    <h3>
+                      <Calendar size={20} />
+                      Availability
+                    </h3>
+                    <p>{selectedDoctor.availability}</p>
+                  </div>
+
+                  <div className={styles.contactInfo}>
+                    <div className={styles.contactItem}>
+                      <Building size={20} />
+                      <span>{selectedDoctor.hospital}</span>
+                    </div>
+                    <div className={styles.contactItem}>
+                      <MapPin size={20} />
+                      <span>{selectedDoctor.location}</span>
+                    </div>
+                    <div className={styles.contactItem}>
+                      <Mail size={20} />
+                      <span>{selectedDoctor.email}</span>
+                    </div>
+                    <div className={styles.contactItem}>
+                      <Phone size={20} />
+                      <span>{selectedDoctor.phone}</span>
+                    </div>
+                  </div>
+                  <Link href={`/doctors/${selectedDoctor.id}/book`} className={styles.modalBookButton}>
+                    Book Appointment
+                  </Link>
+                </div>
+              </div>
             </div>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className={styles.paginationButton}
-            >
-              Next
-            </button>
-          </div>
         )}
-      </main>
-      <Footer />
-      
-      {selectedDoctor && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedDoctor(null)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <button 
-              className={styles.closeButton}
-              onClick={() => setSelectedDoctor(null)}
-            >
-              <X size={24} />
-            </button>
-            
-            <div className={styles.modalHeader}>
-              <img 
-                src={selectedDoctor.image} 
-                alt={selectedDoctor.name} 
-                className={styles.modalImage}
-              />
-              <div className={styles.modalHeaderContent}>
-                <h2>{selectedDoctor.name}</h2>
-                <p className={styles.specialty}>{selectedDoctor.specialty}</p>
-                <div className={styles.rating}>
-                  <Star size={20} fill="currentColor" />
-                  <span>{selectedDoctor.rating}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className={styles.modalContent}>
-              <div className={styles.infoSection}>
-                <h3>
-                  <Award size={20} />
-                  Education & Training
-                </h3>
-                <ul>
-                  {selectedDoctor.education.map((edu, index) => (
-                    <li key={index}>{edu}</li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className={styles.infoSection}>
-                <h3>
-                  <Stethoscope size={20} />
-                  Specializations
-                </h3>
-                <ul>
-                  {selectedDoctor.specializations.map((spec, index) => (
-                    <li key={index}>{spec}</li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className={styles.infoSection}>
-                <h3>
-                  <Calendar size={20} />
-                  Availability
-                </h3>
-                <p>{selectedDoctor.availability}</p>
-              </div>
-              
-              <div className={styles.contactInfo}>
-                <div className={styles.contactItem}>
-                  <Building size={20} />
-                  <span>{selectedDoctor.hospital}</span>
-                </div>
-                <div className={styles.contactItem}>
-                  <MapPin size={20} />
-                  <span>{selectedDoctor.location}</span>
-                </div>
-                <div className={styles.contactItem}>
-                  <Mail size={20} />
-                  <span>{selectedDoctor.email}</span>
-                </div>
-                <div className={styles.contactItem}>
-                  <Phone size={20} />
-                  <span>{selectedDoctor.phone}</span>
-                </div>
-              </div>
-              <Link href={`/doctors/${selectedDoctor.id}/book`} className={styles.modalBookButton}>
-                Book Appointment
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
   )
 }
