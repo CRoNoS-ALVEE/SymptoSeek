@@ -30,7 +30,7 @@ const tabs = [
 ]
 
 export default function EditProfilePage() {
-  const [profileImage, setProfileImage] = useState("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200")
+  const [profileImage, setProfileImage] = useState("/default-profile.png")
   const [activeTab, setActiveTab] = useState<TabId>("personal")
   const [formData, setFormData] = useState({
     firstName: "",
@@ -47,14 +47,21 @@ export default function EditProfilePage() {
     age: "",
     profilePic: ""
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   // Fetch initial user data
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
+        const token = localStorage.getItem("token")
+        if (!token) {
+          throw new Error("No authentication token found")
+        }
+
         const response = await fetch("http://localhost:5000/api/auth/profile", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         })
 
@@ -63,56 +70,67 @@ export default function EditProfilePage() {
         }
 
         const data = await response.json()
-        const [firstName, lastName] = data.name.split(" ") // Split name into first and last name
+        const [firstName, lastName] = data.name?.split(" ") || ["", ""]
         setFormData({
           firstName,
           lastName,
-          email: data.email, // Set email from backend
-          phone: data.phone,
-          address: data.address,
-          zipCode: data.zip_code,
-          city: data.city,
-          state: data.state,
-          country: data.country,
-          bio: data.bio,
-          gender: data.gender,
-          age: data.age,
-          profilePic: data.profile_pic,
+          email: data.email || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          zipCode: data.zip_code || "",
+          city: data.city || "",
+          state: data.state || "",
+          country: data.country || "",
+          bio: data.bio || "",
+          gender: data.gender || "",
+          age: data.age || "",
+          profilePic: data.profile_pic || "",
         })
-        setProfileImage(data.profile_pic)
+        setProfileImage(data.profile_pic || "/default-profile.png")
       } catch (error) {
         console.error("Error fetching profile data:", error)
+        setError("Failed to load profile data")
       }
     }
 
     fetchProfileData()
   }, [])
 
-// Handle Image Upload to Cloudinary
-const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+  // Handle Image Upload to Cloudinary
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "your_upload_preset"); // Change this to your Cloudinary preset
+    try {
+      setIsLoading(true)
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "symptoseek_profile")
 
-  try {
-    const res = await fetch("https://api.cloudinary.com/v1_1/dslepn2og/image/upload", {
-      method: "POST",
-      body: formData,
-    });
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dslepn2og"}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      )
 
-    const data = await res.json();
-    if (data.secure_url) {
-      setProfileImage(data.secure_url);
-      setFormData((prev) => ({ ...prev, profilePic: data.secure_url }));
+      if (!res.ok) {
+        throw new Error("Image upload failed")
+      }
+
+      const data = await res.json()
+      if (data.secure_url) {
+        setProfileImage(data.secure_url)
+        setFormData(prev => ({ ...prev, profilePic: data.secure_url }))
+      }
+    } catch (error) {
+      console.error("Image upload failed:", error)
+      setError("Failed to upload image")
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    console.error("Image upload failed:", error);
   }
-};
-
 
   // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -123,11 +141,18 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
+    setError("")
 
     try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
+
       const data = {
         name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email, // Email is not editable, so it remains the same
+        email: formData.email,
         bio: formData.bio,
         gender: formData.gender,
         age: formData.age,
@@ -144,22 +169,30 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(data),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to update profile")
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to update profile")
       }
 
       const updatedUser = await response.json()
       console.log("Profile updated successfully:", updatedUser)
       alert("Profile updated successfully!")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error)
-      alert("Failed to update profile")
+      setError(error.message || "Failed to update profile")
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    window.location.href = "/login"
   }
 
   return (
@@ -200,7 +233,7 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
             <Settings size={20} />
             Settings
           </Link>
-          <button className={styles.navItem}>
+          <button className={styles.navItem} onClick={handleLogout}>
             <LogOut size={20} />
             Log out
           </button>
@@ -215,12 +248,15 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
           </Link>
         </div>
 
+        {error && <div className={styles.errorMessage}>{error}</div>}
+
         <div className={styles.tabs}>
-          {tabs.map((tab, index) => (
+          {tabs.map((tab) => (
             <button
-              key={index}
+              key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
+              disabled={isLoading}
             >
               {tab.icon}
               {tab.label}
@@ -239,15 +275,18 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
                     width={120}
                     height={120}
                     className={styles.profileImage}
-                  /> 
-                  <label className={styles.uploadButton}>
+                    priority
+                  />
+                  <label className={styles.uploadButton} htmlFor="profile-upload">
                     <Camera size={20} />
-                    Change Photo
+                    {isLoading ? "Uploading..." : "Change Photo"}
                     <input
+                      id="profile-upload"
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
                       className={styles.fileInput}
+                      disabled={isLoading}
                     />
                   </label>
                 </div>
@@ -258,69 +297,82 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
                 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>First Name</label>
+                    <label htmlFor="firstName">First Name</label>
                     <input
+                      id="firstName"
                       type="text"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
                       placeholder="Enter first name"
+                      disabled={isLoading}
+                      required
                     />
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Last Name</label>
+                    <label htmlFor="lastName">Last Name</label>
                     <input
+                      id="lastName"
                       type="text"
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
                       placeholder="Enter last name"
+                      disabled={isLoading}
+                      required
                     />
                   </div>
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Email</label>
+                  <label htmlFor="email">Email</label>
                   <input
+                    id="email"
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Enter email address"
-                    disabled // Disable the email field
+                    disabled
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Phone Number</label>
+                  <label htmlFor="phone">Phone Number</label>
                   <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="Enter phone number"
+                    disabled={isLoading}
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label>Bio</label>
+                  <label htmlFor="bio">Bio</label>
                   <textarea
+                    id="bio"
                     name="bio"
                     value={formData.bio}
                     onChange={handleChange}
                     placeholder="Enter your bio"
                     className={styles.textarea}
+                    disabled={isLoading}
                   />
                 </div>
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>Gender</label>
+                    <label htmlFor="gender">Gender</label>
                     <select
+                      id="gender"
                       name="gender"
                       value={formData.gender}
                       onChange={handleChange}
+                      disabled={isLoading}
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -330,13 +382,17 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Age</label>
+                    <label htmlFor="age">Age</label>
                     <input
+                      id="age"
                       type="number"
                       name="age"
                       value={formData.age}
                       onChange={handleChange}
                       placeholder="Enter age"
+                      disabled={isLoading}
+                      min="1"
+                      max="120"
                     />
                   </div>
                 </div>
@@ -346,60 +402,70 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
                 <h2>Address Information</h2>
 
                 <div className={styles.formGroup}>
-                  <label>Address</label>
+                  <label htmlFor="address">Address</label>
                   <input
+                    id="address"
                     type="text"
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="Enter street address"
+                    disabled={isLoading}
                   />
                 </div>
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>ZIP Code</label>
+                    <label htmlFor="zipCode">ZIP Code</label>
                     <input
+                      id="zipCode"
                       type="text"
                       name="zipCode"
                       value={formData.zipCode}
                       onChange={handleChange}
                       placeholder="Enter ZIP code"
+                      disabled={isLoading}
                     />
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>City</label>
+                    <label htmlFor="city">City</label>
                     <input
+                      id="city"
                       type="text"
                       name="city"
                       value={formData.city}
                       onChange={handleChange}
                       placeholder="Enter city"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label>State</label>
+                    <label htmlFor="state">State</label>
                     <input
+                      id="state"
                       type="text"
                       name="state"
                       value={formData.state}
                       onChange={handleChange}
                       placeholder="Enter state"
+                      disabled={isLoading}
                     />
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label>Country</label>
+                    <label htmlFor="country">Country</label>
                     <input
+                      id="country"
                       type="text"
                       name="country"
                       value={formData.country}
                       onChange={handleChange}
                       placeholder="Enter country"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -410,71 +476,7 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
           {activeTab === "medical" && (
             <div className={styles.formSection}>
               <h2>Medical Details</h2>
-              
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Blood Type</label>
-                  <select defaultValue="A+">
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Height (cm)</label>
-                  <input
-                    type="number"
-                    defaultValue="165"
-                    placeholder="Enter height"
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Weight (kg)</label>
-                  <input
-                    type="number"
-                    defaultValue="65"
-                    placeholder="Enter weight"
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Emergency Contact</label>
-                  <input
-                    type="tel"
-                    defaultValue="+1 (555) 987-6543"
-                    placeholder="Enter emergency contact"
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Allergies</label>
-                <textarea
-                  rows={3}
-                  defaultValue="Penicillin"
-                  placeholder="List any allergies"
-                  className={styles.textarea}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Medical History</label>
-                <textarea
-                  rows={4}
-                  defaultValue="No major medical conditions."
-                  placeholder="Enter your medical history"
-                  className={styles.textarea}
-                />
-              </div>
+              <p className={styles.comingSoon}>Medical information coming soon...</p>
             </div>
           )}
 
@@ -493,12 +495,22 @@ const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => 
           )}
 
           <div className={styles.actions}>
-            <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`}>
+            <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`} passHref>
               Cancel
             </Link>
-            <button type="submit" className={`${styles.button} ${styles.primaryButton}`}>
-              <Save size={16} />
-              Update
+            <button 
+              type="submit" 
+              className={`${styles.button} ${styles.primaryButton}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                "Updating..."
+              ) : (
+                <>
+                  <Save size={16} />
+                  Update
+                </>
+              )}
             </button>
           </div>
         </form>

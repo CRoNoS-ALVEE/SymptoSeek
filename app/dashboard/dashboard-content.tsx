@@ -13,7 +13,12 @@ import styles from "./dashboard.module.css";
 
 export default function DashboardContent() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  interface User {
+    profile_pic?: string;
+    name?: string;
+  }
+
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,7 +30,7 @@ export default function DashboardContent() {
         return;
       }
       try {
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+        const response = await axios.get("http://localhost:5000/api/auth/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
@@ -65,7 +70,7 @@ export default function DashboardContent() {
 
   return (
     <div className={styles.container}>
-      <Navbar isLoggedIn={true} userImage={user?.profilePicture || "/default-avatar.png"} />
+      <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} />
       <main className={styles.main}>
         <section className={styles.welcomeSection}>
           <Particles className={styles.particles} init={particlesInit} options={{ /* Particle settings */ }} />

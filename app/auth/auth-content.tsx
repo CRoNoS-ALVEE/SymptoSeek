@@ -57,7 +57,7 @@ export default function AuthContent() {
     setError("") // Clear previous errors
 
     try {
-      const result = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const result = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
         email,
         password,
       })
@@ -90,7 +90,7 @@ export default function AuthContent() {
     setError("") // Clear previous errors
 
     try {
-      const result = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, {
+      const result = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/signup`, {
         name,
         email,
         password,

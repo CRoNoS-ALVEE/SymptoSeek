@@ -4,6 +4,8 @@
   display: flex;
 }
 
+/* Removed invalid JSON block */
+
 .sidebar {
   width: 280px;
   background: white;

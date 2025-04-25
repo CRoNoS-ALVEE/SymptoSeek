@@ -1,129 +1,129 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
 import { MapPin, Clock, Star, Phone, Mail, Building, Search } from "lucide-react"
 import styles from "./doctors.module.css"
+import { spec } from "node:test/reporters"
 
 interface Doctor {
-  id: number
+  _id: string
+  image_source: string
   name: string
-  specialty: string
-  location: string
-  experience: string
-  rating: number
-  availability: string
-  hospital: string
-  image: string
-  email: string
-  phone: string
+  speciality: string
+  address: string
+  number: string
+  visiting_hours: string
+  degree: string
+  hospital_name: string
+  about: string
+  // Added fields for frontend display
+  location?: string
+  experience?: string
+  rating?: number
+  availability?: string
+  email?: string
+  phone?: string
 }
 
-const doctors: Doctor[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    location: "New York, NY",
-    experience: "15 years",
-    rating: 4.8,
-    availability: "Mon-Fri",
-    hospital: "Heart Care Center",
-    image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400",
-    email: "sarah.johnson@example.com",
-    phone: "(555) 123-4567"
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Chen",
-    specialty: "Neurologist",
-    location: "San Francisco, CA",
-    experience: "12 years",
-    rating: 4.9,
-    availability: "Mon-Thu",
-    hospital: "Brain & Spine Institute",
-    image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400",
-    email: "michael.chen@example.com",
-    phone: "(555) 234-5678"
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Rodriguez",
-    specialty: "Pediatrician",
-    location: "Miami, FL",
-    experience: "10 years",
-    rating: 4.7,
-    availability: "Mon-Sat",
-    hospital: "Children's Medical Center",
-    image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=400",
-    email: "emily.rodriguez@example.com",
-    phone: "(555) 345-6789"
-  },
-  {
-    id: 4,
-    name: "Dr. James Wilson",
-    specialty: "Dermatologist",
-    location: "Los Angeles, CA",
-    experience: "8 years",
-    rating: 4.6,
-    availability: "Tue-Sat",
-    hospital: "Skin Care Clinic",
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400",
-    email: "james.wilson@example.com",
-    phone: "(555) 456-7890"
-  },
-  {
-    id: 5,
-    name: "Dr. Lisa Thompson",
-    specialty: "Psychiatrist",
-    location: "Chicago, IL",
-    experience: "14 years",
-    rating: 4.9,
-    availability: "Mon-Fri",
-    hospital: "Mental Wellness Center",
-    image: "https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&q=80&w=400",
-    email: "lisa.thompson@example.com",
-    phone: "(555) 567-8901"
-  },
-  {
-    id: 6,
-    name: "Dr. David Kim",
-    specialty: "Orthopedist",
-    location: "Seattle, WA",
-    experience: "11 years",
-    rating: 4.7,
-    availability: "Mon-Thu",
-    hospital: "Joint & Bone Center",
-    image: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400",
-    email: "david.kim@example.com",
-    phone: "(555) 678-9012"
-  }
-]
-
 export default function DoctorsPage() {
+  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSpecialty, setSelectedSpecialty] = useState("")
   const [selectedLocation, setSelectedLocation] = useState("")
   const [selectedAvailability, setSelectedAvailability] = useState("")
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [doctorsPerPage] = useState(6) // Matches grid layout
+  const [totalDoctors, setTotalDoctors] = useState(0)
 
-  const specialties = [...new Set(doctors.map(doctor => doctor.specialty))]
-  const locations = [...new Set(doctors.map(doctor => doctor.location))]
-  const availabilities = [...new Set(doctors.map(doctor => doctor.availability))]
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(
+          `http://localhost:5000/api/doctors?page=${currentPage}&limit=${doctorsPerPage}`
+        )
+        if (!response.ok) throw new Error('Failed to fetch doctors')
+        
+        const data = await response.json()
+        // Map backend data to frontend structure
+        const formattedDoctors = data.doctors.map((doctor: Doctor) => ({
+          ...doctor,
+          location: doctor.address,
+          phone: doctor.number,
+          degree: doctor.degree,
+          speciality: doctor.speciality,
+          visiting_hours: doctor.visiting_hours,
+          hospital_name: doctor.hospital_name,
+        }))
+        
+        setDoctors(formattedDoctors)
+        setTotalPages(data.pagination.totalPages)
+        setTotalDoctors(data.pagination.totalDoctors)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDoctors()
+  }, [currentPage, doctorsPerPage])
+
+  const specialties = [...new Set(doctors.map(doctor => doctor.speciality))]
+  const hospital_name = [...new Set(doctors.map(doctor => doctor.hospital_name))]
+  const visiting_hours = [...new Set(doctors.map(doctor => doctor.visiting_hours))]
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter(doctor => {
       const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.hospital.toLowerCase().includes(searchTerm.toLowerCase())
+        doctor.speciality.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.hospital_name.toLowerCase().includes(searchTerm.toLowerCase())
       
-      const matchesSpecialty = !selectedSpecialty || doctor.specialty === selectedSpecialty
-      const matchesLocation = !selectedLocation || doctor.location === selectedLocation
-      const matchesAvailability = !selectedAvailability || doctor.availability === selectedAvailability
+      const matchesSpecialty = !selectedSpecialty || doctor.speciality === selectedSpecialty
+      const matchesLocation = !selectedLocation || doctor.hospital_name === selectedLocation
+      const matchesAvailability = !selectedAvailability || doctor.visiting_hours === selectedAvailability
 
       return matchesSearch && matchesSpecialty && matchesLocation && matchesAvailability
     })
-  }, [searchTerm, selectedSpecialty, selectedLocation, selectedAvailability])
+  }, [doctors, searchTerm, selectedSpecialty, selectedLocation, selectedAvailability])
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <main className={styles.main}>
+          <div className={styles.loading}>Loading doctors...</div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <main className={styles.main}>
+          <div className={styles.error}>Error: {error}</div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -168,8 +168,8 @@ export default function DoctorsPage() {
                 onChange={(e) => setSelectedLocation(e.target.value)}
               >
                 <option value="">All Locations</option>
-                {locations.map(location => (
-                  <option key={location} value={location}>{location}</option>
+                {hospital_name.map(hospital_name => (
+                  <option key={hospital_name} value={hospital_name}>{hospital_name}</option>
                 ))}
               </select>
             </div>
@@ -182,8 +182,8 @@ export default function DoctorsPage() {
                 onChange={(e) => setSelectedAvailability(e.target.value)}
               >
                 <option value="">Any Availability</option>
-                {availabilities.map(availability => (
-                  <option key={availability} value={availability}>{availability}</option>
+                {visiting_hours.map((visiting_hour, index) => (
+                  <option key={`${visiting_hour}-${index}`} value={visiting_hour}>{visiting_hour}</option>
                 ))}
               </select>
             </div>
@@ -193,11 +193,15 @@ export default function DoctorsPage() {
         <div className={styles.doctorsGrid}>
           {filteredDoctors.length > 0 ? (
             filteredDoctors.map(doctor => (
-              <div key={doctor.id} className={styles.doctorCard}>
-                <img src={doctor.image} alt={doctor.name} className={styles.doctorImage} />
+              <div key={doctor._id} className={styles.doctorCard}>
+                <img 
+                  src={doctor.image_source || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400"} 
+                  alt={doctor.name} 
+                  className={styles.doctorImage} 
+                />
                 <div className={styles.doctorInfo}>
                   <h2 className={styles.doctorName}>{doctor.name}</h2>
-                  <p className={styles.doctorSpecialty}>{doctor.specialty}</p>
+                  <p className={styles.doctorSpecialty}>{doctor.speciality}</p>
                   <div className={styles.doctorDetails}>
                     <div className={styles.detailItem}>
                       <MapPin size={16} />
@@ -205,26 +209,26 @@ export default function DoctorsPage() {
                     </div>
                     <div className={styles.detailItem}>
                       <Clock size={16} />
-                      {doctor.experience} experience
+                      {doctor.visiting_hours}
                     </div>
                     <div className={styles.detailItem}>
                       <Building size={16} />
-                      {doctor.hospital}
+                      {doctor.hospital_name}
                     </div>
-                    <div className={styles.detailItem}>
+                    {/* <div className={styles.detailItem}>
                       <Mail size={16} />
                       {doctor.email}
-                    </div>
+                    </div> */}
                     <div className={styles.detailItem}>
                       <Phone size={16} />
                       {doctor.phone}
                     </div>
-                    <div className={styles.detailItem}>
+                    {/* <div className={styles.detailItem}>
                       <div className={styles.rating}>
                         <Star size={16} fill="currentColor" />
                         {doctor.rating}
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                   <button className={styles.bookButton}>Book Appointment</button>
                 </div>
@@ -236,6 +240,57 @@ export default function DoctorsPage() {
             </div>
           )}
         </div>
+
+        {totalPages > 1 && (
+          <div className={styles.paginationContainer}>
+            <div className={styles.pagination}>
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={styles.paginationButton}
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`${styles.paginationButton} ${
+                      currentPage === pageNum ? styles.activePage : ''
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={styles.paginationButton}
+              >
+                Next
+              </button>
+            </div>
+            <div className={styles.paginationInfo}>
+              Showing {(currentPage - 1) * doctorsPerPage + 1}-
+              {Math.min(currentPage * doctorsPerPage, totalDoctors)} of {totalDoctors} doctors
+            </div>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
