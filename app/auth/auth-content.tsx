@@ -59,7 +59,7 @@ export default function AuthContent() {
     setError("") // Clear previous errors
 
     try {
-      const result = await axios.post<{ token: string }>(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      const result = await axios.post<{ token: string }>(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
         email,
         password,
       })
@@ -92,7 +92,7 @@ export default function AuthContent() {
     setError("") // Clear previous errors
 
     try {
-      const result = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, {
+      const result = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/signup`, {
         name,
         email,
         password,
@@ -100,7 +100,7 @@ export default function AuthContent() {
 
       if (result.status === 201) {
         console.log("Sign-up successful")
-        router.push("/login")
+        router.push("/dashboard")
       } else {
         setError("Sign-up failed. Please try again.")
       }

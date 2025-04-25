@@ -1,9 +1,11 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Particles from "react-tsparticles"
 import { loadSlim } from "tsparticles-slim"
 import Link from "next/link"
+import axios from "axios";
+import { useRouter } from "next/navigation";
 import type { Engine } from "tsparticles-engine"
 import { Calendar, Clock, MessageSquare, Stethoscope, User, Plus } from "lucide-react"
 import Navbar from "../components/Navbar/Navbar"
@@ -11,15 +13,52 @@ import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
 
 export default function DashboardContent() {
+
+  const router = useRouter();
+
+  interface User {
+    profile_pic?: string;
+    name?: string;
+  }
+
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/auth");
+        return;
+      }
+      try {
+        const response = await axios.get("http://localhost:5000/api/auth/profile", {
+          headers: {Authorization: `Bearer ${token}`},
+        });
+        setUser(response.data);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+        setError("Failed to fetch user data.");
+        localStorage.removeItem("token");
+        router.push("/auth");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
   const particlesInit = useCallback(async (engine: Engine) => {
     await loadSlim(engine)
   }, [])
 
   const stats = [
-    { value: "5", label: "Upcoming Appointments" },
-    { value: "12", label: "Past Consultations" },
-    { value: "3", label: "Active Plans", link: "/plans" },
-    { value: "85%", label: "Health Score" },
+    { value: "0", label: "Upcoming Appointments", link: "/reminders"},
+    { value: "0", label: "Past Consultations" },
+    { value: "0", label: "Active Plans", link: "/plans" },
+    { value: "0%", label: "Health Score" },
   ]
 
   const recentActivity = [
@@ -45,9 +84,12 @@ export default function DashboardContent() {
     },
   ]
 
+  if (loading) return <p className={styles.loading}>Loading...</p>;
+  if (error) return <p className={styles.error}>{error}</p>;
+
   return (
       <div className={styles.container}>
-        <Navbar isLoggedIn={true} userImage="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" />
+        <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} />
         <main className={styles.main}>
           <section className={styles.welcomeSection}>
             <Particles
@@ -118,7 +160,7 @@ export default function DashboardContent() {
                 }}
             />
             <div className={styles.welcomeContent}>
-              <h1 className={styles.welcomeTitle}>Welcome back, John!</h1>
+              <h1 className={styles.welcomeTitle}>Welcome back, {user?.name || "User"}! </h1>
               <p className={styles.welcomeText}>
                 Track your health journey and manage your appointments all in one place
               </p>
@@ -138,7 +180,7 @@ export default function DashboardContent() {
                   {stat.link && (
                       <div className={styles.statAction}>
                         <Plus size={16} />
-                        View Plans
+                        View
                       </div>
                   )}
                 </Link>
