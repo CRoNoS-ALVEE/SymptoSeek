@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import { Bot, BookOpen, History, ExternalLink, FileText, Send, Zap } from "lucide-react"
 import Navbar from "../components/Navbar/Navbar"
 import styles from "./chatbot.module.css"
+import {useRouter} from "next/navigation";
+import axios from "axios";
 
 interface Message {
   text: string
@@ -11,6 +13,55 @@ interface Message {
 }
 
 export default function ChatbotPage() {
+
+  /*
+   This is a Login function
+ */
+
+  const router = useRouter();
+
+  interface User {
+    profile_pic?: string;
+    name?: string;
+  }
+
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/auth");
+        return;
+      }
+      try {
+        const response = await axios.get("http://localhost:5000/api/auth/profile", {
+          headers: {Authorization: `Bearer ${token}`},
+        });
+        setUser(response.data);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+        setError("Failed to fetch user data.");
+        localStorage.removeItem("token");
+        router.push("/auth");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      setUser(null);
+      router.push("/auth");
+    }
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       text: "Hello! I'm your AI health assistant powered by advanced medical knowledge. How can I help you today?",
@@ -64,7 +115,7 @@ export default function ChatbotPage() {
 
   return (
       <div className={styles.container}>
-        <Navbar />
+        <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} onLogout={handleLogout} />
         <div className={styles.content}>
           <main className={styles.chatContainer}>
             <div className={styles.header}>

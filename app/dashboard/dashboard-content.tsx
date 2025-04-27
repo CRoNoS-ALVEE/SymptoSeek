@@ -20,6 +20,9 @@ export default function DashboardContent() {
     profile_pic?: string;
     name?: string;
   }
+  /*
+   This is a Login function
+ */
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +52,15 @@ export default function DashboardContent() {
 
     fetchUserData();
   }, [router]);
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      setUser(null);
+      router.push("/auth");
+    }
+  };
+
 
   const particlesInit = useCallback(async (engine: Engine) => {
     await loadSlim(engine)
@@ -89,7 +101,7 @@ export default function DashboardContent() {
 
   return (
       <div className={styles.container}>
-        <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} />
+        <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} onLogout={handleLogout} />
         <main className={styles.main}>
           <section className={styles.welcomeSection}>
             <Particles

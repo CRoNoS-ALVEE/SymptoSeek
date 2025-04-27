@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import {type ReactNode, useState} from "react"
+import { useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   FileText,
@@ -27,6 +28,17 @@ interface Reminder {
   type: "medication" | "appointment" | "exercise"
   description: string
   completed: boolean
+}
+
+interface NavItemProps {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+interface User {
+  profile_pic?: string;
+  name?: string;
 }
 
 type ReminderFormData = Omit<Reminder, 'id' | 'completed'>;
@@ -76,6 +88,14 @@ export default function RemindersPage() {
     type: "medication",
     description: ""
   })
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from local storage
+    setUser(null); // Reset user state
+    router.push("/auth"); // Redirect to auth page
+  };
 
   const toggleComplete = (id: number) => {
     setActiveReminders(prev =>
@@ -142,7 +162,7 @@ export default function RemindersPage() {
               <Settings size={20} />
               Settings
             </Link>
-            <button className={styles.navItem}>
+            <button onClick={handleLogout}  className={styles.navItem}>
               <LogOut size={20} />
               Log out
             </button>

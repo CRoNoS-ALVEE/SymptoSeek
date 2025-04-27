@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import {type ReactNode, useState} from "react"
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -16,6 +17,17 @@ import {
   Menu
 } from "lucide-react"
 import styles from "./reports.module.css"
+
+interface NavItemProps {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+interface User {
+  profile_pic?: string;
+  name?: string;
+}
 
 interface Report {
   id: number
@@ -65,6 +77,14 @@ export default function ReportsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedType, setSelectedType] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("")
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from local storage
+    setUser(null); // Reset user state
+    router.push("/auth"); // Redirect to auth page
+  };
 
   const filteredReports = reports.filter(report => {
     const matchesType = !selectedType || report.type === selectedType
@@ -117,7 +137,7 @@ export default function ReportsPage() {
             <Settings size={20} />
             Settings
           </Link>
-          <button className={styles.navItem}>
+          <button onClick={handleLogout} className={styles.navItem}>
             <LogOut size={20} />
             Log out
           </button>

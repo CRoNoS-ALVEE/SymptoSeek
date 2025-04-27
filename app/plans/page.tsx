@@ -1,11 +1,23 @@
 "use client"
 
-import { useState } from 'react'
+import {type ReactNode, useState} from 'react'
 import { Calendar, Clock, Plus, LayoutDashboard, FileText, Bell, User, Settings, LogOut, Stethoscope, Menu, X } from "lucide-react"
 import Link from "next/link"
 import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./plans.module.css"
+import {useRouter} from "next/navigation";
+
+interface NavItemProps {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+interface User {
+  profile_pic?: string;
+  name?: string;
+}
 
 interface Plan {
   id: number
@@ -85,6 +97,15 @@ export default function PlansPage() {
     setIsAddModalOpen(false)
   }
 
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from local storage
+    setUser(null); // Reset user state
+    router.push("/auth"); // Redirect to auth page
+  };
+
   const toggleComplete = (id: number) => {
 
   }
@@ -134,7 +155,7 @@ export default function PlansPage() {
               <Settings size={20} />
               Settings
             </Link>
-            <button className={styles.navItem}>
+            <button onClick={handleLogout}  className={styles.navItem}>
               <LogOut size={20} />
               Log out
             </button>

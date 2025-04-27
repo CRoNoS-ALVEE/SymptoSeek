@@ -6,18 +6,30 @@ import { usePathname } from "next/navigation"
 import { Menu, X, Stethoscope, User, Settings, LogOut } from "lucide-react"
 import Image from "next/image"
 import styles from "./Navbar.module.css"
+import router from "next/router";
 
 interface NavbarProps {
   isLoggedIn?: boolean
   userImage?: string
+  onLogout: () => void
 }
 
-export default function Navbar({ isLoggedIn, userImage }: NavbarProps) {
+export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps) {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+
+
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      setUser(null);
+      router.push("/auth");
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,7 +103,7 @@ export default function Navbar({ isLoggedIn, userImage }: NavbarProps) {
                     <Settings size={16} />
                     <span>Settings</span>
                   </Link>
-                  <button onClick={() => {}} className={styles.dropdownItem}>
+                  <button onClick={onLogout} className={styles.dropdownItem}>
                     <LogOut size={16} />
                     <span>Logout</span>
                   </button>
@@ -111,5 +123,9 @@ export default function Navbar({ isLoggedIn, userImage }: NavbarProps) {
       </div>
     </nav>
   )
+}
+
+function setUser(arg0: null) {
+    throw new Error("Function not implemented.")
 }
 

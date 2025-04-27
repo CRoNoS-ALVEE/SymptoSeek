@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import {type ReactNode, useState} from "react"
+import { useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   FileText,
@@ -20,6 +21,18 @@ import {
   Mail
 } from "lucide-react"
 import styles from "./settings.module.css"
+import router from "next/router";
+
+interface NavItemProps {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+interface User {
+  profile_pic?: string;
+  name?: string;
+}
 
 export default function SettingsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -27,6 +40,14 @@ export default function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
   const [language, setLanguage] = useState("en")
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from local storage
+    setUser(null); // Reset user state
+    router.push("/auth"); // Redirect to auth page
+  };
 
   return (
     <div className={styles.container}>
@@ -70,7 +91,7 @@ export default function SettingsPage() {
             <Settings size={20} />
             Settings
           </Link>
-          <button className={styles.navItem}>
+          <button onClick={handleLogout} className={styles.navItem}>
             <LogOut size={20} />
             Log out
           </button>

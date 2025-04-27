@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import {type ReactNode, useState} from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -22,6 +22,18 @@ import {
 } from "lucide-react"
 import styles from "./settings.module.css"
 
+interface NavItemProps {
+  href?: string;
+  children: ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+
+interface User {
+  profile_pic?: string;
+  name?: string;
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -31,11 +43,13 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("en")
   const [timezone, setTimezone] = useState("UTC")
   const [dataRetention, setDataRetention] = useState("30")
+  const [user, setUser] = useState<User | null>(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("adminToken")
-    router.push("/admin/auth")
-  }
+    localStorage.removeItem("token"); // Remove token from local storage
+    setUser(null); // Reset user state
+    router.push("/auth"); // Redirect to auth page
+  };
 
   return (
     <div className={styles.container}>

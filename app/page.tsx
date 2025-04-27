@@ -1,3 +1,7 @@
+"use client"
+
+import { useRouter } from "next/navigation";
+import axios from "axios";
 import Navbar from "./components/Navbar/Navbar"
 import Hero from "./components/Hero/Hero"
 import Features from "./components/Features/Features"
@@ -6,11 +10,58 @@ import HowItWorks from "./components/HowItWorks/HowItWorks"
 import Testimonials from "./components/Testimonials/Testimonials"
 import Footer from "./components/Footer/Footer"
 import styles from "./page.module.css"
+import { useCallback, useEffect, useState } from "react"
+import type { Engine } from "tsparticles-engine"
+import {loadSlim} from "tsparticles-slim";
+import {Calendar, MessageSquare, Stethoscope} from "lucide-react";
+
 
 export default function Home() {
+    const router = useRouter();
+
+    interface User {
+        profile_pic?: string;
+        name?: string;
+    }
+
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                router.push("/auth");
+                return;
+            }
+            try {
+                const response = await axios.get("http://localhost:5000/api/auth/profile", {
+                    headers: {Authorization: `Bearer ${token}`},
+                });
+                setUser(response.data);
+            } catch (err) {
+                console.error("Failed to fetch user data:", err);
+                setError("Failed to fetch user data.");
+                localStorage.removeItem("token");
+                router.push("/auth");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [router]);
+
+    const handleLogout = () => {
+        localStorage.removeItem("token"); // Remove token from local storage
+        setUser(null); // Reset user state
+        router.push("/auth"); // Redirect to auth page
+    };
+
   return (
     <div className={styles.app}>
-      <Navbar />
+      <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} onLogout={handleLogout} />
       <main className={styles.main}>
         <Hero />
         <Features />

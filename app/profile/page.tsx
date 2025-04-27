@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect, type ReactNode } from "react"
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -33,6 +34,10 @@ interface NavItemProps {
   className?: string;
   onClick?: () => void;
 }
+interface User {
+  profile_pic?: string;
+  name?: string;
+}
 
 const NavItem = ({ href, children, className, onClick }: NavItemProps) => {
   const classes = `${styles.navItem} ${className || ''}`
@@ -55,6 +60,14 @@ const NavItem = ({ href, children, className, onClick }: NavItemProps) => {
 export default function ProfilePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove token from local storage
+    setUser(null); // Reset user state
+    router.push("/auth"); // Redirect to auth page
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -114,7 +127,7 @@ export default function ProfilePage() {
             <Settings size={20} />
             Settings
           </NavItem>
-          <NavItem onClick={() => console.log('Logout clicked')} className={styles.logoutButton}>
+          <NavItem onClick={handleLogout} className={styles.logoutButton}>
             <LogOut size={20} />
             Log out
           </NavItem>
