@@ -135,8 +135,32 @@ export default function DoctorsPage() {
   const router = useRouter();
 
   interface User {
-    profile_pic?: string;
-    name?: string;
+    _id: string;
+    name: string;
+    email: string;
+    bio: string;
+    gender: string;
+    age: number | null;
+    phone: string;
+    address: string;
+    zip_code: string;
+    country: string;
+    state: string;
+    city: string;
+    profile_pic: string;
+    role: string;
+    status: string;
+    blood_group: string;
+    weight: string;
+    height: string;
+    allergies: string;
+    medical_conditions: string;
+    medications: string;
+    surgeries: string;
+    family_medical_history: string;
+    emergency_contact: string;
+    date: string;
+    __v: number;
   }
 
   const [user, setUser] = useState<User | null>(null);
@@ -151,15 +175,17 @@ export default function DoctorsPage() {
         return;
       }
       try {
-        const response = await axios.get("http://localhost:5000/api/auth/profile", {
+        const userId = localStorage.getItem("id");
+        const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
           headers: {Authorization: `Bearer ${token}`},
         });
         setUser(response.data);
+        
       } catch (err) {
         console.error("Failed to fetch user data:", err);
         setError("Failed to fetch user data.");
-        localStorage.removeItem("token");
-        router.push("/auth");
+        // localStorage.removeItem("token");
+        // router.push("/auth");
       } finally {
         setLoading(false);
       }
@@ -174,7 +200,7 @@ export default function DoctorsPage() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
       setUser(null);
-      router.push("/auth");
+      // router.push("/auth");
     }
   };
 
@@ -210,9 +236,11 @@ export default function DoctorsPage() {
   const currentDoctors = filteredDoctors.slice(indexOfFirstDoctor, indexOfLastDoctor)
   const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage)
 
+  console.log(user)
+
   return (
       <div className={styles.container}>
-        <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} onLogout={handleLogout} />
+        <Navbar isLoggedIn={true} userImage={user?.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740"} onLogout={handleLogout} />
         <main className={styles.main}>
           <div className={styles.header}>
             <h1>Find the Right Doctor</h1>

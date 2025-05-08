@@ -30,7 +30,7 @@ const tabs = [
 ]
 
 export default function EditProfilePage() {
-  const [profileImage, setProfileImage] = useState("/default-profile.png")
+  const [profileImage, setProfileImage] = useState("https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740")
   const [activeTab, setActiveTab] = useState<TabId>("personal")
   const [formData, setFormData] = useState({
     firstName: "",
@@ -59,7 +59,9 @@ export default function EditProfilePage() {
           throw new Error("No authentication token found")
         }
 
-        const response = await fetch("http://localhost:5000/api/auth/profile", {
+        const userId = localStorage.getItem("id")
+
+        const response = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -86,7 +88,7 @@ export default function EditProfilePage() {
           age: data.age || "",
           profilePic: data.profile_pic || "",
         })
-        setProfileImage(data.profile_pic || "/default-profile.png")
+        setProfileImage(data.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740")
       } catch (error) {
         console.error("Error fetching profile data:", error)
         setError("Failed to load profile data")
@@ -165,7 +167,8 @@ export default function EditProfilePage() {
         profile_pic: formData.profilePic,
       }
 
-      const response = await fetch("http://localhost:5000/api/auth/profile/edit", {
+      const userId = localStorage.getItem("id")
+      const response = await fetch(`http://localhost:5000/api/auth/profile/edit/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

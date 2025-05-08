@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link"
+import axios from "axios";
 import Image from "next/image"
 import { useState, useEffect, type ReactNode } from "react"
 import { useRouter } from 'next/navigation';
@@ -35,8 +36,32 @@ interface NavItemProps {
   onClick?: () => void;
 }
 interface User {
-  profile_pic?: string;
-  name?: string;
+  _id: string;
+  name: string;
+  email: string;
+  bio: string;
+  gender: string;
+  age: number | null;
+  phone: string;
+  address: string;
+  zip_code: string;
+  country: string;
+  state: string;
+  city: string;
+  profile_pic: string;
+  role: string;
+  status: string;
+  blood_group: string;
+  weight: string;
+  height: string;
+  allergies: string;
+  medical_conditions: string;
+  medications: string;
+  surgeries: string;
+  family_medical_history: string;
+  emergency_contact: string;
+  date: string;
+  __v: number;
 }
 
 const NavItem = ({ href, children, className, onClick }: NavItemProps) => {
@@ -62,12 +87,39 @@ export default function ProfilePage() {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove token from local storage
     setUser(null); // Reset user state
     router.push("/auth"); // Redirect to auth page
   };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/auth");
+        return;
+      }
+      try {
+        const userId = localStorage.getItem("id");
+        const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
+          headers: {Authorization: `Bearer ${token}`},
+        });
+        console.log(response.data)
+        setUser(response.data);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+        // localStorage.removeItem("token");
+        // router.push("/auth");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -138,18 +190,18 @@ export default function ProfilePage() {
         <div className={styles.header}>
           <div className={styles.profileImage}>
             <Image
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200"
+              src={user?.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740"}
               alt="Profile"
               width={120}
               height={120}
             />
           </div>
           <div className={styles.profileInfo}>
-            <h1 className={styles.name}>Samantha Harkness</h1>
+            <h1 className={styles.name}>{user?.name}</h1>
             <div className={styles.metadata}>
               <div className={styles.metaItem}>
                 <User size={16} />
-                Age: 28
+                Age: {user?.age || 'Not availabe'}
               </div>
               <div className={styles.metaItem}>
                 <Clock size={16} />

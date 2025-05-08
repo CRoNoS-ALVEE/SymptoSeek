@@ -38,6 +38,9 @@ export default function AuthContent() {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
       console.log(tokenResponse)
+      localStorage.setItem("token", tokenResponse.access_token)
+      console.log(localStorage.getItem("token"))
+      router.push("/dashboard")
       // Handle successful login here
     },
     onError: (error) => {
@@ -59,14 +62,22 @@ export default function AuthContent() {
     setError("") // Clear previous errors
 
     try {
-      const result = await axios.post<{ token: string }>(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
+      const result = await axios.post<{ user: { 
+        email: string,
+        id: string,
+        name: string,
+        profile_pic: string,
+        token: string
+      } }>(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/login`, {
         email,
         password,
       })
 
       if (result.status === 200) {
         console.log("Login successful")
-        localStorage.setItem("token", result.data.token)
+        console.log(result.data.user.id)
+        localStorage.setItem("id", result.data.user.id);
+        localStorage.setItem("token", result.data.user.token);
         router.push("/dashboard")
       } else {
         setError("Login failed. Please check your credentials.")
