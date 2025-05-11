@@ -8,7 +8,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import type { Engine } from "tsparticles-engine"
 import { Calendar, Clock, MessageSquare, Stethoscope, User, Plus } from "lucide-react"
-import Navbar from "../components/Navbar/Dashboard-Navbar"
+import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
 
