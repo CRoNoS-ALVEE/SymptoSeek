@@ -8,7 +8,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import type { Engine } from "tsparticles-engine"
 import { Calendar, Clock, MessageSquare, Stethoscope, User, Plus } from "lucide-react"
-import Navbar from "../components/Navbar/Navbar"
+import Navbar from "../components/Navbar/Dashboard-Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
 
@@ -36,15 +36,16 @@ export default function DashboardContent() {
         return;
       }
       try {
-        const response = await axios.get("http://localhost:5000/api/auth/profile", {
+        const userId = localStorage.getItem("id");
+        const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
           headers: {Authorization: `Bearer ${token}`},
         });
         setUser(response.data);
       } catch (err) {
         console.error("Failed to fetch user data:", err);
         setError("Failed to fetch user data.");
-        localStorage.removeItem("token");
-        router.push("/auth");
+        // localStorage.removeItem("token");
+        // router.push("/auth");
       } finally {
         setLoading(false);
       }

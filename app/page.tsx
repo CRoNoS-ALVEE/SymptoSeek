@@ -27,24 +27,30 @@ export default function Home() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
         const fetchUserData = async () => {
             const token = localStorage.getItem("token");
+            console.log('From root',token);
             if (!token) {
-                router.push("/auth");
+                // router.push("/auth");
                 return;
             }
             try {
-                const response = await axios.get("http://localhost:5000/api/auth/profile", {
+                const userId = localStorage.getItem("id");
+                const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
                     headers: {Authorization: `Bearer ${token}`},
                 });
+                if(response){
+                    setIsLoggedIn(true);
+                }
                 setUser(response.data);
             } catch (err) {
                 console.error("Failed to fetch user data:", err);
                 setError("Failed to fetch user data.");
-                localStorage.removeItem("token");
-                router.push("/auth");
+                // localStorage.removeItem("token");
+                // router.push("/auth");
             } finally {
                 setLoading(false);
             }
@@ -56,12 +62,13 @@ export default function Home() {
     const handleLogout = () => {
         localStorage.removeItem("token"); // Remove token from local storage
         setUser(null); // Reset user state
-        router.push("/auth"); // Redirect to auth page
+        setIsLoggedIn(false);
+        // router.push("/auth"); // Redirect to auth page
     };
 
   return (
     <div className={styles.app}>
-      <Navbar isLoggedIn={true} userImage={user?.profile_pic || "/default-avatar.png"} onLogout={handleLogout} />
+      <Navbar isLoggedIn={isLoggedIn} userImage={user?.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740"} onLogout={handleLogout} />
       <main className={styles.main}>
         <Hero />
         <Features />
