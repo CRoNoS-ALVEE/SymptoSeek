@@ -77,7 +77,7 @@ export default function DoctorsPage() {
     currentPage: 1,
     totalPages: 1,
     totalDoctors: 0,
-    doctorsPerPage: 10,
+    doctorsPerPage: 12,
   })
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -110,7 +110,7 @@ export default function DoctorsPage() {
     const fetchDoctors = async () => {
       try {
         const response = await axios.get<ApiResponse>(
-          `http://localhost:5000/api/doctors?page=${currentPage}&limit=10`
+          `http://localhost:5000/api/doctors?page=${currentPage}&limit=12`
         )
         setDoctors(response.data.doctors)
         setPagination(response.data.pagination)

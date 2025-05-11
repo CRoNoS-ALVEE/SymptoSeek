@@ -8,7 +8,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import type { Engine } from "tsparticles-engine"
 import { Calendar, Clock, MessageSquare, Stethoscope, User, Plus } from "lucide-react"
-import Navbar from "../components/Navbar/Navbar"
+import Navbar from "../components/Navbar/Dashboard-Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
 
@@ -97,7 +97,7 @@ export default function DashboardContent() {
     },
   ]
 
-  if (loading) return <p className={styles.loading}>Loading...</p>;
+  if (loading) return <p className={styles.loading}></p>;
   if (error) return <p className={styles.error}>{error}</p>;
 
   return (
