@@ -236,7 +236,7 @@ export default function EditProfilePage() {
             <Settings size={20} />
             Settings
           </Link>
-          <button className={styles.navItem}>
+          <button className={styles.navItem} onClick={handleLogout}>
             <LogOut size={20} />
             Log out
           </button>
