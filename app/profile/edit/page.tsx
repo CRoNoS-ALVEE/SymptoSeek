@@ -72,7 +72,9 @@ export default function EditProfilePage() {
         }
 
         const data = await response.json()
-        const [firstName, lastName] = data.name?.split(" ") || ["", ""]
+        const nameParts = data.name?.trim().split(" ") || []
+        const lastName = nameParts.pop() || ""
+        const firstName = nameParts.join(" ")
         setFormData({
           firstName,
           lastName,
