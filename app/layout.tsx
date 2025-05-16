@@ -6,6 +6,9 @@ import { Analytics } from '@vercel/analytics/next';
 export const metadata: Metadata = {
   title: 'SymptoSeek',
   description: 'Seek the perfect doctor for your symptoms',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
