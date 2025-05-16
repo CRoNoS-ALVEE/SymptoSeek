@@ -40,24 +40,27 @@
 .logoIcon {
   width: 40px;
   height: 40px;
+  background: transparent;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #9333ea;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
-.logoIcon img {
+.logoIcon svg {
   position: relative;
   z-index: 2;
   transition: all 0.3s ease;
   transform-origin: center;
 }
 
-.logo:hover .logoIcon img {
+.logo:hover .logoIcon svg {
   transform: rotate(-12deg);
+  color: #7928ca;
 }
 
 .logo span {
