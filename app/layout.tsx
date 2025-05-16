@@ -6,6 +6,9 @@ import { Analytics } from '@vercel/analytics/next';
 export const metadata: Metadata = {
   title: 'SymptoSeek',
   description: 'Seek the perfect doctor for your symptoms',
+    icons: {
+        icon: '/stethoscope.svg', // or '/favicon.png'
+    },
 }
 
 export default function RootLayout({
@@ -23,3 +26,4 @@ export default function RootLayout({
       </html>
   )
 }
+
