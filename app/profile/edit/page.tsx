@@ -33,20 +33,30 @@ export default function EditProfilePage() {
   const [profileImage, setProfileImage] = useState("https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740")
   const [activeTab, setActiveTab] = useState<TabId>("personal")
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    zipCode: "",
-    city: "",
-    state: "",
-    country: "",
-    bio: "",
-    gender: "",
-    age: "",
-    profilePic: ""
-  })
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
+        zipCode: "",
+        city: "",
+        state: "",
+        country: "",
+        bio: "",
+        gender: "",
+        age: "",
+        profilePic: "",
+        blood_group: "",
+        weight: "",
+        height: "",
+        allergies: "",
+        medical_conditions: "",
+        medications: "",
+        surgeries: "",
+        family_medical_history: "",
+        emergency_contact: ""
+})
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -89,6 +99,15 @@ export default function EditProfilePage() {
           gender: data.gender || "",
           age: data.age || "",
           profilePic: data.profile_pic || "",
+          blood_group: data.blood_group || "",
+          weight: data.weight || "",
+          height: data.height || "",
+          allergies: data.allergies || "",
+          medical_conditions: data.medical_conditions || "",
+          medications: data.medications || "",
+          surgeries: data.surgeries || "",
+          family_medical_history: data.family_medical_history || "",
+          emergency_contact: data.emergency_contact || ""
         })
         setProfileImage(data.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740")
       } catch (error) {
@@ -167,6 +186,15 @@ export default function EditProfilePage() {
         state: formData.state,
         city: formData.city,
         profile_pic: formData.profilePic,
+        blood_group: formData.blood_group,
+        height: formData.height,
+        weight: formData.weight,
+        emergency_contact: formData.emergency_contact,
+        allergies: formData.allergies,
+        medical_conditions: formData.medical_conditions,
+        medications: formData.medications,
+        surgeries: formData.surgeries,
+        family_medical_history: formData.family_medical_history
       }
 
       const userId = localStorage.getItem("id")
@@ -201,386 +229,442 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className={styles.container}>
-      <aside className={styles.sidebar}>
-        <Link href="/" className={styles.mainLogo}>
-          <div className={styles.logoIcon}>
-            <Stethoscope size={24} />
-          </div>
-          <span>SymptoSeek</span>
-        </Link>
-
-        <nav>
-          <Link href="/dashboard" className={styles.navItem}>
-            <LayoutDashboard size={20} />
-            Dashboard
-          </Link>
-          <Link href="/reports" className={styles.navItem}>
-            <FileText size={20} />
-            Reports
-          </Link>
-          <Link href="/plans" className={styles.navItem}>
-            <Calendar size={20} />
-            Plans
-          </Link>
-          <Link href="/reminders" className={styles.navItem}>
-            <Bell size={20} />
-            Reminders
-          </Link>
-          <Link href="/profile" className={`${styles.navItem} ${styles.active}`}>
-            <User size={20} />
-            Profile
-          </Link>
-        </nav>
-
-        <div className={styles.bottomNav}>
-          <Link href="/settings" className={styles.navItem}>
-            <Settings size={20} />
-            Settings
-          </Link>
-          <button className={styles.navItem} onClick={handleLogout}>
-            <LogOut size={20} />
-            Log out
-          </button>
-        </div>
-      </aside>
-
-      <main className={styles.main}>
-        <div className={styles.header}>
-          <Link href="/profile" className={styles.backButton}>
-            <ArrowLeft size={20} />
-            Back to Profile
-          </Link>
-        </div>
-
-        {error && <div className={styles.errorMessage}>{error}</div>}
-
-        <div className={styles.tabs}>
-          {tabs.map((tab, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <form className={styles.editForm} onSubmit={handleSubmit}>
-          {activeTab === "personal" && (
-            <>
-              <div className={styles.imageSection}>
-                <div className={styles.imageWrapper}>
-                  <Image
-                    src={profileImage}
-                    alt="Profile"
-                    width={120}
-                    height={120}
-                    className={styles.profileImage}
-                  />
-                  <label className={styles.uploadButton}>
-                    <Camera size={20} />
-                    {isLoading ? "Uploading..." : "Change Photo"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className={styles.fileInput}
-                      disabled={isLoading}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className={styles.formSection}>
-                <h2>Personal Information</h2>
-                
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>First Name</label>
-                    <input
-                        id="firstName"
-                        type="text"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        placeholder="Enter first name"
-                        disabled={isLoading}
-                        required
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Last Name</label>
-                    <input
-                        id="lastName"
-                        type="text"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        placeholder="Enter last name"
-                        disabled={isLoading}
-                        required
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Email</label>
-                  <input
-                      id="email"
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="Enter email address"
-                      disabled
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Phone Number</label>
-                  <input
-                      id="phone"
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="Enter phone number"
-                      disabled={isLoading}
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label htmlFor="bio">Bio</label>
-                  <textarea
-                      id="bio"
-                      name="bio"
-                      value={formData.bio}
-                      onChange={handleChange}
-                      placeholder="Enter your bio"
-                      className={styles.textarea}
-                      disabled={isLoading}
-                  />
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="gender">Gender</label>
-                    <select
-                        id="gender"
-                        name="gender"
-                        value={formData.gender}
-                        onChange={handleChange}
-                        disabled={isLoading}
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label htmlFor="age">Age</label>
-                    <input
-                        id="age"
-                        type="number"
-                        name="age"
-                        value={formData.age}
-                        onChange={handleChange}
-                        placeholder="Enter age"
-                        disabled={isLoading}
-                        min="1"
-                        max="120"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.formSection}>
-                <h2>Address Information</h2>
-
-                <div className={styles.formGroup}>
-                  <label>Address</label>
-                  <input
-                      id="address"
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="Enter street address"
-                      disabled={isLoading}
-                  />
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>ZIP Code</label>
-                    <input
-                        id="zipCode"
-                        type="text"
-                        name="zipCode"
-                        value={formData.zipCode}
-                        onChange={handleChange}
-                        placeholder="Enter ZIP code"
-                        disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>City</label>
-                    <input
-                        id="city"
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        placeholder="Enter city"
-                        disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label>State</label>
-                    <input
-                        id="state"
-                        type="text"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleChange}
-                        placeholder="Enter state"
-                        disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className={styles.formGroup}>
-                    <label>Country</label>
-                    <input
-                        id="country"
-                        type="text"
-                        name="country"
-                        value={formData.country}
-                        onChange={handleChange}
-                        placeholder="Enter country"
-                        disabled={isLoading}
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === "medical" && (
-            <div className={styles.formSection}>
-              <h2>Medical Details</h2>
-              
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Blood Type</label>
-                  <select defaultValue="A+">
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Height (cm)</label>
-                  <input
-                    type="number"
-                    defaultValue="165"
-                    placeholder="Enter height"
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Weight (kg)</label>
-                  <input
-                    type="number"
-                    defaultValue="65"
-                    placeholder="Enter weight"
-                  />
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label>Emergency Contact</label>
-                  <input
-                    type="tel"
-                    defaultValue="+1 (555) 987-6543"
-                    placeholder="Enter emergency contact"
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Allergies</label>
-                <textarea
-                  rows={3}
-                  defaultValue="Penicillin"
-                  placeholder="List any allergies"
-                  className={styles.textarea}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Medical History</label>
-                <textarea
-                  rows={4}
-                  defaultValue="No major medical conditions."
-                  placeholder="Enter your medical history"
-                  className={styles.textarea}
-                />
-              </div>
+      <div className={styles.container}>
+        <aside className={styles.sidebar}>
+          <Link href="/" className={styles.mainLogo}>
+            <div className={styles.logoIcon}>
+              <Stethoscope size={24} />
             </div>
-          )}
+            <span>SymptoSeek</span>
+          </Link>
 
-          {activeTab === "security" && (
-            <div className={styles.formSection}>
-              <h2>Security Settings</h2>
-              <p className={styles.comingSoon}>Security settings coming soon...</p>
-            </div>
-          )}
-
-          {activeTab === "subscription" && (
-            <div className={styles.formSection}>
-              <h2>Subscription Details</h2>
-              <p className={styles.comingSoon}>Subscription management coming soon...</p>
-            </div>
-          )}
-
-          <div className={styles.actions}>
-            <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`} passHref>
-              Cancel
+          <nav>
+            <Link href="/dashboard" className={styles.navItem}>
+              <LayoutDashboard size={20} />
+              Dashboard
             </Link>
-            <button
-                type="submit"
-                className={`${styles.button} ${styles.primaryButton}`}
-                disabled={isLoading}
-            >
-              {isLoading ? (
-                  "Updating..."
-              ) : (
-                  <>
-                    <Save size={16} />
-                    Update
-                  </>
-              )}
+            <Link href="/reports" className={styles.navItem}>
+              <FileText size={20} />
+              Reports
+            </Link>
+            <Link href="/plans" className={styles.navItem}>
+              <Calendar size={20} />
+              Plans
+            </Link>
+            <Link href="/reminders" className={styles.navItem}>
+              <Bell size={20} />
+              Reminders
+            </Link>
+            <Link href="/profile" className={`${styles.navItem} ${styles.active}`}>
+              <User size={20} />
+              Profile
+            </Link>
+          </nav>
+
+          <div className={styles.bottomNav}>
+            <Link href="/settings" className={styles.navItem}>
+              <Settings size={20} />
+              Settings
+            </Link>
+            <button className={styles.navItem} onClick={handleLogout}>
+              <LogOut size={20} />
+              Log out
             </button>
           </div>
-        </form>
-      </main>
-    </div>
+        </aside>
+
+        <main className={styles.main}>
+          <div className={styles.header}>
+            <Link href="/profile" className={styles.backButton}>
+              <ArrowLeft size={20} />
+              Back to Profile
+            </Link>
+          </div>
+
+          {error && <div className={styles.errorMessage}>{error}</div>}
+
+          <div className={styles.tabs}>
+            {tabs.map((tab, index) => (
+                <button
+                    key={index}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`${styles.tab} ${activeTab === tab.id ? styles.active : ''}`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+            ))}
+          </div>
+
+          <form className={styles.editForm} onSubmit={handleSubmit}>
+            {activeTab === "personal" && (
+                <>
+                  <div className={styles.imageSection}>
+                    <div className={styles.imageWrapper}>
+                      <Image
+                          src={profileImage}
+                          alt="Profile"
+                          width={120}
+                          height={120}
+                          className={styles.profileImage}
+                      />
+                      <label className={styles.uploadButton}>
+                        <Camera size={20} />
+                        {isLoading ? "Uploading..." : "Change Photo"}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className={styles.fileInput}
+                            disabled={isLoading}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className={styles.formSection}>
+                    <h2>Personal Information</h2>
+
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label>First Name</label>
+                        <input
+                            id="firstName"
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            placeholder="Enter first name"
+                            disabled={isLoading}
+                            required
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label>Last Name</label>
+                        <input
+                            id="lastName"
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            placeholder="Enter last name"
+                            disabled={isLoading}
+                            required
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Email</label>
+                      <input
+                          id="email"
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="Enter email address"
+                          disabled
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Phone Number</label>
+                      <input
+                          id="phone"
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          placeholder="Enter phone number"
+                          disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="bio">Bio</label>
+                      <textarea
+                          id="bio"
+                          name="bio"
+                          value={formData.bio}
+                          onChange={handleChange}
+                          placeholder="Enter your bio"
+                          className={styles.textarea}
+                          disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="gender">Gender</label>
+                        <select
+                            id="gender"
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            disabled={isLoading}
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label htmlFor="age">Age</label>
+                        <input
+                            id="age"
+                            type="number"
+                            name="age"
+                            value={formData.age}
+                            onChange={handleChange}
+                            placeholder="Enter age"
+                            disabled={isLoading}
+                            min="1"
+                            max="120"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.formSection}>
+                    <h2>Address Information</h2>
+
+                    <div className={styles.formGroup}>
+                      <label>Address</label>
+                      <input
+                          id="address"
+                          type="text"
+                          name="address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          placeholder="Enter street address"
+                          disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label>ZIP Code</label>
+                        <input
+                            id="zipCode"
+                            type="text"
+                            name="zipCode"
+                            value={formData.zipCode}
+                            onChange={handleChange}
+                            placeholder="Enter ZIP code"
+                            disabled={isLoading}
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label>City</label>
+                        <input
+                            id="city"
+                            type="text"
+                            name="city"
+                            value={formData.city}
+                            onChange={handleChange}
+                            placeholder="Enter city"
+                            disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label>State</label>
+                        <input
+                            id="state"
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleChange}
+                            placeholder="Enter state"
+                            disabled={isLoading}
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label>Country</label>
+                        <input
+                            id="country"
+                            type="text"
+                            name="country"
+                            value={formData.country}
+                            onChange={handleChange}
+                            placeholder="Enter country"
+                            disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+            )}
+
+            {activeTab === "medical" && (
+                <div className={styles.formSection}>
+                  <h2>Medical Details</h2>
+
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label>Blood Type</label>
+                      <select
+                          name="blood_group"
+                          value={formData.blood_group}
+                          onChange={handleChange}
+                          disabled={isLoading}
+                      >
+                        <option value="">Select...</option>
+                        {["A+","A-","B+","B-","O+","O-","AB+","AB-"].map(v => (
+                            <option key={v} value={v}>{v}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Height (cm)</label>
+                      <input
+                          type="number"
+                          name="height"
+                          value={formData.height}
+                          onChange={handleChange}
+                          placeholder="Enter height"
+                          disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.formRow}>
+                    <div className={styles.formGroup}>
+                      <label>Weight (kg)</label>
+                      <input
+                          type="number"
+                          name="weight"
+                          value={formData.weight}
+                          onChange={handleChange}
+                          placeholder="Enter weight"
+                          disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Emergency Contact</label>
+                      <input
+                          type="tel"
+                          name="emergency_contact"
+                          value={formData.emergency_contact}
+                          onChange={handleChange}
+                          placeholder="Enter emergency contact"
+                          disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Allergies</label>
+                    <textarea
+                        name="allergies"
+                        rows={3}
+                        value={formData.allergies}
+                        onChange={handleChange}
+                        placeholder="List any allergies"
+                        disabled={isLoading}
+                        className={styles.textarea}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Medical Conditions</label>
+                    <textarea
+                        name="medical_conditions"
+                        rows={3}
+                        value={formData.medical_conditions}
+                        onChange={handleChange}
+                        placeholder="Enter any medical conditions"
+                        disabled={isLoading}
+                        className={styles.textarea}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Medications</label>
+                    <textarea
+                        name="medications"
+                        rows={2}
+                        value={formData.medications}
+                        onChange={handleChange}
+                        placeholder="List current medications"
+                        disabled={isLoading}
+                        className={styles.textarea}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Surgeries</label>
+                    <textarea
+                        name="surgeries"
+                        rows={2}
+                        value={formData.surgeries}
+                        onChange={handleChange}
+                        placeholder="List past surgeries"
+                        disabled={isLoading}
+                        className={styles.textarea}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Family Medical History</label>
+                    <textarea
+                        name="family_medical_history"
+                        rows={3}
+                        value={formData.family_medical_history}
+                        onChange={handleChange}
+                        placeholder="Enter family medical history"
+                        disabled={isLoading}
+                        className={styles.textarea}
+                    />
+                  </div>
+                </div>
+            )}
+
+
+            {activeTab === "security" && (
+                <div className={styles.formSection}>
+                  <h2>Security Settings</h2>
+                  <p className={styles.comingSoon}>Security settings coming soon...</p>
+                </div>
+            )}
+
+            {activeTab === "subscription" && (
+                <div className={styles.formSection}>
+                  <h2>Subscription Details</h2>
+                  <p className={styles.comingSoon}>Subscription management coming soon...</p>
+                </div>
+            )}
+
+            <div className={styles.actions}>
+              <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`} passHref>
+                Cancel
+              </Link>
+              <button
+                  type="submit"
+                  className={`${styles.button} ${styles.primaryButton}`}
+                  disabled={isLoading}
+              >
+                {isLoading ? (
+                    "Updating..."
+                ) : (
+                    <>
+                      <Save size={16} />
+                      Update
+                    </>
+                )}
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
   )
 }
