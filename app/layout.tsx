@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'SymptoSeek',
   description: 'Seek the perfect doctor for your symptoms',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/symptoseek-logo.svg',
   },
 }
 

@@ -64,7 +64,12 @@ export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps)
       <div className={styles.container}>
         <Link href="/" className={styles.logo}>
           <div className={styles.logoIcon}>
-            <Stethoscope size={24} />
+            <Image
+              src="/symptoseek-logo.svg"
+              alt="SymptoSeek Logo"
+              width={24}
+              height={24}
+            />
           </div>
           <span>SymptoSeek</span>
         </Link>
