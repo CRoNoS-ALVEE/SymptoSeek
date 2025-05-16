@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { Menu, X, Stethoscope, User, Settings, LogOut } from "lucide-react"
 import Image from "next/image"
-import Logo from "../../../public/symptoseek-logo.svg"
 import styles from "./Navbar.module.css"
 import router from "next/router";
 
@@ -65,7 +64,7 @@ export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps)
             <div className={styles.container}>
                 <Link href="/" className={styles.logo}>
                     <div className={styles.logoIcon}>
-                        <Image src={Logo} alt="SymptoSeek Logo" width={24} height={24} />
+                        <Stethoscope size={24} />
                     </div>
                     <span>SymptoSeek</span>
                 </Link>
@@ -129,3 +128,4 @@ export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps)
 function setUser(arg0: null) {
     throw new Error("Function not implemented.")
 }
+
