@@ -3,6 +3,7 @@
 import { useCallback } from "react"
 import Particles from "react-tsparticles"
 import { loadSlim } from "tsparticles-slim"
+import Link from "next/link"
 import type { Engine } from "tsparticles-engine"
 import styles from "./Hero.module.css"
 import type React from "react" // Import React
@@ -84,7 +85,7 @@ export default function Hero() {
       <div className={styles.content}>
         <h1 className={styles.animatedText}>Welcome to SymptoSeek</h1>
         <p className={styles.animatedSubtext}>Revolutionizing Symptom Analysis with AI-driven insights</p>
-        <button className={styles.button} style={{ "--clr": "#7808d0" } as React.CSSProperties}>
+        <Link href="/auth" className={styles.button} style={{ "--clr": "#7808d0" } as React.CSSProperties}>
           <span className={styles.buttonIconWrapper}>
             <svg
               viewBox="0 0 14 15"
@@ -113,7 +114,7 @@ export default function Hero() {
             </svg>
           </span>
           Get Started
-        </button>
+        </Link>
       </div>
     </section>
   )
