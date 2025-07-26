@@ -10,10 +10,7 @@ import HowItWorks from "./components/HowItWorks/HowItWorks"
 import Testimonials from "./components/Testimonials/Testimonials"
 import Footer from "./components/Footer/Footer"
 import styles from "./page.module.css"
-import { useCallback, useEffect, useState } from "react"
-import type { Engine } from "tsparticles-engine"
-import {loadSlim} from "tsparticles-slim";
-import {Calendar, MessageSquare, Stethoscope} from "lucide-react";
+import { useEffect, useState } from "react"
 
 
 export default function Home() {
@@ -38,8 +35,7 @@ export default function Home() {
                 return;
             }
             try {
-                const userId = localStorage.getItem("id");
-                const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
+                const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
                     headers: {Authorization: `Bearer ${token}`},
                 });
                 if(response){
@@ -70,7 +66,7 @@ export default function Home() {
     <div className={styles.app}>
       <Navbar isLoggedIn={isLoggedIn} userImage={user?.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740"} onLogout={handleLogout} />
       <main className={styles.main}>
-        <Hero />
+        <Hero isLoggedIn={isLoggedIn} />
         <Features />
         <Statistics />
         <HowItWorks />

@@ -12,40 +12,74 @@ import Navbar from "../components/Navbar/Dashboard-Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
 
+interface User {
+  profile_pic?: string;
+  name?: string;
+  email?: string;
+}
+
+interface DashboardStats {
+  upcomingAppointments: number;
+  pastConsultations: number;
+  activeAppointments: number;
+  healthScore: number;
+}
+
+interface RecentActivity {
+  icon: JSX.Element;
+  title: string;
+  time: string;
+  type: string;
+}
+
 export default function DashboardContent() {
-
   const router = useRouter();
-
-  interface User {
-    profile_pic?: string;
-    name?: string;
-  }
-  /*
-   This is a Login function
- */
-
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [stats, setStats] = useState<DashboardStats>({
+    upcomingAppointments: 0,
+    pastConsultations: 0,
+    activeAppointments: 0,
+    healthScore: 0
+  });
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
+      console.log("Token from localStorage:", token ? "exists" : "missing");
+      
       if (!token) {
+        console.log("No token found, redirecting to auth");
         router.push("/auth");
         return;
       }
+      
       try {
-        const userId = localStorage.getItem("id");
-        const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
-          headers: {Authorization: `Bearer ${token}`},
+        console.log("Attempting to fetch user data...");
+        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        console.log("User data fetched successfully:", response.data);
         setUser(response.data);
-      } catch (err) {
+        
+        // Fetch dashboard stats after user data is loaded
+        await fetchDashboardStats(token);
+        await fetchRecentActivity(token);
+        
+      } catch (err: any) {
         console.error("Failed to fetch user data:", err);
-        setError("Failed to fetch user data.");
-        // localStorage.removeItem("token");
-        // router.push("/auth");
+        console.log("Error response:", err.response);
+        
+        if (err.response && err.response.status === 401) {
+          console.log("Token is invalid/expired, clearing localStorage and redirecting");
+          localStorage.removeItem("token");
+          localStorage.removeItem("id");
+          router.push("/auth");
+        } else {
+          setError("Failed to fetch user data. Please try refreshing the page.");
+        }
       } finally {
         setLoading(false);
       }
@@ -53,6 +87,116 @@ export default function DashboardContent() {
 
     fetchUserData();
   }, [router]);
+
+  const fetchDashboardStats = async (token: string) => {
+    try {
+      // Fetch appointments
+      const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const appointments = appointmentsResponse.data;
+      const now = new Date();
+      
+      // Calculate upcoming and past appointments
+      const upcomingAppointments = appointments.filter((apt: any) => 
+        new Date(apt.date) > now && apt.status === 'Approved'
+      ).length;
+      
+      const pastConsultations = appointments.filter((apt: any) => 
+        new Date(apt.date) < now && (apt.status === 'Completed' || apt.status === 'Approved')
+      ).length;
+
+      // Fetch reminders for active appointments count
+      const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const activeAppointments = appointments.filter((apt: any) => 
+        apt.status === 'Approved' && new Date(apt.date) > now
+      ).length;
+
+      // Calculate health score based on completed activities
+      const completedReminders = remindersResponse.data.filter((reminder: any) => reminder.completed).length;
+      const totalReminders = remindersResponse.data.length;
+      const healthScore = totalReminders > 0 ? Math.round((completedReminders / totalReminders) * 100) : 0;
+
+      setStats({
+        upcomingAppointments,
+        pastConsultations,
+        activeAppointments,
+        healthScore
+      });    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+    }
+  };
+
+  const fetchRecentActivity = async (token: string) => {
+    try {
+      const activities: RecentActivity[] = [];
+
+      // Fetch recent appointments
+      const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const recentAppointments = appointmentsResponse.data
+        .slice(0, 2)
+        .map((apt: any) => ({
+          icon: <Calendar size={20} />,
+          title: `Appointment ${apt.status.toLowerCase()} with Dr. ${apt.doctors_id?.name || 'Unknown'}`,
+          time: getRelativeTime(apt.createdAt),
+          type: 'appointment'
+        }));
+
+      // Fetch recent reminders
+      const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const recentReminders = remindersResponse.data
+        .slice(0, 2)
+        .map((reminder: any) => ({
+          icon: reminder.type === 'medication' ? <Stethoscope size={20} /> : <Clock size={20} />,
+          title: reminder.title,
+          time: getRelativeTime(reminder.createdAt),
+          type: 'reminder'
+        }));
+
+      // Add chatbot activity
+      activities.push({
+        icon: <MessageSquare size={20} />,
+        title: "Chat session with AI Health Assistant",
+        time: "Today",
+        type: 'chat'
+      });
+
+      setRecentActivity([...recentAppointments, ...recentReminders, ...activities].slice(0, 4));
+
+    } catch (error) {
+      console.error("Error fetching recent activity:", error);
+      // Set default activity if API fails
+      setRecentActivity([
+        {
+          icon: <MessageSquare size={20} />,
+          title: "Welcome to SymptoSeek!",
+          time: "Now",
+          type: 'welcome'
+        }
+      ]);
+    }
+  };
+
+  const getRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    if (diffInHours < 48) return "Yesterday";
+    return `${Math.floor(diffInHours / 24)} days ago`;
+  };
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
@@ -62,39 +206,15 @@ export default function DashboardContent() {
     }
   };
 
-
   const particlesInit = useCallback(async (engine: Engine) => {
     await loadSlim(engine)
   }, [])
 
-  const stats = [
-    { value: "0", label: "Upcoming Appointments", link: "/reminders"},
-    { value: "0", label: "Past Consultations" },
-    { value: "0", label: "Active Plans", link: "/plans" },
-    { value: "0%", label: "Health Score" },
-  ]
-
-  const recentActivity = [
-    {
-      icon: <Calendar size={20} />,
-      title: "Appointment scheduled with Dr. Sarah Johnson",
-      time: "2 hours ago",
-    },
-    {
-      icon: <MessageSquare size={20} />,
-      title: "Chat session with AI Health Assistant",
-      time: "Yesterday",
-    },
-    {
-      icon: <Stethoscope size={20} />,
-      title: "Health check-up completed",
-      time: "3 days ago",
-    },
-    {
-      icon: <User size={20} />,
-      title: "Profile information updated",
-      time: "1 week ago",
-    },
+  const dashboardStats = [
+    { value: stats.upcomingAppointments.toString(), label: "Upcoming Appointments", link: "/appointments"},
+    { value: stats.pastConsultations.toString(), label: "Past Consultations" },
+    { value: stats.activeAppointments.toString(), label: "Active Appointments", link: "/appointments" },
+    { value: `${stats.healthScore}%`, label: "Health Score" },
   ]
 
   if (loading) return <p className={styles.loading}></p>;
@@ -181,7 +301,7 @@ export default function DashboardContent() {
           </section>
 
           <div className={styles.statsGrid}>
-            {stats.map((stat, index) => (
+            {dashboardStats.map((stat, index) => (
                 <Link
                     key={index}
                     href={stat.link || "#"}

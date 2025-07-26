@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 import {
   Stethoscope,
   BarChart3,
@@ -21,181 +22,274 @@ import {
   Filter,
   LogOut,
   Clock,
-  Building
+  Building,
+  User
 } from "lucide-react"
 import styles from "./doctors.module.css"
 
 interface Doctor {
-  id: string
+  _id: string
+  image_source: string
   name: string
-  specialty: string
-  experience: string
-  rating: number
-  availability: string
-  hospital: string
-  location: string
-  email: string
-  phone: string
-  status: string
-  image: string
-  education: string[]
-  specializations: string[]
-  languages: string[]
+  speciality: string
+  address: string
+  number: string
+  visiting_hours: string
+  degree: string
+  hospital_name: string
+  About: string
+  longitude?: string
+  latitude?: string
 }
 
 interface DoctorFormData {
-  name: string;
-  specialty: string;
-  experience: string;
-  rating: number;
-  availability: string;
-  hospital: string;
-  location: string;
-  email: string;
-  phone: string;
-  status: string;
-  image: string;
-  education: string[];
-  specializations: string[];
-  languages: string[];
+  image_source: string
+  name: string
+  speciality: string
+  address: string
+  number: string
+  visiting_hours: string
+  degree: string
+  hospital_name: string
+  About: string
+  longitude?: string
+  latitude?: string
 }
-
-const doctors: Doctor[] = [
-  {
-    id: '1',
-    name: 'Dr. John Smith',
-    specialty: 'Cardiologist',
-    experience: '15 years',
-    rating: 4.8,
-    availability: 'Mon-Fri',
-    hospital: 'Heart Care Center',
-    location: 'New York',
-    email: 'john.smith@example.com',
-    phone: '123-456-7890',
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop',
-    education: ['MD from Harvard Medical School', 'Cardiology Fellowship at Mayo Clinic'],
-    specializations: ['Interventional Cardiology', 'Heart Failure Management', 'Preventive Cardiology'],
-    languages: ['English', 'Spanish']
-  },
-  {
-    id: '2',
-    name: 'Dr. Sarah Wilson',
-    specialty: 'Pediatrician',
-    experience: '12 years',
-    rating: 4.9,
-    availability: 'Mon-Thu',
-    hospital: 'Children\'s Medical Center',
-    location: 'Los Angeles',
-    email: 'sarah.wilson@example.com',
-    phone: '987-654-3210',
-    status: 'active',
-    image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop',
-    education: ['MD from UCLA', 'Pediatrics Residency at Boston Children\'s Hospital'],
-    specializations: ['General Pediatrics', 'Developmental Pediatrics', 'Adolescent Medicine'],
-    languages: ['English', 'Spanish']
-  },
-  {
-    id: '3',
-    name: 'Dr. Michael Chen',
-    specialty: 'Neurologist',
-    experience: '10 years',
-    rating: 4.7,
-    availability: 'Mon-Sat',
-    hospital: 'Brain & Spine Institute',
-    location: 'Chicago',
-    email: 'michael.chen@example.com',
-    phone: '555-123-4567',
-    status: 'inactive',
-    image: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=400&fit=crop',
-    education: ['MD from Stanford University', 'Neurology Residency at Johns Hopkins'],
-    specializations: ['General Neurology', 'Stroke Care', 'Headache Management'],
-    languages: ['English', 'Mandarin']
-  }
-];
 
 export default function DoctorsPage() {
   const router = useRouter()
+  const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [newDoctor, setNewDoctor] = useState<DoctorFormData>({
+    image_source: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400",
     name: "",
-    specialty: "",
-    experience: "",
-    rating: 5.0,
-    availability: "Mon-Fri",
-    hospital: "",
-    location: "",
-    email: "",
-    phone: "",
-    status: "active",
-    image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400",
-    education: [""],
-    specializations: [""],
-    languages: [""]
+    speciality: "",
+    address: "",
+    number: "",
+    visiting_hours: "",
+    degree: "",
+    hospital_name: "",
+    About: "",
+    longitude: "",
+    latitude: ""
   })
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedSpecialty, setSelectedSpecialty] = useState("")
-  const [selectedLocation, setSelectedLocation] = useState("")
-  const [selectedStatus, setSelectedStatus] = useState("")
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalDoctors, setTotalDoctors] = useState(0)
+  const doctorsPerPage = 12
 
-  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)))
-  const statuses = Array.from(new Set(doctors.map(doctor => doctor.status)))
-  const locations = Array.from(new Set(doctors.map(doctor => doctor.location)))
-  const availabilities = Array.from(new Set(doctors.map(doctor => doctor.availability)))
+  // Get available specialties from current doctors
+  const specialties = Array.from(new Set(doctors.map(doctor => doctor.speciality)))
+
+  useEffect(() => {
+    checkAuth()
+    fetchDoctors()
+  }, [])
+
+  const checkAuth = () => {
+    const token = localStorage.getItem("adminToken")
+    if (!token) {
+      router.push("/admin/auth")
+      return
+    }
+  }
+
+  const fetchDoctors = async (page = 1) => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem("adminToken")
+      
+      const response = await axios.get(`http://localhost:5000/api/admin/doctors?page=${page}&limit=${doctorsPerPage}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      console.log('Doctors API response:', response.data)
+      
+      // Handle different response formats
+      if (response.data.doctors) {
+        setDoctors(response.data.doctors)
+        setTotalDoctors(response.data.pagination?.total || response.data.doctors.length)
+      } else if (Array.isArray(response.data)) {
+        setDoctors(response.data)
+        setTotalDoctors(response.data.length)
+      } else {
+        setDoctors([])
+        setTotalDoctors(0)
+      }
+      
+      setCurrentPage(page)
+      setError("")
+    } catch (err: any) {
+      console.error('Error fetching doctors:', err)
+      setError(err.response?.data?.message || 'Failed to fetch doctors')
+      if (err.response?.status === 401) {
+        localStorage.removeItem("adminToken")
+        router.push("/admin/auth")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken")
     router.push("/admin/auth")
   }
 
-  const handleAddDoctor = (e: React.FormEvent) => {
+  const handleAddDoctor = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically make an API call to add the doctor
-    console.log('New doctor data:', newDoctor)
-    setIsAddModalOpen(false)
+    try {
+      const token = localStorage.getItem("adminToken")
+      
+      const response = await axios.post('http://localhost:5000/api/admin/doctors', newDoctor, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      setIsAddModalOpen(false)
+      
+      // Reset form
+      setNewDoctor({
+        image_source: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400",
+        name: "",
+        speciality: "",
+        address: "",
+        number: "",
+        visiting_hours: "",
+        degree: "",
+        hospital_name: "",
+        About: "",
+        longitude: "",
+        latitude: ""
+      })
+      
+      // Refresh the current page to show the new doctor
+      fetchDoctors(currentPage)
+      setError("")
+    } catch (err: any) {
+      console.error('Error adding doctor:', err)
+      setError(err.response?.data?.message || 'Failed to add doctor')
+    }
   }
 
-  const handleSaveDoctor = (e: React.FormEvent) => {
+  const handleEditDoctor = (doctor: Doctor) => {
+    setEditingDoctor(doctor)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveDoctor = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingDoctor) return
 
-    // Here you would typically make an API call to update the doctor
-    console.log('Updated doctor data:', editingDoctor)
-    setIsEditModalOpen(false)
+    try {
+      const token = localStorage.getItem("adminToken")
+      
+      const response = await axios.patch(`http://localhost:5000/api/admin/doctors/${editingDoctor._id}`, editingDoctor, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      setIsEditModalOpen(false)
+      setEditingDoctor(null)
+      
+      // Refresh the current page
+      fetchDoctors(currentPage)
+      setError("")
+    } catch (err: any) {
+      console.error('Error updating doctor:', err)
+      setError(err.response?.data?.message || 'Failed to update doctor')
+    }
   }
 
-  const handleArrayInputChange = (
-      field: keyof Pick<DoctorFormData, 'education' | 'specializations' | 'languages'>,
-      value: string,
-      index: number
-  ) => {
-    setNewDoctor(prev => {
-      const newArray = [...prev[field]]
-      newArray[index] = value
-      return { ...prev, [field]: newArray }
-    })
+  const handleDeleteDoctor = async (doctorId: string) => {
+    if (!confirm('Are you sure you want to delete this doctor?')) return
+
+    try {
+      const token = localStorage.getItem("adminToken")
+      
+      await axios.delete(`http://localhost:5000/api/admin/doctors/${doctorId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      
+      // Refresh the current page
+      fetchDoctors(currentPage)
+      setError("")
+    } catch (err: any) {
+      console.error('Error deleting doctor:', err)
+      setError(err.response?.data?.message || 'Failed to delete doctor')
+    }
   }
 
-  const addArrayField = (field: keyof Pick<DoctorFormData, 'education' | 'specializations' | 'languages'>) => {
-    setNewDoctor(prev => ({
-      ...prev,
-      [field]: [...prev[field], ""]
-    }))
+  const handleViewDetails = (doctor: Doctor) => {
+    setSelectedDoctor(doctor)
+    setIsDetailModalOpen(true)
   }
 
-  const removeArrayField = (
-      field: keyof Pick<DoctorFormData, 'education' | 'specializations' | 'languages'>,
-      index: number
-  ) => {
-    setNewDoctor(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }))
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= Math.ceil(totalDoctors / doctorsPerPage)) {
+      fetchDoctors(page)
+    }
   }
+
+  // Filter doctors based on search and specialty
+  const filteredDoctors = doctors.filter(doctor => {
+    const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doctor.speciality.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doctor.hospital_name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSpecialty = !selectedSpecialty || doctor.speciality === selectedSpecialty
+    
+    return matchesSearch && matchesSpecialty
+  })
+
+  const totalPages = Math.ceil(totalDoctors / doctorsPerPage)
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisiblePages = 5
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages is less than or equal to max visible
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      // Calculate start and end of visible pages
+      let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+      let end = Math.min(totalPages, start + maxVisiblePages - 1)
+      
+      // Adjust start if we're near the end
+      if (end - start < maxVisiblePages - 1) {
+        start = Math.max(1, end - maxVisiblePages + 1)
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
+    }
+    
+    return pages
+  }
+
+  const pageNumbers = getPageNumbers()
 
   return (
       <div className={styles.container}>
@@ -220,6 +314,10 @@ export default function DoctorsPage() {
             <Link href="/admin/doctors" className={`${styles.sidebarLink} ${styles.active}`}>
               <Stethoscope size={20} />
               Doctors
+            </Link>
+            <Link href="/admin/users" className={styles.sidebarLink}>
+              <User size={20} />
+              Users
             </Link>
             <Link href="/admin/appointments" className={styles.sidebarLink}>
               <Calendar size={20} />
@@ -250,6 +348,12 @@ export default function DoctorsPage() {
             </button>
           </div>
 
+          {error && (
+            <div className={styles.errorMessage}>
+              {error}
+            </div>
+          )}
+
           <div className={styles.filters}>
             <div className={styles.searchBar}>
               <Search size={20} />
@@ -272,77 +376,265 @@ export default function DoctorsPage() {
                     <option key={specialty} value={specialty}>{specialty}</option>
                 ))}
               </select>
+            </div>
 
-              <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-              >
-                <option value="">All Statuses</option>
-                {statuses.map(status => (
-                    <option key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </option>
-                ))}
-              </select>
+            <div className={styles.resultsInfo}>
+              <span>Showing {doctors.length} of {totalDoctors} doctors</span>
             </div>
           </div>
 
-          <div className={styles.doctorsGrid}>
-            {doctors.map((doctor) => (
-                <div key={doctor.id} className={styles.doctorCard}>
-                  <div className={styles.cardHeader}>
-                    <div className={styles.doctorProfile}>
-                      <img src={doctor.image} alt={doctor.name} className={styles.doctorImage} />
-                      <div className={styles.doctorInfo}>
-                        <h3 className={styles.doctorName}>{doctor.name}</h3>
-                        <p className={styles.doctorSpecialty}>{doctor.specialty}</p>
+          {loading ? (
+            <div className={styles.loading}>
+              <div className={styles.spinner}></div>
+              <p>Loading doctors...</p>
+            </div>
+          ) : (
+            <>
+              <div className={styles.doctorsGrid}>
+                {filteredDoctors.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <Stethoscope size={48} />
+                    <h3>No doctors found</h3>
+                    <p>Try adjusting your search criteria or add a new doctor.</p>
+                  </div>
+                ) : (
+                  filteredDoctors.map((doctor) => (
+                    <div key={doctor._id} className={styles.doctorCard}>
+                      <div className={styles.cardHeader}>
+                        <div className={styles.doctorProfile}>
+                          <img 
+                            src={doctor.image_source || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400"} 
+                            alt={doctor.name} 
+                            className={styles.doctorImage}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400";
+                            }}
+                          />
+                          <div className={styles.doctorInfo}>
+                            <h3 
+                              className={styles.doctorName}
+                              onClick={() => handleViewDetails(doctor)}
+                              title="Click to view details"
+                            >
+                              {doctor.name}
+                            </h3>
+                            <p className={styles.doctorSpecialty}>{doctor.speciality}</p>
+                          </div>
+                        </div>
+                        <div className={styles.headerActions}>
+                          <button
+                              className={styles.actionButton}
+                              onClick={() => handleEditDoctor(doctor)}
+                              title="Edit doctor"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                              className={styles.actionButton}
+                              onClick={() => handleDeleteDoctor(doctor._id)}
+                              title="Delete doctor"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.details}>
+                        <div className={styles.detail}>
+                          <MapPin size={16} />
+                          <span>{doctor.address}</span>
+                        </div>
+                        <div className={styles.detail}>
+                          <Clock size={16} />
+                          <span>{doctor.visiting_hours}</span>
+                        </div>
+                        <div className={styles.detail}>
+                          <Building size={16} />
+                          <span>{doctor.hospital_name}</span>
+                        </div>
+                        <div className={styles.detail}>
+                          <Phone size={16} />
+                          <span>{doctor.number}</span>
+                        </div>
+                        <div className={styles.detail}>
+                          <span className={styles.degreeLabel}>Degree:</span>
+                          <span>{doctor.degree}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className={styles.headerActions}>
+                  ))
+                )}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className={styles.pagination}>
+                  {/* First button - only show if current page > 3 */}
+                  {/* {currentPage > 3 && (
+                    <button 
+                      className={styles.pageButton}
+                      onClick={() => handlePageChange(1)}
+                    >
+                      First
+                    </button>
+                  )} */}
+
+                  <button 
+                    className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Prev
+                  </button>
+
+                  <div className={styles.pageNumbers}>
+                    {/* Show page 1 if not in visible range */}
+                    {pageNumbers[0] > 1 && (
+                      <>
+                        <button
+                          className={styles.pageNumber}
+                          onClick={() => handlePageChange(1)}
+                        >
+                          1
+                        </button>
+                        {pageNumbers[0] > 2 && (
+                          <span className={styles.dots}>...</span>
+                        )}
+                      </>
+                    )}
+
+                    {pageNumbers.map(page => (
                       <button
-                          className={styles.actionButton}
-                          onClick={() => {
-                            setEditingDoctor(doctor)
-                            setIsEditModalOpen(true)
-                          }}
+                        key={page}
+                        className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
+                        onClick={() => handlePageChange(page)}
                       >
-                        <Edit size={16} />
+                        {page}
                       </button>
-                      <button className={styles.actionButton}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    ))}
+                    
+                    {/* Show dots and last page if not in visible range */}
+                    {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                      <>
+                        {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                          <span className={styles.dots}>...</span>
+                        )}
+                        <button
+                          className={styles.pageNumber}
+                          onClick={() => handlePageChange(totalPages)}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
                   </div>
 
-                  <div className={styles.details}>
-                    <div className={styles.detail}>
-                      <MapPin size={16} />
-                      {doctor.location}
-                    </div>
-                    <div className={styles.detail}>
-                      <Clock size={16} />
-                      {doctor.experience} experience
-                    </div>
-                    <div className={styles.detail}>
-                      <Building size={16} />
-                      {doctor.hospital}
-                    </div>
-                    <div className={styles.detail}>
-                      <Mail size={16} />
-                      {doctor.email}
-                    </div>
-                    <div className={styles.detail}>
-                      <Phone size={16} />
-                      {doctor.phone}
-                    </div>
-                  </div>
-                  <div className={`${styles.status} ${styles[doctor.status]}`}>
-                    {doctor.status.charAt(0).toUpperCase() + doctor.status.slice(1)}
+                  <button 
+                    className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+
+                  {/* Last button - only show if current page is more than 3 pages from end */}
+                  {/* {currentPage < totalPages - 2 && (
+                    <button 
+                      className={styles.pageButton}
+                      onClick={() => handlePageChange(totalPages)}
+                    >
+                      Last
+                    </button>
+                  )} */}
+                </div>
+              )}
+            </>
+          )}
+        </main>
+
+        {/* Doctor Detail Modal */}
+        {isDetailModalOpen && selectedDoctor && (
+          <div className={styles.modalOverlay} onClick={() => setIsDetailModalOpen(false)}>
+            <div className={styles.detailModal} onClick={e => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h2>Doctor Details</h2>
+                <button
+                    className={styles.closeButton}
+                    onClick={() => setIsDetailModalOpen(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className={styles.detailContent}>
+                <div className={styles.doctorProfileSection}>
+                  <img 
+                    src={selectedDoctor.image_source || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400"} 
+                    alt={selectedDoctor.name} 
+                    className={styles.detailDoctorImage}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400";
+                    }}
+                  />
+                  <div className={styles.doctorMainInfo}>
+                    <h3>{selectedDoctor.name}</h3>
+                    <p className={styles.specialty}>{selectedDoctor.speciality}</p>
+                    <p className={styles.degree}>{selectedDoctor.degree}</p>
                   </div>
                 </div>
-            ))}
+
+                <div className={styles.detailGrid}>
+                  <div className={styles.detailItem}>
+                    <Building size={18} />
+                    <div>
+                      <strong>Hospital</strong>
+                      <p>{selectedDoctor.hospital_name}</p>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.detailItem}>
+                    <MapPin size={18} />
+                    <div>
+                      <strong>Address</strong>
+                      <p>{selectedDoctor.address}</p>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.detailItem}>
+                    <Phone size={18} />
+                    <div>
+                      <strong>Phone</strong>
+                      <p>{selectedDoctor.number}</p>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.detailItem}>
+                    <Clock size={18} />
+                    <div>
+                      <strong>Visiting Hours</strong>
+                      <p>{selectedDoctor.visiting_hours}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.aboutSection}>
+                  <h4>About Doctor</h4>
+                  <p>{selectedDoctor.About}</p>
+                </div>
+
+                {(selectedDoctor.longitude && selectedDoctor.latitude) && (
+                  <div className={styles.locationSection}>
+                    <h4>Location Coordinates</h4>
+                    <p>Longitude: {selectedDoctor.longitude}</p>
+                    <p>Latitude: {selectedDoctor.latitude}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </main>
+        )}
 
         {isEditModalOpen && editingDoctor && (
             <div className={styles.modalOverlay} onClick={() => setIsEditModalOpen(false)}>
@@ -364,133 +656,123 @@ export default function DoctorsPage() {
                       <input
                           id="name"
                           type="text"
-                          defaultValue={editingDoctor.name}
+                          value={editingDoctor.name}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, name: e.target.value } : null)}
                           required
                       />
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="specialty">Specialty</label>
+                      <label htmlFor="speciality">Specialty</label>
                       <input
-                          id="specialty"
+                          id="speciality"
                           type="text"
-                          defaultValue={editingDoctor.specialty}
+                          value={editingDoctor.speciality}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, speciality: e.target.value } : null)}
                           required
                       />
                     </div>
+
                     <div className={styles.formGroup}>
-                      <label htmlFor="experience">Experience</label>
+                      <label htmlFor="degree">Degree</label>
                       <input
-                          id="experience"
+                          id="degree"
                           type="text"
-                          defaultValue={editingDoctor.experience}
+                          value={editingDoctor.degree}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, degree: e.target.value } : null)}
                           required
                       />
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="rating">Rating</label>
+                      <label htmlFor="hospital_name">Hospital Name</label>
                       <input
-                          id="rating"
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="5"
-                          defaultValue={editingDoctor.rating}
-                          required
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label htmlFor="availability">Availability</label>
-                      <input
-                          id="availability"
+                          id="hospital_name"
                           type="text"
-                          defaultValue={editingDoctor.availability}
+                          value={editingDoctor.hospital_name}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, hospital_name: e.target.value } : null)}
                           required
                       />
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="hospital">Hospital</label>
+                      <label htmlFor="address">Address</label>
                       <input
-                          id="hospital"
+                          id="address"
                           type="text"
-                          defaultValue={editingDoctor.hospital}
+                          value={editingDoctor.address}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, address: e.target.value } : null)}
                           required
                       />
                     </div>
 
-                    <div className={styles.formGroup}>
-                      <label htmlFor="location">Location</label>
-                      <input
-                          id="location"
-                          type="text"
-                          defaultValue={editingDoctor.location}
-                          required
-                      />
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="number">Phone Number</label>
+                        <input
+                            id="number"
+                            type="tel"
+                            value={editingDoctor.number}
+                            onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, number: e.target.value } : null)}
+                            required
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label htmlFor="visiting_hours">Visiting Hours</label>
+                        <input
+                            id="visiting_hours"
+                            type="text"
+                            value={editingDoctor.visiting_hours}
+                            onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, visiting_hours: e.target.value } : null)}
+                            required
+                        />
+                      </div>
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="email">Email</label>
-                      <input
-                          id="email"
-                          type="email"
-                          defaultValue={editingDoctor.email}
-                          required
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label htmlFor="phone">Phone</label>
-                      <input
-                          id="phone"
-                          type="tel"
-                          defaultValue={editingDoctor.phone}
-                          required
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label htmlFor="status">Status</label>
-                      <select
-                          id="status"
-                          defaultValue={editingDoctor.status}
-                          required
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label htmlFor="education">Education (one per line)</label>
+                      <label htmlFor="About">About Doctor</label>
                       <textarea
-                          id="education"
+                          id="About"
+                          value={editingDoctor.About}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, About: e.target.value } : null)}
+                          rows={4}
                           className={styles.textarea}
-                          defaultValue={editingDoctor.education.join('\n')}
                           required
                       />
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="specializations">Specializations (one per line)</label>
-                      <textarea
-                          id="specializations"
-                          className={styles.textarea}
-                          defaultValue={editingDoctor.specializations.join('\n')}
+                      <label htmlFor="image_source">Profile Image URL</label>
+                      <input
+                          id="image_source"
+                          type="url"
+                          value={editingDoctor.image_source}
+                          onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, image_source: e.target.value } : null)}
                           required
                       />
                     </div>
 
-                    <div className={styles.formGroup}>
-                      <label htmlFor="languages">Languages (one per line)</label>
-                      <textarea
-                          id="languages"
-                          className={styles.textarea}
-                          defaultValue={editingDoctor.languages.join('\n')}
-                          required
-                      />
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="longitude">Longitude (Optional)</label>
+                        <input
+                            id="longitude"
+                            type="text"
+                            value={editingDoctor.longitude || ""}
+                            onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, longitude: e.target.value } : null)}
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label htmlFor="latitude">Latitude (Optional)</label>
+                        <input
+                            id="latitude"
+                            type="text"
+                            value={editingDoctor.latitude || ""}
+                            onChange={(e) => setEditingDoctor(prev => prev ? { ...prev, latitude: e.target.value } : null)}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -539,209 +821,121 @@ export default function DoctorsPage() {
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="specialty">Specialty</label>
+                      <label htmlFor="speciality">Specialty</label>
                       <input
-                          id="specialty"
+                          id="speciality"
                           type="text"
-                          value={newDoctor.specialty}
-                          onChange={(e) => setNewDoctor(prev => ({ ...prev, specialty: e.target.value }))}
-                          required
-                      />
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="experience">Experience</label>
-                        <input
-                            id="experience"
-                            type="text"
-                            value={newDoctor.experience}
-                            onChange={(e) => setNewDoctor(prev => ({ ...prev, experience: e.target.value }))}
-                            placeholder="e.g. 10 years"
-                            required
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="rating">Rating</label>
-                        <input
-                            id="rating"
-                            type="number"
-                            min="0"
-                            max="5"
-                            step="0.1"
-                            value={newDoctor.rating}
-                            onChange={(e) => setNewDoctor(prev => ({ ...prev, rating: parseFloat(e.target.value) }))}
-                            required
-                        />
-                      </div>
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="availability">Availability</label>
-                        <input
-                            id="availability"
-                            type="text"
-                            value={newDoctor.availability}
-                            onChange={(e) => setNewDoctor(prev => ({ ...prev, availability: e.target.value }))}
-                            required
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="status">Status</label>
-                        <select
-                            id="status"
-                            value={newDoctor.status}
-                            onChange={(e) => setNewDoctor(prev => ({ ...prev, status: e.target.value }))}
-                            required
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label htmlFor="hospital">Hospital</label>
-                      <input
-                          id="hospital"
-                          type="text"
-                          value={newDoctor.hospital}
-                          onChange={(e) => setNewDoctor(prev => ({ ...prev, hospital: e.target.value }))}
+                          value={newDoctor.speciality}
+                          onChange={(e) => setNewDoctor(prev => ({ ...prev, speciality: e.target.value }))}
                           required
                       />
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="location">Location</label>
+                      <label htmlFor="degree">Degree</label>
                       <input
-                          id="location"
+                          id="degree"
                           type="text"
-                          value={newDoctor.location}
-                          onChange={(e) => setNewDoctor(prev => ({ ...prev, location: e.target.value }))}
+                          value={newDoctor.degree}
+                          onChange={(e) => setNewDoctor(prev => ({ ...prev, degree: e.target.value }))}
+                          placeholder="e.g. MBBS, MD"
+                          required
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="hospital_name">Hospital Name</label>
+                      <input
+                          id="hospital_name"
+                          type="text"
+                          value={newDoctor.hospital_name}
+                          onChange={(e) => setNewDoctor(prev => ({ ...prev, hospital_name: e.target.value }))}
+                          required
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label htmlFor="address">Address</label>
+                      <input
+                          id="address"
+                          type="text"
+                          value={newDoctor.address}
+                          onChange={(e) => setNewDoctor(prev => ({ ...prev, address: e.target.value }))}
                           required
                       />
                     </div>
 
                     <div className={styles.formRow}>
                       <div className={styles.formGroup}>
-                        <label htmlFor="email">Email</label>
+                        <label htmlFor="number">Phone Number</label>
                         <input
-                            id="email"
-                            type="email"
-                            value={newDoctor.email}
-                            onChange={(e) => setNewDoctor(prev => ({ ...prev, email: e.target.value }))}
-                            required
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label htmlFor="phone">Phone</label>
-                        <input
-                            id="phone"
+                            id="number"
                             type="tel"
-                            value={newDoctor.phone}
-                            onChange={(e) => setNewDoctor(prev => ({ ...prev, phone: e.target.value }))}
+                            value={newDoctor.number}
+                            onChange={(e) => setNewDoctor(prev => ({ ...prev, number: e.target.value }))}
+                            required
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label htmlFor="visiting_hours">Visiting Hours</label>
+                        <input
+                            id="visiting_hours"
+                            type="text"
+                            value={newDoctor.visiting_hours}
+                            onChange={(e) => setNewDoctor(prev => ({ ...prev, visiting_hours: e.target.value }))}
+                            placeholder="e.g. 9:00 AM - 5:00 PM"
                             required
                         />
                       </div>
                     </div>
 
                     <div className={styles.formGroup}>
-                      <label htmlFor="image">Profile Image URL</label>
-                      <input
-                          id="image"
-                          type="url"
-                          value={newDoctor.image}
-                          onChange={(e) => setNewDoctor(prev => ({ ...prev, image: e.target.value }))}
+                      <label htmlFor="About">About Doctor</label>
+                      <textarea
+                          id="About"
+                          value={newDoctor.About}
+                          onChange={(e) => setNewDoctor(prev => ({ ...prev, About: e.target.value }))}
+                          placeholder="Brief description about the doctor..."
+                          rows={4}
+                          className={styles.textarea}
                           required
                       />
                     </div>
 
-                    <div className={styles.formSection}>
-                      <label>Education</label>
-                      {newDoctor.education.map((edu, index) => (
-                          <div key={index} className={styles.arrayField}>
-                            <input
-                                type="text"
-                                value={edu}
-                                onChange={(e) => handleArrayInputChange('education', e.target.value, index)}
-                                placeholder="e.g. MD from Harvard Medical School"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => removeArrayField('education', index)}
-                                className={styles.removeButton}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                      ))}
-                      <button
-                          type="button"
-                          onClick={() => addArrayField('education')}
-                          className={styles.addFieldButton}
-                      >
-                        <Plus size={16} /> Add Education
-                      </button>
+                    <div className={styles.formGroup}>
+                      <label htmlFor="image_source">Profile Image URL</label>
+                      <input
+                          id="image_source"
+                          type="url"
+                          value={newDoctor.image_source}
+                          onChange={(e) => setNewDoctor(prev => ({ ...prev, image_source: e.target.value }))}
+                          required
+                      />
                     </div>
 
-                    <div className={styles.formSection}>
-                      <label>Specializations</label>
-                      {newDoctor.specializations.map((spec, index) => (
-                          <div key={index} className={styles.arrayField}>
-                            <input
-                                type="text"
-                                value={spec}
-                                onChange={(e) => handleArrayInputChange('specializations', e.target.value, index)}
-                                placeholder="e.g. Cardiology"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => removeArrayField('specializations', index)}
-                                className={styles.removeButton}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                      ))}
-                      <button
-                          type="button"
-                          onClick={() => addArrayField('specializations')}
-                          className={styles.addFieldButton}
-                      >
-                        <Plus size={16} /> Add Specialization
-                      </button>
-                    </div>
+                    <div className={styles.formRow}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="longitude">Longitude (Optional)</label>
+                        <input
+                            id="longitude"
+                            type="text"
+                            value={newDoctor.longitude || ""}
+                            onChange={(e) => setNewDoctor(prev => ({ ...prev, longitude: e.target.value }))}
+                            placeholder="e.g. 90.4125"
+                        />
+                      </div>
 
-                    <div className={styles.formSection}>
-                      <label>Languages</label>
-                      {newDoctor.languages.map((lang, index) => (
-                          <div key={index} className={styles.arrayField}>
-                            <input
-                                type="text"
-                                value={lang}
-                                onChange={(e) => handleArrayInputChange('languages', e.target.value, index)}
-                                placeholder="e.g. English"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => removeArrayField('languages', index)}
-                                className={styles.removeButton}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                      ))}
-                      <button
-                          type="button"
-                          onClick={() => addArrayField('languages')}
-                          className={styles.addFieldButton}
-                      >
-                        <Plus size={16} /> Add Language
-                      </button>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="latitude">Latitude (Optional)</label>
+                        <input
+                            id="latitude"
+                            type="text"
+                            value={newDoctor.latitude || ""}
+                            onChange={(e) => setNewDoctor(prev => ({ ...prev, latitude: e.target.value }))}
+                            placeholder="e.g. 23.8103"
+                        />
+                      </div>
                     </div>
                   </div>
 

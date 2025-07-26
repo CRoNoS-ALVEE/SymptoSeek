@@ -72,9 +72,9 @@ export default function SettingsPage() {
             <FileText size={20} />
             Reports
           </Link>
-          <Link href="/plans" className={styles.navItem}>
+          <Link href="/appointments" className={styles.navItem}>
             <Calendar size={20} />
-            Plans
+            Appointments
           </Link>
           <Link href="/reminders" className={styles.navItem}>
             <Bell size={20} />

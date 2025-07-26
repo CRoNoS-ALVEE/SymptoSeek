@@ -490,3 +490,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+.emptyActivity {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.emptyActivity p {
+  margin: 0;
+}

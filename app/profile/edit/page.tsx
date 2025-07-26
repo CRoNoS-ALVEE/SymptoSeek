@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useCallback, useEffect} from "react"
+import { useState, useCallback, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   FileText,
@@ -30,38 +31,65 @@ const tabs = [
 ]
 
 export default function EditProfilePage() {
+  const router = useRouter()
   const [profileImage, setProfileImage] = useState("https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740")
   const [activeTab, setActiveTab] = useState<TabId>("personal")
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        address: "",
-        zipCode: "",
-        city: "",
-        state: "",
-        country: "",
-        bio: "",
-        gender: "",
-        age: "",
-        profilePic: "",
-        blood_group: "",
-        weight: "",
-        height: "",
-        allergies: "",
-        medical_conditions: "",
-        medications: "",
-        surgeries: "",
-        family_medical_history: "",
-        emergency_contact: ""
-})
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    zipCode: "",
+    city: "",
+    state: "",
+    country: "",
+    bio: "",
+    gender: "",
+    age: "",
+    profilePic: "",
+    blood_group: "",
+    weight: "",
+    height: "",
+    allergies: "",
+    medical_conditions: "",
+    medications: "",
+    surgeries: "",
+    family_medical_history: "",
+    emergency_contact: ""
+  })
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  })
+  const [passwordError, setPasswordError] = useState("")
+  const [passwordSuccess, setPasswordSuccess] = useState("")
+
+  // Check authentication first
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        router.push("/auth")
+        return
+      }
+      setIsAuthenticated(true)
+      setAuthLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
 
   // Fetch initial user data
   useEffect(() => {
+    if (!isAuthenticated) return
+
     const fetchProfileData = async () => {
       try {
         const token = localStorage.getItem("token")
@@ -69,9 +97,7 @@ export default function EditProfilePage() {
           throw new Error("No authentication token found")
         }
 
-        const userId = localStorage.getItem("id")
-
-        const response = await fetch(`http://localhost:5000/api/auth/profile/${userId}`, {
+        const response = await fetch(`http://localhost:5000/api/auth/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -117,7 +143,7 @@ export default function EditProfilePage() {
     }
 
     fetchProfileData()
-  }, [])
+  }, [isAuthenticated])
 
   // Handle Image Upload to Cloudinary
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,7 +184,11 @@ export default function EditProfilePage() {
   // Handle form field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
+    if (name in passwordData) {
+      setPasswordData({ ...passwordData, [name]: value })
+    } else {
+      setFormData({ ...formData, [name]: value })
+    }
   }
 
   // Handle form submission
@@ -197,8 +227,7 @@ export default function EditProfilePage() {
         family_medical_history: formData.family_medical_history
       }
 
-      const userId = localStorage.getItem("id")
-      const response = await fetch(`http://localhost:5000/api/auth/profile/edit/${userId}`, {
+      const response = await fetch(`http://localhost:5000/api/auth/profile/edit`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -214,7 +243,9 @@ export default function EditProfilePage() {
 
       const updatedUser = await response.json()
       console.log("Profile updated successfully:", updatedUser)
-      alert("Profile updated successfully!")
+
+      // Redirect to profile page with success message
+      router.push("/profile?updated=true")
     } catch (error: any) {
       console.error("Error updating profile:", error)
       setError(error.message || "Failed to update profile")
@@ -223,9 +254,132 @@ export default function EditProfilePage() {
     }
   }
 
+  // Handle password change
+  const handlePasswordChange = async () => {
+    setPasswordError("")
+    setPasswordSuccess("")
+
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError("Please fill in all password fields.")
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("New passwords do not match.")
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters long.")
+      return
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      setPasswordError("New password must be different from current password.")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
+
+      const response = await fetch(`http://localhost:5000/api/auth/change-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      })
+
+      const responseText = await response.text()
+
+      if (!response.ok) {
+        let errorMessage = "Failed to change password"
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.message || errorMessage
+        } catch (parseError) {
+          // If response is HTML (like error page), extract meaningful message
+          if (responseText.includes("<!DOCTYPE")) {
+            errorMessage = "Server error occurred. Please try again later."
+          } else {
+            errorMessage = responseText || errorMessage
+          }
+        }
+        throw new Error(errorMessage)
+      }
+
+      let result
+      try {
+        result = JSON.parse(responseText)
+      } catch (parseError) {
+        // If successful response but not JSON, treat as success
+        result = { message: "Password changed successfully" }
+      }
+
+      console.log("Password changed successfully:", result)
+
+      // Reset password form
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      })
+
+      setPasswordSuccess("Password changed successfully! A confirmation email has been sent.")
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setPasswordSuccess("")
+      }, 5000)
+
+    } catch (error: any) {
+      console.error("Error changing password:", error)
+      setPasswordError(error.message || "Failed to change password")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem("token")
     window.location.href = "/auth"
+  }
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          background: '#f9fafb'
+        }}>
+          <div style={{
+            padding: '2rem',
+            background: 'white',
+            borderRadius: '1rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            Loading...
+          </div>
+        </div>
+    )
+  }
+
+  // Don't render the page if not authenticated
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
@@ -247,9 +401,9 @@ export default function EditProfilePage() {
               <FileText size={20} />
               Reports
             </Link>
-            <Link href="/plans" className={styles.navItem}>
+            <Link href="/appointments" className={styles.navItem}>
               <Calendar size={20} />
-              Plans
+              Appointments
             </Link>
             <Link href="/reminders" className={styles.navItem}>
               <Bell size={20} />
@@ -353,19 +507,6 @@ export default function EditProfilePage() {
                             required
                         />
                       </div>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Email</label>
-                      <input
-                          id="email"
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="Enter email address"
-                          disabled
-                      />
                     </div>
 
                     <div className={styles.formGroup}>
@@ -633,7 +774,68 @@ export default function EditProfilePage() {
             {activeTab === "security" && (
                 <div className={styles.formSection}>
                   <h2>Security Settings</h2>
-                  <p className={styles.comingSoon}>Security settings coming soon...</p>
+
+                  <div className={styles.formGroup}>
+                    <label>Email</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Enter email address"
+                        disabled
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Current Password</label>
+                    <input
+                        type="password"
+                        name="currentPassword"
+                        value={passwordData.currentPassword}
+                        onChange={handleChange}
+                        placeholder="Enter current password"
+                        required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>New Password</label>
+                    <input
+                        type="password"
+                        name="newPassword"
+                        value={passwordData.newPassword}
+                        onChange={handleChange}
+                        placeholder="Enter new password"
+                        minLength={6}
+                        required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label>Confirm New Password</label>
+                    <input
+                        type="password"
+                        name="confirmPassword"
+                        value={passwordData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Confirm new password"
+                        minLength={6}
+                        required
+                    />
+                  </div>
+
+                  {passwordError && (
+                      <div className={styles.errorMessage}>
+                        {passwordError}
+                      </div>
+                  )}
+
+                  {passwordSuccess && (
+                      <div className={styles.successMessage}>
+                        {passwordSuccess}
+                      </div>
+                  )}
                 </div>
             )}
 
@@ -645,23 +847,49 @@ export default function EditProfilePage() {
             )}
 
             <div className={styles.actions}>
-              <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`} passHref>
-                Cancel
-              </Link>
-              <button
-                  type="submit"
-                  className={`${styles.button} ${styles.primaryButton}`}
-                  disabled={isLoading}
-              >
-                {isLoading ? (
-                    "Updating..."
-                ) : (
-                    <>
-                      <Save size={16} />
-                      Update
-                    </>
-                )}
-              </button>
+              {activeTab !== "security" && (
+                  <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`} passHref>
+                    Cancel
+                  </Link>
+              )}
+              {activeTab !== "security" && (
+                  <button
+                      type="submit"
+                      className={`${styles.button} ${styles.primaryButton}`}
+                      disabled={isLoading}
+                  >
+                    {isLoading ? (
+                        "Updating..."
+                    ) : (
+                        <>
+                          <Save size={16} />
+                          Update
+                        </>
+                    )}
+                  </button>
+              )}
+              {activeTab === "security" && (
+                  <Link href="/profile" className={`${styles.button} ${styles.secondaryButton}`} passHref>
+                    Cancel
+                  </Link>
+              )}
+              {activeTab === "security" && (
+                  <button
+                      type="button"
+                      className={`${styles.button} ${styles.primaryButton}`}
+                      onClick={handlePasswordChange}
+                      disabled={isLoading}
+                  >
+                    {isLoading ? (
+                        "Changing..."
+                    ) : (
+                        <>
+                          <Save size={16} />
+                          Change Password
+                        </>
+                    )}
+                  </button>
+              )}
             </div>
           </form>
         </main>

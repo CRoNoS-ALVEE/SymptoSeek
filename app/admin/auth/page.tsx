@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 import { Stethoscope, AlertCircle } from "lucide-react"
 import styles from "./auth.module.css"
 
@@ -18,15 +19,25 @@ export default function AdminAuth() {
     setError("")
 
     try {
-      // In production, replace with actual admin authentication
-      if (email === "admin@example.com" && password === "admin123") {
-        localStorage.setItem("adminToken", "demo-token")
+      const response = await axios.post('http://localhost:5000/api/admin/login', {
+        email,
+        password
+      })
+
+      if (response.data.token) {
+        // Store admin token and info
+        localStorage.setItem("adminToken", response.data.token)
+        localStorage.setItem("adminInfo", JSON.stringify(response.data.admin))
+        
+        // Redirect to admin dashboard
         router.push("/admin/dashboard")
-      } else {
-        setError("Invalid credentials")
       }
-    } catch (err) {
-      setError("An error occurred. Please try again.")
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message)
+      } else {
+        setError("An error occurred. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -55,7 +66,7 @@ export default function AdminAuth() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
+              placeholder="Enter admin email"
               required
             />
           </div>
@@ -67,7 +78,7 @@ export default function AdminAuth() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Enter admin password"
               required
             />
           </div>

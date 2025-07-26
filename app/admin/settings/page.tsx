@@ -18,7 +18,8 @@ import {
   Sun,
   Database,
   Lock,
-  LogOut
+  LogOut,
+  User
 } from "lucide-react"
 import styles from "./settings.module.css"
 
@@ -29,7 +30,7 @@ interface NavItemProps {
   onClick?: () => void;
 }
 
-interface User {
+interface UserProfile {
   profile_pic?: string;
   name?: string;
 }
@@ -43,7 +44,7 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState("en")
   const [timezone, setTimezone] = useState("UTC")
   const [dataRetention, setDataRetention] = useState("30")
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove token from local storage
@@ -74,6 +75,10 @@ export default function SettingsPage() {
           <Link href="/admin/doctors" className={styles.sidebarLink}>
             <Stethoscope size={20} />
             Doctors
+          </Link>
+          <Link href="/admin/users" className={styles.sidebarLink}>
+            <User size={20} />
+            Users
           </Link>
           <Link href="/admin/appointments" className={styles.sidebarLink}>
             <Calendar size={20} />

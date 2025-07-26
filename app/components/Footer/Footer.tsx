@@ -23,8 +23,8 @@ export default function Footer() {
         <div className={styles.section}>
           <h4>Contact Us</h4>
           <ul>
-            <li>Email: support@symptoseek.com</li>
-            <li>Phone: +1 (800) 123-4567</li>
+            <li>Email: symptoseek.aibot@gmail.com</li>
+            <li>Phone: +880 1748 495499</li>
           </ul>
         </div>
 

@@ -162,57 +162,57 @@
   gap: 1.5rem;
 }
 
-.planCard {
+.appointmentCard {
   background: white;
-  border-radius: 1rem;
+  border-radius: 12px;
   padding: 1.5rem;
+  margin-bottom: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-  border-top: 4px solid #9333ea;
+  transition: all 0.3s ease;
 }
 
-.planCard:hover {
-  transform: translateY(-2px);
+.appointmentCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.planCard.completed {
-  border-top-color: #10b981;
+.appointmentCard.completed {
+  opacity: 0.7;
 }
 
-.planCard.cancelled {
-  border-top-color: #ef4444;
+.appointmentCard.cancelled {
+  opacity: 0.5;
 }
 
-.planHeader {
+.appointmentHeader {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1rem;
 }
 
-.planTitle {
-  font-size: 1.125rem;
+.appointmentTitle {
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #111827;
+  margin: 0;
 }
 
-.planStatus {
-  text-transform: capitalize;
-  font-size: 0.875rem;
+.appointmentStatus {
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: #f3e8ff;
-  color: #9333ea;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.planCard.completed .planStatus {
-  background: #d1fae5;
-  color: #10b981;
+.appointmentCard.completed .appointmentStatus {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.planCard.cancelled .planStatus {
-  background: #fee2e2;
-  color: #ef4444;
+.appointmentCard.cancelled .appointmentStatus {
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .modalOverlay {
@@ -391,27 +391,49 @@
   margin-bottom: 1rem;
 }
 
-.planDetails {
+.appointmentDetails {
   display: flex;
-  gap: 1rem;
+  gap: 2rem;
   margin-bottom: 1rem;
 }
 
-.planInfo {
+.appointmentInfo {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   color: #6b7280;
-  font-size: 0.875rem;
 }
 
-.planType {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  background: #f3f4f6;
-  color: #4b5563;
-  border-radius: 9999px;
+.appointmentType {
+  color: #9333ea;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.appointmentActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.cancelButton {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancelButton:hover {
+  background: #dc2626;
+}
+
+.cancelButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
 }
 
 .menuButton {

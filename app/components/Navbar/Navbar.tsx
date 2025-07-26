@@ -2,11 +2,10 @@
 
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Menu, X, Stethoscope, User, Settings, LogOut } from "lucide-react"
 import Image from "next/image"
 import styles from "./Navbar.module.css"
-import router from "next/router";
 
 interface NavbarProps {
   isLoggedIn?: boolean
@@ -16,6 +15,7 @@ interface NavbarProps {
 
 export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -23,13 +23,21 @@ export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps)
 
 
 
-  const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      setUser(null);
-      router.push("/auth");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      
+      if (response.ok) {
+        onLogout()
+        router.push('/auth/login')
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
     }
-  };
+  }
 
   useEffect(() => {
     const handleScroll = () => {

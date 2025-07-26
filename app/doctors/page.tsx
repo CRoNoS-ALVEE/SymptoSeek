@@ -88,8 +88,7 @@ export default function DoctorsPage() {
         return
       }
       try {
-        const userId = localStorage.getItem("id")
-        const response = await axios.get(`http://localhost:5000/api/auth/profile/${userId}`, {
+        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         setUser(response.data)
