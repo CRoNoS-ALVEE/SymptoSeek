@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
-import { Bell, Clock, CheckCircle, X } from "lucide-react"
+import { Bell, Clock, CheckCircle, Calendar, Pill, AlertCircle } from "lucide-react"
 import styles from "./NotificationDropdown.module.css"
 
-interface Notification {
+interface TodayReminder {
   _id: string
   title: string
   description: string
@@ -15,14 +15,28 @@ interface Notification {
   createdAt: string
 }
 
+interface TodayAppointment {
+  _id: string
+  doctors_id: {
+    name: string
+    speciality: string
+    hospital_name: string
+  }
+  date: string
+  appointmentType: string
+  reason: string
+  status: string
+}
+
 interface NotificationDropdownProps {
   className?: string
 }
 
 export default function NotificationDropdown({ className }: NotificationDropdownProps) {
   const [showNotifications, setShowNotifications] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [todayReminders, setTodayReminders] = useState<TodayReminder[]>([])
+  const [todayAppointments, setTodayAppointments] = useState<TodayAppointment[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
   const notificationRef = useRef<HTMLDivElement>(null)
@@ -36,18 +50,35 @@ export default function NotificationDropdown({ className }: NotificationDropdown
   useEffect(() => {
     if (!mounted) return
     
-    fetchNotifications()
-    fetchUnreadCount()
-    
-    // Poll for new notifications every 30 seconds
+    // Fetch data immediately when component mounts
+    fetchTodayItems()
+
+    // Poll for updates every 2 minutes
     const interval = setInterval(() => {
       if (mounted) {
-        fetchUnreadCount()
+        fetchTodayItems()
       }
-    }, 30000)
+    }, 120000)
 
     return () => {
       clearInterval(interval)
+    }
+  }, [mounted])
+
+  // Also fetch when component becomes visible (page focus)
+  useEffect(() => {
+    if (!mounted) return
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && mounted) {
+        fetchTodayItems()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [mounted])
 
@@ -71,91 +102,181 @@ export default function NotificationDropdown({ className }: NotificationDropdown
     }
   }, [showNotifications, mounted])
 
-  const fetchNotifications = async () => {
+  const fetchTodayItems = async () => {
     const token = localStorage.getItem("token")
-    if (!token) return
+    if (!token) {
+      console.log("No token found for notifications")
+      return
+    }
 
     try {
       setLoading(true)
-      const response = await axios.get("http://localhost:5000/api/notifications", {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000 // 10 second timeout
-      })
-      setNotifications(response.data || [])
+      const today = new Date()
+      const todayDateString = today.toISOString().split('T')[0] // Get today's date in YYYY-MM-DD format
+
+      console.log("Fetching today's items for date:", todayDateString)
+
+      let fetchedReminders: TodayReminder[] = []
+      let fetchedAppointments: TodayAppointment[] = []
+
+      // Fetch today's reminders from the correct endpoint
+      try {
+        console.log("Fetching reminders from: http://localhost:5000/api/reminder")
+        const remindersResponse = await axios.get("http://localhost:5000/api/reminder", {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        })
+
+        console.log("Raw reminders response:", remindersResponse.data)
+
+        // Filter reminders for today - handle both one-time and recurring reminders
+        const todayRemindersList = remindersResponse.data.filter((reminder: any) => {
+          console.log("Processing reminder:", reminder)
+
+          let isValidForToday = false
+
+          if (reminder.recurring === 'daily') {
+            console.log("Daily reminder found:", reminder.title)
+            isValidForToday = true
+          } else if (reminder.recurring === 'weekly' && reminder.daysOfWeek) {
+            const todayDayOfWeek = today.getDay() // 0 = Sunday, 6 = Saturday
+            console.log(`Weekly reminder check: today is ${todayDayOfWeek}, reminder days:`, reminder.daysOfWeek)
+            isValidForToday = reminder.daysOfWeek.includes(todayDayOfWeek)
+          } else if (reminder.date) {
+            const reminderDate = new Date(reminder.date).toISOString().split('T')[0]
+            console.log(`One-time reminder check: reminder date ${reminderDate} vs today ${todayDateString}`)
+            isValidForToday = reminderDate === todayDateString
+          } else if (reminder.recurring === 'none' && !reminder.date) {
+            console.log("No date reminder, assuming today:", reminder.title)
+            isValidForToday = true
+          }
+
+          // If the reminder is valid for today, check if it's still upcoming
+          if (isValidForToday) {
+            // Create the reminder datetime for today
+            const reminderDateTime = new Date(`${todayDateString}T${reminder.time}:00`)
+            const currentTime = new Date()
+
+            console.log(`Time check for ${reminder.title}:`)
+            console.log(`  - Reminder time: ${reminderDateTime.toLocaleTimeString()}`)
+            console.log(`  - Current time: ${currentTime.toLocaleTimeString()}`)
+            console.log(`  - Is upcoming: ${reminderDateTime > currentTime}`)
+
+            // Only include if the reminder time hasn't passed yet
+            return reminderDateTime > currentTime
+          }
+
+          return false
+        }).map((reminder: any) => ({
+          ...reminder,
+          // Fix time formatting - create proper datetime string
+          scheduleTime: reminder.date
+            ? `${reminder.date.split('T')[0]}T${reminder.time}:00`
+            : `${todayDateString}T${reminder.time}:00`
+        }))
+
+        console.log("Filtered today's reminders:", todayRemindersList)
+        fetchedReminders = todayRemindersList
+        setTodayReminders(todayRemindersList)
+
+      } catch (reminderError) {
+        console.error("Error fetching reminders:", reminderError)
+        console.error("Reminder error details:", (reminderError as any)?.response?.data || (reminderError as Error)?.message)
+      }
+
+      // Fetch today's appointments
+      try {
+        console.log("Fetching appointments from: http://localhost:5000/api/appointments/my-appointments")
+        const appointmentsResponse = await axios.get("http://localhost:5000/api/appointments/my-appointments", {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        })
+
+        console.log("Raw appointments response:", appointmentsResponse.data)
+
+        // Filter appointments for today AND only approved ones
+        const todayAppointmentsList = appointmentsResponse.data.filter((appointment: TodayAppointment) => {
+          const appointmentDate = new Date(appointment.date).toISOString().split('T')[0]
+          const isToday = appointmentDate === todayDateString
+          const isApproved = appointment.status && appointment.status.toLowerCase() === 'approved'
+
+          console.log(`Appointment check: ${appointment._id}`)
+          console.log(`  - Date: ${appointmentDate} vs today ${todayDateString} = ${isToday}`)
+          console.log(`  - Status: ${appointment.status} = ${isApproved ? 'APPROVED' : 'NOT APPROVED'}`)
+          console.log(`  - Include: ${isToday && isApproved}`)
+
+          return isToday && isApproved
+        })
+
+        console.log("Filtered today's APPROVED appointments:", todayAppointmentsList)
+        fetchedAppointments = todayAppointmentsList
+        setTodayAppointments(todayAppointmentsList)
+
+      } catch (appointmentError) {
+        console.error("Error fetching appointments:", appointmentError)
+        console.error("Appointment error details:", (appointmentError as any)?.response?.data || (appointmentError as Error)?.message)
+      }
+
+      // Use the fetched data to calculate total count
+      const total = fetchedReminders.length + fetchedAppointments.length
+      console.log(`Setting total count: ${fetchedReminders.length} reminders + ${fetchedAppointments.length} appointments = ${total}`)
+      setTotalCount(total)
+
     } catch (error) {
-      console.error("Error fetching notifications:", error)
-      // Don't throw error, just log it
+      console.error("Error fetching today's items:", error)
+      console.error("Error details:", (error as any)?.response?.data || (error as Error)?.message)
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchUnreadCount = async () => {
-    const token = localStorage.getItem("token")
-    if (!token) return
-
-    try {
-      const response = await axios.get("http://localhost:5000/api/notifications/unread-count", {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 5000 // 5 second timeout
-      })
-      setUnreadCount(response.data.unreadCount || 0)
-    } catch (error) {
-      console.error("Error fetching unread count:", error)
-      // Silently fail for unread count
-    }
-  }
-
-  const markAsRead = async (notificationId: string) => {
+  const markReminderAsCompleted = async (reminderId: string) => {
     const token = localStorage.getItem("token")
     if (!token) return
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/notifications/${notificationId}/read`,
-        {},
+        `http://localhost:5000/api/reminder/${reminderId}`,
+        { isCompleted: true },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       
       // Update local state
-      setNotifications(prev => 
-        prev.map(n => 
-          n._id === notificationId ? { ...n, isCompleted: true } : n
+      setTodayReminders(prev =>
+        prev.map(r =>
+          r._id === reminderId ? { ...r, isCompleted: true } : r
         )
       )
-      setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
-      console.error("Error marking notification as read:", error)
+      console.error("Error marking reminder as completed:", error)
     }
   }
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
-    if (diffInMinutes < 1) return "Just now"
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    
-    const diffInDays = Math.floor(diffInHours / 24)
-    if (diffInDays < 7) return `${diffInDays}d ago`
-    
-    return date.toLocaleDateString()
+    const hours = date.getHours()
+    const minutes = date.getMinutes()
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    const displayHours = hours % 12 || 12
+    const displayMinutes = minutes.toString().padStart(2, '0')
+    return `${displayHours}:${displayMinutes} ${ampm}`
   }
 
-  const getNotificationIcon = (type: string) => {
+  const getItemIcon = (type: string, itemType: 'reminder' | 'appointment') => {
+    if (itemType === 'appointment') {
+      return <Calendar size={16} className={styles.appointmentIcon} />
+    }
+
     switch (type) {
       case 'medicine':
-        return '💊'
+      case 'medication':
+        return <Pill size={16} className={styles.medicineIcon} />
       case 'exercise':
         return '🏃‍♂️'
       case 'appointment':
-        return '🏥'
+        return <Calendar size={16} className={styles.appointmentIcon} />
       default:
-        return '🔔'
+        return <AlertCircle size={16} className={styles.defaultIcon} />
     }
   }
 
@@ -163,7 +284,7 @@ export default function NotificationDropdown({ className }: NotificationDropdown
     if (!mounted) return
     setShowNotifications(!showNotifications)
     if (!showNotifications) {
-      fetchNotifications()
+      fetchTodayItems()
     }
   }
 
@@ -185,9 +306,9 @@ export default function NotificationDropdown({ className }: NotificationDropdown
         onClick={toggleNotifications}
       >
         <Bell size={20} />
-        {unreadCount > 0 && (
+        {totalCount > 0 && (
           <span className={styles.notificationBadge}>
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {totalCount > 99 ? '99+' : totalCount}
           </span>
         )}
       </button>
@@ -195,9 +316,9 @@ export default function NotificationDropdown({ className }: NotificationDropdown
       {showNotifications && (
         <div className={styles.notificationDropdown}>
           <div className={styles.notificationHeader}>
-            <h3>Notifications</h3>
-            {unreadCount > 0 && (
-              <span className={styles.unreadCount}>{unreadCount} unread</span>
+            <h3>Today's Schedule</h3>
+            {totalCount > 0 && (
+              <span className={styles.unreadCount}>{totalCount} items</span>
             )}
           </div>
           
@@ -205,70 +326,110 @@ export default function NotificationDropdown({ className }: NotificationDropdown
             {loading ? (
               <div className={styles.loadingState}>
                 <Clock size={24} />
-                <span>Loading notifications...</span>
+                <span>Loading today's items...</span>
               </div>
-            ) : notifications.length === 0 ? (
+            ) : totalCount === 0 ? (
               <div className={styles.emptyState}>
-                <Bell size={48} />
-                <h4>No Notifications</h4>
-                <p>You're all caught up! New notifications will appear here.</p>
+                <Calendar size={48} />
+                <h4>No Items Today</h4>
+                <p>You have no appointments or reminders scheduled for today.</p>
               </div>
             ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification._id}
-                  className={`${styles.notificationItem} ${!notification.isCompleted ? styles.unread : ''}`}
-                >
-                  <div className={styles.notificationIcon}>
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className={styles.notificationContent}>
-                    <div className={styles.notificationTitle}>
-                      {notification.title}
+              <>
+                {/* Today's Appointments */}
+                {todayAppointments.length > 0 && (
+                  <>
+                    <div className={styles.sectionHeader}>
+                      <Calendar size={16} />
+                      <span>Today's Appointments</span>
                     </div>
-                    <div className={styles.notificationMessage}>
-                      {notification.description}
+                    {todayAppointments.map((appointment) => (
+                      <div
+                        key={`apt-${appointment._id}`}
+                        className={`${styles.notificationItem} ${styles.appointmentItem}`}
+                      >
+                        <div className={styles.notificationIcon}>
+                          {getItemIcon('appointment', 'appointment')}
+                        </div>
+                        <div className={styles.notificationContent}>
+                          <div className={styles.notificationTitle}>
+                            Dr. {appointment.doctors_id?.name || 'Unknown'}
+                          </div>
+                          <div className={styles.notificationMessage}>
+                            {appointment.appointmentType} - {appointment.reason}
+                          </div>
+                          <div className={styles.notificationMeta}>
+                            <span className={styles.notificationTime}>
+                              <Clock size={12} />
+                              {formatTime(appointment.date)}
+                            </span>
+                            <span className={`${styles.notificationType} ${styles.statusBadge} ${styles[appointment.status.toLowerCase()]}`}>
+                              {appointment.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* Today's Reminders */}
+                {todayReminders.length > 0 && (
+                  <>
+                    <div className={styles.sectionHeader}>
+                      <Bell size={16} />
+                      <span>Today's Reminders</span>
                     </div>
-                    <div className={styles.notificationMeta}>
-                      <span className={styles.notificationTime}>
-                        <Clock size={12} />
-                        {formatTime(notification.scheduleTime)}
-                      </span>
-                      <span className={styles.notificationType}>
-                        {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
-                      </span>
-                    </div>
-                  </div>
-                  {!notification.isCompleted && (
-                    <button
-                      className={styles.markReadButton}
-                      onClick={() => markAsRead(notification._id)}
-                      title="Mark as read"
-                    >
-                      <CheckCircle size={16} />
-                    </button>
-                  )}
-                </div>
-              ))
+                    {todayReminders.map((reminder) => (
+                      <div
+                        key={`rem-${reminder._id}`}
+                        className={`${styles.notificationItem} ${!reminder.isCompleted ? styles.unread : styles.completed}`}
+                      >
+                        <div className={styles.notificationIcon}>
+                          {getItemIcon(reminder.type, 'reminder')}
+                        </div>
+                        <div className={styles.notificationContent}>
+                          <div className={styles.notificationTitle}>
+                            {reminder.title}
+                          </div>
+                          <div className={styles.notificationMessage}>
+                            {reminder.description}
+                          </div>
+                          <div className={styles.notificationMeta}>
+                            <span className={styles.notificationTime}>
+                              <Clock size={12} />
+                              {formatTime(reminder.scheduleTime)}
+                            </span>
+                            <span className={styles.notificationType}>
+                              {reminder.type.charAt(0).toUpperCase() + reminder.type.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                        {!reminder.isCompleted && (
+                          <button
+                            className={styles.markReadButton}
+                            onClick={() => markReminderAsCompleted(reminder._id)}
+                            title="Mark as completed"
+                          >
+                            <CheckCircle size={16} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </>
             )}
           </div>
           
-          {notifications.length > 0 && (
-            <div className={styles.notificationFooter}>
-              <button 
-                className={styles.viewAllButton}
-                onClick={() => {
-                  setShowNotifications(false)
-                  // Use window.location to avoid Next.js router issues
-                  if (typeof window !== 'undefined') {
-                    window.location.href = '/notifications'
-                  }
-                }}
-              >
-                View All Notifications
-              </button>
-            </div>
-          )}
+          <div className={styles.notificationFooter}>
+            <button className={styles.footerButton} onClick={() => window.location.href = '/appointments'}>
+              View All Appointments
+            </button>
+            <button className={styles.footerButton} onClick={() => window.location.href = '/reminders'}>
+              View All Reminders
+            </button>
+          </div>
         </div>
       )}
     </div>

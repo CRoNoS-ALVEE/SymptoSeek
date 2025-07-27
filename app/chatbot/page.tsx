@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
-import { Bot, Plus, Mic, Paperclip, Send, MessageSquare, Stethoscope, Menu, X, Search, Bell, User, Settings, LogOut, Home, Calendar, FileText, MapPin, ExternalLink } from "lucide-react"
+import { Plus, Mic, Paperclip, Send, Stethoscope, Menu, X, Search, Bell, User, Settings, LogOut, Home, MapPin, ExternalLink } from "lucide-react"
 import styles from "./chatbot.module.css"
 import { useRouter } from "next/navigation"
 import axios from "axios"
@@ -134,16 +134,27 @@ export default function ChatbotPage() {
   }
 
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
   const [loggedIn, setLoggedIn] = useState(false)
-  
-    useEffect(() => {
+  const [error, setError] = useState("")
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+
+    if (diffInMinutes < 1) return 'Just now'
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
+    if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`
+
+    return date.toLocaleDateString()
+  }
+
+  useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token")
       if (!token) {
         setLoggedIn(false)
-        setLoading(false)
         return
       }
       try {
@@ -154,10 +165,7 @@ export default function ChatbotPage() {
         setLoggedIn(true)
       } catch (err) {
         console.error("Failed to fetch user data:", err)
-        setError("Failed to fetch user data.")
         setLoggedIn(false)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -297,7 +305,11 @@ export default function ChatbotPage() {
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const [isMobile, setIsMobile] = useState(true) // Start as true to prevent flash
+  const [isMobile, setIsMobile] = useState(true)
+  const [todayReminders, setTodayReminders] = useState<any[]>([])
+  const [todayAppointments, setTodayAppointments] = useState<any[]>([])
+  const [totalNotificationCount, setTotalNotificationCount] = useState(0)
+  const [loadingNotifications, setLoadingNotifications] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<number | null>(null)
   const sidebarTimeoutRef = useRef<number | null>(null)
@@ -597,15 +609,159 @@ export default function ChatbotPage() {
     }
   ]
 
-  const formatTime = (dateInput: Date | string) => {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
-    const now = new Date()
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+  // Load notifications when component mounts
+  useEffect(() => {
+    if (loggedIn && user) {
+      fetchTodayNotifications()
+    }
+  }, [loggedIn, user])
 
-    if (diffInHours < 1) return "Just now"
-    if (diffInHours < 24) return `${diffInHours}h ago`
-    if (diffInHours < 48) return "Yesterday"
-    return `${Math.floor(diffInHours / 24)}d ago`
+  // Fetch today's notifications automatically every 2 minutes
+  useEffect(() => {
+    if (!loggedIn) return
+
+    const interval = setInterval(() => {
+      fetchTodayNotifications()
+    }, 120000) // 2 minutes
+
+    return () => clearInterval(interval)
+  }, [loggedIn])
+
+  // Fetch today's reminders and appointments
+  const fetchTodayNotifications = async () => {
+    const token = localStorage.getItem("token")
+    if (!token) return
+
+    try {
+      setLoadingNotifications(true)
+      const today = new Date()
+      const todayDateString = today.toISOString().split('T')[0]
+
+      let fetchedReminders: any[] = []
+      let fetchedAppointments: any[] = []
+
+      // Fetch today's reminders
+      try {
+        const remindersResponse = await axios.get("http://localhost:5000/api/reminder", {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        })
+
+        // Filter reminders for today and only upcoming ones
+        const todayRemindersList = remindersResponse.data.filter((reminder: any) => {
+          let isValidForToday = false
+
+          if (reminder.recurring === 'daily') {
+            isValidForToday = true
+          } else if (reminder.recurring === 'weekly' && reminder.daysOfWeek) {
+            const todayDayOfWeek = today.getDay()
+            isValidForToday = reminder.daysOfWeek.includes(todayDayOfWeek)
+          } else if (reminder.date) {
+            const reminderDate = new Date(reminder.date).toISOString().split('T')[0]
+            isValidForToday = reminderDate === todayDateString
+          } else if (reminder.recurring === 'none' && !reminder.date) {
+            isValidForToday = true
+          }
+
+          // If valid for today, check if it's still upcoming
+          if (isValidForToday) {
+            const reminderDateTime = new Date(`${todayDateString}T${reminder.time}:00`)
+            const currentTime = new Date()
+            return reminderDateTime > currentTime
+          }
+
+          return false
+        })
+
+        fetchedReminders = todayRemindersList
+        setTodayReminders(todayRemindersList)
+      } catch (reminderError) {
+        console.error("Error fetching reminders:", reminderError)
+      }
+
+      // Fetch today's appointments
+      try {
+        const appointmentsResponse = await axios.get("http://localhost:5000/api/appointments/my-appointments", {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        })
+
+        // Filter appointments for today AND only approved ones
+        const todayAppointmentsList = appointmentsResponse.data.filter((appointment: any) => {
+          const appointmentDate = new Date(appointment.date).toISOString().split('T')[0]
+          const isToday = appointmentDate === todayDateString
+          const isApproved = appointment.status && appointment.status.toLowerCase() === 'approved'
+          return isToday && isApproved
+        })
+
+        fetchedAppointments = todayAppointmentsList
+        setTodayAppointments(todayAppointmentsList)
+      } catch (appointmentError) {
+        console.error("Error fetching appointments:", appointmentError)
+      }
+
+      // Calculate total count
+      const total = fetchedReminders.length + fetchedAppointments.length
+      setTotalNotificationCount(total)
+
+    } catch (error) {
+      console.error("Error fetching today's notifications:", error)
+    } finally {
+      setLoadingNotifications(false)
+    }
+  }
+
+  const formatNotificationTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const hours = date.getHours()
+    const minutes = date.getMinutes()
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    const displayHours = hours % 12 || 12
+    const displayMinutes = minutes.toString().padStart(2, '0')
+    return `${displayHours}:${displayMinutes} ${ampm}`
+  }
+
+  const getNotificationIcon = (type: string, itemType: 'reminder' | 'appointment') => {
+    if (itemType === 'appointment') {
+      return '📅'
+    }
+
+    switch (type) {
+      case 'medicine':
+      case 'medication':
+        return '💊'
+      case 'exercise':
+        return '🏃‍♂️'
+      case 'appointment':
+        return '📅'
+      default:
+        return '🔔'
+    }
+  }
+
+  const markReminderAsCompleted = async (reminderId: string) => {
+    const token = localStorage.getItem("token")
+    if (!token) return
+
+    try {
+      await axios.patch(
+        `http://localhost:5000/api/reminder/${reminderId}`,
+        { isCompleted: true },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      // Update local state
+      setTodayReminders(prev =>
+        prev.map(r =>
+          r._id === reminderId ? { ...r, isCompleted: true } : r
+        )
+      )
+
+      // Update total count
+      setTotalNotificationCount(prev => Math.max(0, prev - 1))
+    } catch (error) {
+      console.error("Error marking reminder as completed:", error)
+    }
   }
 
   const handleQuickAction = (action: string) => {
@@ -698,39 +854,126 @@ export default function ChatbotPage() {
                   <div className={styles.notificationContainer} ref={notificationRef}>
                     <button
                         className={styles.navIconButton}
-                        onClick={() => setShowNotifications(!showNotifications)}
+                        onClick={() => {
+                          setShowNotifications(!showNotifications)
+                          if (!showNotifications) {
+                            fetchTodayNotifications()
+                          }
+                        }}
                     >
                       <Bell size={20} />
-                      {notifications.filter(n => n.unread).length > 0 && (
+                      {totalNotificationCount > 0 && (
                           <span className={styles.notificationBadge}>
-                          {notifications.filter(n => n.unread).length}
+                          {totalNotificationCount > 99 ? '99+' : totalNotificationCount}
                         </span>
                       )}
                     </button>
                     {showNotifications && (
                         <div className={styles.notificationDropdown}>
                           <div className={styles.notificationHeader}>
-                            <h3>Notifications</h3>
+                            <h3>Today's Schedule</h3>
+                            {totalNotificationCount > 0 && (
+                              <span className={styles.unreadCount}>{totalNotificationCount} items</span>
+                            )}
                           </div>
                           <div className={styles.notificationList}>
-                            {notifications.map((notification) => (
-                                <div
-                                    key={notification.id}
-                                    className={`${styles.notificationItem} ${notification.unread ? styles.unread : ''}`}
-                                >
-                                  <div className={styles.notificationContent}>
-                                    <div className={styles.notificationTitle}>
-                                      {notification.title}
+                            {loadingNotifications ? (
+                              <div className={styles.loadingState}>
+                                <div className={styles.loadingSpinner}></div>
+                                <span>Loading today's items...</span>
+                              </div>
+                            ) : totalNotificationCount === 0 ? (
+                              <div className={styles.emptyState}>
+                                <Bell size={48} />
+                                <h4>No Items Today</h4>
+                                <p>You have no appointments or reminders scheduled for today.</p>
+                              </div>
+                            ) : (
+                              <>
+                                {/* Today's Appointments */}
+                                {todayAppointments.length > 0 && (
+                                  <>
+                                    <div className={styles.sectionHeader}>
+                                      <span>📅 Today's Appointments</span>
                                     </div>
-                                    <div className={styles.notificationMessage}>
-                                      {notification.message}
+                                    {todayAppointments.map((appointment) => (
+                                      <div
+                                        key={`apt-${appointment._id}`}
+                                        className={`${styles.notificationItem} ${styles.appointmentItem}`}
+                                      >
+                                        <div className={styles.notificationIcon}>
+                                          {getNotificationIcon('appointment', 'appointment')}
+                                        </div>
+                                        <div className={styles.notificationContent}>
+                                          <div className={styles.notificationTitle}>
+                                            Dr. {appointment.doctors_id?.name || 'Unknown'}
+                                          </div>
+                                          <div className={styles.notificationMessage}>
+                                            {appointment.appointmentType} - {appointment.reason}
+                                          </div>
+                                          <div className={styles.notificationTime}>
+                                            {formatNotificationTime(appointment.date)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+
+                                {/* Today's Reminders */}
+                                {todayReminders.length > 0 && (
+                                  <>
+                                    <div className={styles.sectionHeader}>
+                                      <span>🔔 Today's Reminders</span>
                                     </div>
-                                    <div className={styles.notificationTime}>
-                                      {notification.time}
-                                    </div>
-                                  </div>
-                                </div>
-                            ))}
+                                    {todayReminders.map((reminder) => (
+                                      <div
+                                        key={`rem-${reminder._id}`}
+                                        className={`${styles.notificationItem} ${!reminder.isCompleted ? styles.unread : styles.completed}`}
+                                      >
+                                        <div className={styles.notificationIcon}>
+                                          {getNotificationIcon(reminder.type, 'reminder')}
+                                        </div>
+                                        <div className={styles.notificationContent}>
+                                          <div className={styles.notificationTitle}>
+                                            {reminder.title}
+                                          </div>
+                                          <div className={styles.notificationMessage}>
+                                            {reminder.description}
+                                          </div>
+                                          <div className={styles.notificationTime}>
+                                            {formatNotificationTime(`${new Date().toISOString().split('T')[0]}T${reminder.time}:00`)}
+                                          </div>
+                                        </div>
+                                        {!reminder.isCompleted && (
+                                          <button
+                                            className={styles.markCompleteButton}
+                                            onClick={() => markReminderAsCompleted(reminder._id)}
+                                            title="Mark as completed"
+                                          >
+                                            ✓
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div className={styles.notificationFooter}>
+                            <button
+                              className={styles.footerButton}
+                              onClick={() => window.location.href = '/appointments'}
+                            >
+                              View All Appointments
+                            </button>
+                            <button
+                              className={styles.footerButton}
+                              onClick={() => window.location.href = '/reminders'}
+                            >
+                              View All Reminders
+                            </button>
                           </div>
                         </div>
                     )}
@@ -1074,3 +1317,4 @@ export default function ChatbotPage() {
       </div>
   )
 }
+

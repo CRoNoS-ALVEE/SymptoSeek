@@ -252,10 +252,6 @@ export default function AppointmentsPage() {
         <main className={styles.main}>
           <div className={styles.header}>
             <h1>My Appointments</h1>
-            <button className={styles.addButton} onClick={() => setIsAddModalOpen(true)}>
-              <Plus size={20} />
-              New Appointment
-            </button>
           </div>
 
           <div className={styles.content}>
