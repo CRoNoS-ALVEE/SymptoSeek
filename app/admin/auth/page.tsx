@@ -28,7 +28,7 @@ export default function AdminAuth() {
         // Store admin token and info
         localStorage.setItem("adminToken", response.data.token)
         localStorage.setItem("adminInfo", JSON.stringify(response.data.admin))
-        
+
         // Redirect to admin dashboard
         router.push("/admin/dashboard")
       }
@@ -44,50 +44,50 @@ export default function AdminAuth() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.formContainer}>
-        <div className={styles.logoContainer}>
-          <Stethoscope className={styles.logo} />
-          <h1>SymptoSeek Admin</h1>
+      <div className={styles.container}>
+        <div className={styles.formContainer}>
+          <div className={styles.logoContainer}>
+            <Stethoscope className={styles.logo} />
+            <h1>SymptoSeek Admin</h1>
+          </div>
+
+          {error && (
+              <div className={styles.error}>
+                <AlertCircle size={20} />
+                {error}
+              </div>
+          )}
+
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.inputGroup}>
+              <label htmlFor="email">Email</label>
+              <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter admin email"
+                  required
+              />
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label htmlFor="password">Password</label>
+              <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  required
+              />
+            </div>
+
+            <button type="submit" className={styles.button} disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
         </div>
-
-        {error && (
-          <div className={styles.error}>
-            <AlertCircle size={20} />
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter admin email"
-              required
-            />
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter admin password"
-              required
-            />
-          </div>
-
-          <button type="submit" className={styles.button} disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
       </div>
-    </div>
   )
 }

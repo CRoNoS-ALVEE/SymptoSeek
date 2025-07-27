@@ -5,11 +5,11 @@ export default function Statistics() {
     <section className={styles.statistics}>
       <div className={styles.container}>
         <div className={styles.stat}>
-          <div className={styles.number}>50K+</div>
-          <div className={styles.label}>Active Users</div>
+          <div className={styles.number}>500+</div>
+          <div className={styles.label}>Doctors</div>
         </div>
         <div className={styles.stat}>
-          <div className={styles.number}>95%</div>
+          <div className={styles.number}>85%</div>
           <div className={styles.label}>Accuracy Rate</div>
         </div>
         <div className={styles.stat}>

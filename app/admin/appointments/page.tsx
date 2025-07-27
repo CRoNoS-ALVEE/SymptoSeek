@@ -21,7 +21,8 @@ import {
   Settings,
   LogOut,
   Check,
-  XCircle
+  XCircle,
+  MessageSquare
 } from "lucide-react"
 import styles from "./appointments.module.css"
 
@@ -54,6 +55,7 @@ interface Appointment {
 }
 
 export default function AppointmentsPage() {
+  const [user, setUser] = useState<any>(null)
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedType, setSelectedType] = useState("")
@@ -62,7 +64,7 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const router = useRouter()
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalAppointments, setTotalAppointments] = useState(0)
@@ -71,28 +73,35 @@ export default function AppointmentsPage() {
   useEffect(() => {
     const fetchAppointments = async (page = 1) => {
       const token = localStorage.getItem("adminToken")
-      
+
       if (!token) {
         router.push("/admin/auth")
         return
       }
-      
+
+      // Load admin info from localStorage
+      const adminInfo = localStorage.getItem('adminInfo')
+      if (adminInfo) {
+        const admin = JSON.parse(adminInfo)
+        setUser(admin)
+      }
+
       try {
         setLoading(true)
         const response = await axios.get(`http://localhost:5000/api/admin/appointments?page=${page}&limit=${appointmentsPerPage}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        
+
         // Backend returns {appointments: [...], pagination: {...}}
         console.log('Appointments response:', response.data)
         console.log('Individual appointments:', response.data.appointments)
-        
+
         // Log user profile pictures for debugging
         if (response.data.appointments && response.data.appointments.length > 0) {
           console.log('Sample user data:', response.data.appointments[0].userId)
           console.log('Profile pic URL:', response.data.appointments[0].userId?.profile_pic)
         }
-        
+
         setAppointments(response.data.appointments || [])
         setTotalAppointments(response.data.pagination?.total || response.data.appointments?.length || 0)
         setCurrentPage(page)
@@ -122,18 +131,18 @@ export default function AppointmentsPage() {
     if (page >= 1 && page <= totalPages) {
       const fetchAppointments = async () => {
         const token = localStorage.getItem("adminToken")
-        
+
         if (!token) {
           router.push("/admin/auth")
           return
         }
-        
+
         try {
           setLoading(true)
           const response = await axios.get(`http://localhost:5000/api/admin/appointments?page=${page}&limit=${appointmentsPerPage}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
-          
+
           setAppointments(response.data.appointments || [])
           setTotalAppointments(response.data.pagination?.total || response.data.appointments?.length || 0)
           setCurrentPage(page)
@@ -144,25 +153,25 @@ export default function AppointmentsPage() {
           setLoading(false)
         }
       }
-      
+
       fetchAppointments()
     }
   }
 
-    const handleApprove = async (appointmentId: string) => {
+  const handleApprove = async (appointmentId: string) => {
     try {
       const token = localStorage.getItem('adminToken')
       await axios.patch(`http://localhost:5000/api/admin/appointments/${appointmentId}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      
+
       // Update the local state
-      setAppointments(prev => 
-        prev.map(app => 
-          app._id === appointmentId 
-            ? { ...app, status: 'Approved' }
-            : app
-        )
+      setAppointments(prev =>
+          prev.map(app =>
+              app._id === appointmentId
+                  ? { ...app, status: 'Approved' }
+                  : app
+          )
       )
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to approve appointment')
@@ -175,14 +184,14 @@ export default function AppointmentsPage() {
       await axios.patch(`http://localhost:5000/api/admin/appointments/${appointmentId}/reject`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      
+
       // Update the local state
-      setAppointments(prev => 
-        prev.map(app => 
-          app._id === appointmentId 
-            ? { ...app, status: 'Rejected' }
-            : app
-        )
+      setAppointments(prev =>
+          prev.map(app =>
+              app._id === appointmentId
+                  ? { ...app, status: 'Rejected' }
+                  : app
+          )
       )
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to reject appointment')
@@ -206,13 +215,13 @@ export default function AppointmentsPage() {
           headers: { Authorization: `Bearer ${token}` },
         })
         console.log('PUT response:', response.data)
-        
-        setAppointments(prev => 
-          prev.map(app => 
-            app._id === appointmentId 
-              ? { ...app, status: status as Appointment['status'] }
-              : app
-          )
+
+        setAppointments(prev =>
+            prev.map(app =>
+                app._id === appointmentId
+                    ? { ...app, status: status as Appointment['status'] }
+                    : app
+            )
         )
       } catch (err: any) {
         console.error('PUT request failed:', err)
@@ -230,7 +239,7 @@ export default function AppointmentsPage() {
   const getPageNumbers = () => {
     const pages = []
     const maxVisiblePages = 5
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is less than or equal to max visible
       for (let i = 1; i <= totalPages; i++) {
@@ -240,17 +249,17 @@ export default function AppointmentsPage() {
       // Calculate start and end of visible pages
       let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
       let end = Math.min(totalPages, start + maxVisiblePages - 1)
-      
+
       // Adjust start if we're near the end
       if (end - start < maxVisiblePages - 1) {
         start = Math.max(1, end - maxVisiblePages + 1)
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
     }
-    
+
     return pages
   }
 
@@ -325,6 +334,10 @@ export default function AppointmentsPage() {
               <Calendar size={20} />
               Appointments
             </Link>
+            <Link href="/admin/feedback" className={styles.sidebarLink}>
+              <MessageSquare size={20} />
+              Feedback
+            </Link>
             <Link href="/admin/reports" className={styles.sidebarLink}>
               <FileText size={20} />
               Reports
@@ -344,10 +357,30 @@ export default function AppointmentsPage() {
         <main className={styles.main}>
           <div className={styles.header}>
             <h1>Appointments</h1>
-            <button className={styles.addButton}>
-              <Plus size={20} />
-              New Appointment
-            </button>
+            <div className={styles.headerActions}>
+              <button className={styles.addButton}>
+                <Plus size={20} />
+                New Appointment
+              </button>
+              <div className={styles.adminProfile}>
+                {user?.profile_pic ? (
+                  <img
+                    src={user.profile_pic}
+                    alt={user.name}
+                    className={styles.avatar}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove(styles.hidden);
+                    }}
+                  />
+                ) : null}
+                <div className={`${styles.avatar} ${user?.profile_pic ? styles.hidden : ''}`}>
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <span>{user?.name}</span>
+              </div>
+            </div>
           </div>
 
           <div className={styles.filters}>
@@ -430,31 +463,31 @@ export default function AppointmentsPage() {
 
                   <div className={styles.actions}>
                     {appointment.status === 'Pending' && (
-                      <>
-                        <button 
-                          className={`${styles.actionButton} ${styles.approveButton}`}
-                          onClick={() => handleStatusUpdate(appointment._id, 'Approved')}
-                        >
-                          <Check size={16} />
-                          Approve
-                        </button>
-                        <button 
-                          className={`${styles.actionButton} ${styles.cancelButton}`}
-                          onClick={() => handleStatusUpdate(appointment._id, 'Cancelled')}
-                        >
-                          <XCircle size={16} />
-                          Reject
-                        </button>
-                      </>
+                        <>
+                          <button
+                              className={`${styles.actionButton} ${styles.approveButton}`}
+                              onClick={() => handleStatusUpdate(appointment._id, 'Approved')}
+                          >
+                            <Check size={16} />
+                            Approve
+                          </button>
+                          <button
+                              className={`${styles.actionButton} ${styles.cancelButton}`}
+                              onClick={() => handleStatusUpdate(appointment._id, 'Cancelled')}
+                          >
+                            <XCircle size={16} />
+                            Reject
+                          </button>
+                        </>
                     )}
                     {appointment.status === 'Approved' && (
-                      <button 
-                        className={`${styles.actionButton} ${styles.completeButton}`}
-                        onClick={() => handleStatusUpdate(appointment._id, 'Completed')}
-                      >
-                        <Check size={16} />
-                        Mark Complete
-                      </button>
+                        <button
+                            className={`${styles.actionButton} ${styles.completeButton}`}
+                            onClick={() => handleStatusUpdate(appointment._id, 'Completed')}
+                        >
+                          <Check size={16} />
+                          Mark Complete
+                        </button>
                     )}
                   </div>
                 </div>
@@ -463,67 +496,68 @@ export default function AppointmentsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <button 
-                className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Prev
-              </button>
+              <div className={styles.pagination}>
+                <button
+                    className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                  Prev
+                </button>
 
-              <div className={styles.pageNumbers}>
-                {/* Show page 1 if not in visible range */}
-                {pageNumbers[0] > 1 && (
-                  <>
-                    <button
-                      className={styles.pageNumber}
-                      onClick={() => handlePageChange(1)}
-                    >
-                      1
-                    </button>
-                    {pageNumbers[0] > 2 && (
-                      <span className={styles.dots}>...</span>
-                    )}
-                  </>
-                )}
+                <div className={styles.pageNumbers}>
+                  {/* Show page 1 if not in visible range */}
+                  {pageNumbers[0] > 1 && (
+                      <>
+                        <button
+                            className={styles.pageNumber}
+                            onClick={() => handlePageChange(1)}
+                        >
+                          1
+                        </button>
+                        {pageNumbers[0] > 2 && (
+                            <span className={styles.dots}>...</span>
+                        )}
+                      </>
+                  )}
 
-                {pageNumbers.map(page => (
-                  <button
-                    key={page}
-                    className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-                
-                {/* Show dots and last page if not in visible range */}
-                {pageNumbers[pageNumbers.length - 1] < totalPages && (
-                  <>
-                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                      <span className={styles.dots}>...</span>
-                    )}
-                    <button
-                      className={styles.pageNumber}
-                      onClick={() => handlePageChange(totalPages)}
-                    >
-                      {totalPages}
-                    </button>
-                  </>
-                )}
+                  {pageNumbers.map(page => (
+                      <button
+                          key={page}
+                          className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
+                          onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </button>
+                  ))}
+
+                  {/* Show dots and last page if not in visible range */}
+                  {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                      <>
+                        {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                            <span className={styles.dots}>...</span>
+                        )}
+                        <button
+                            className={styles.pageNumber}
+                            onClick={() => handlePageChange(totalPages)}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                  )}
+                </div>
+
+                <button
+                    className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
               </div>
-
-              <button 
-                className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
           )}
         </main>
       </div>
   )
 }
+

@@ -23,7 +23,8 @@ import {
   CheckCircle,
   XCircle,
   Edit,
-  X
+  X,
+  MessageSquare
 } from "lucide-react"
 import styles from "./reports.module.css"
 
@@ -60,7 +61,8 @@ export default function ReportsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  
+  const [user, setUser] = useState<UserInfo | null>(null)
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalReports, setTotalReports] = useState(0)
@@ -77,21 +79,28 @@ export default function ReportsPage() {
       router.push("/admin/auth")
       return
     }
+
+    // Load admin info from localStorage
+    const adminInfo = localStorage.getItem('adminInfo')
+    if (adminInfo) {
+      const admin = JSON.parse(adminInfo)
+      setUser(admin)
+    }
   }
 
   const fetchReports = async (page = 1) => {
     try {
       setLoading(true)
       const token = localStorage.getItem("adminToken")
-      
+
       const response = await axios.get(`http://localhost:5000/api/admin/reports?page=${page}&limit=${reportsPerPage}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
-      
+
       console.log('Reports API response:', response.data)
-      
+
       if (response.data.reports) {
         setReports(response.data.reports)
         setTotalReports(response.data.pagination?.total || response.data.reports.length)
@@ -99,7 +108,7 @@ export default function ReportsPage() {
         setReports([])
         setTotalReports(0)
       }
-      
+
       setCurrentPage(page)
       setError("")
     } catch (err: any) {
@@ -122,7 +131,7 @@ export default function ReportsPage() {
   const handleStatusUpdate = async (reportId: string, status: string) => {
     try {
       const token = localStorage.getItem("adminToken")
-      
+
       const response = await axios.patch(`http://localhost:5000/api/admin/reports/${reportId}`, {
         status
       }, {
@@ -130,12 +139,12 @@ export default function ReportsPage() {
           'Authorization': `Bearer ${token}`
         }
       })
-      
+
       // Update the local state
-      setReports(prev => prev.map(report => 
-        report._id === reportId ? { ...report, status: status as Report['status'] } : report
+      setReports(prev => prev.map(report =>
+          report._id === reportId ? { ...report, status: status as Report['status'] } : report
       ))
-      
+
       setError("")
     } catch (err: any) {
       console.error('Error updating report status:', err)
@@ -150,13 +159,13 @@ export default function ReportsPage() {
 
     try {
       const token = localStorage.getItem("adminToken")
-      
+
       await axios.delete(`http://localhost:5000/api/admin/reports/${reportId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
-      
+
       // Remove from local state
       setReports(prev => prev.filter(report => report._id !== reportId))
       setError("")
@@ -210,7 +219,7 @@ export default function ReportsPage() {
   const getPageNumbers = () => {
     const pages = []
     const maxVisiblePages = 5
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is less than or equal to max visible
       for (let i = 1; i <= totalPages; i++) {
@@ -220,17 +229,17 @@ export default function ReportsPage() {
       // Calculate start and end of visible pages
       let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
       let end = Math.min(totalPages, start + maxVisiblePages - 1)
-      
+
       // Adjust start if we're near the end
       if (end - start < maxVisiblePages - 1) {
         start = Math.max(1, end - maxVisiblePages + 1)
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
     }
-    
+
     return pages
   }
 
@@ -238,12 +247,12 @@ export default function ReportsPage() {
 
   if (loading && reports.length === 0) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
-          <p>Loading reports...</p>
+        <div className={styles.container}>
+          <div className={styles.loading}>
+            <div className={styles.spinner}></div>
+            <p>Loading reports...</p>
+          </div>
         </div>
-      </div>
     )
   }
 
@@ -279,6 +288,10 @@ export default function ReportsPage() {
               <Calendar size={20} />
               Appointments
             </Link>
+            <Link href="/admin/feedback" className={styles.sidebarLink}>
+              <MessageSquare size={20} />
+              Feedback
+            </Link>
             <Link href="/admin/reports" className={`${styles.sidebarLink} ${styles.active}`}>
               <FileText size={20} />
               Reports
@@ -303,12 +316,33 @@ export default function ReportsPage() {
         <main className={styles.main}>
           <div className={styles.header}>
             <h1>Reports</h1>
-            {error && (
+            <div className={styles.headerActions}>
+              <div className={styles.adminProfile}>
+                {user?.profile_pic ? (
+                  <img
+                    src={user.profile_pic}
+                    alt={user.name}
+                    className={styles.avatar}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove(styles.hidden);
+                    }}
+                  />
+                ) : null}
+                <div className={`${styles.avatar} ${user?.profile_pic ? styles.hidden : ''}`}>
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <span>{user?.name}</span>
+              </div>
+            </div>
+          </div>
+
+          {error && (
               <div className={styles.errorMessage}>
                 {error}
               </div>
-            )}
-          </div>
+          )}
 
           <div className={styles.filters}>
             <div className={styles.searchBar}>
@@ -349,244 +383,245 @@ export default function ReportsPage() {
 
           <div className={styles.reportsGrid}>
             {currentReports.length === 0 ? (
-              <div className={styles.emptyState}>
-                <FileText size={48} />
-                <h3>No reports found</h3>
-                <p>Try adjusting your search criteria.</p>
-              </div>
-            ) : (
-              currentReports.map(report => (
-                <div key={report._id} className={styles.reportCard}>
-                  <div className={styles.reportHeader}>
-                    <h3 className={styles.reportTitle}>{report.title}</h3>
-                    <div className={`${styles.status} ${styles[report.status.toLowerCase()]}`}>
-                      {report.status}
-                    </div>
-                  </div>
-
-                  <div className={styles.details}>
-                    <div className={styles.detail}>
-                      <FileText size={16} />
-                      <span>Type: {report.type}</span>
-                    </div>
-                    <div className={styles.detail}>
-                      <Clock size={16} />
-                      <span>Date: {new Date(report.reportDate).toLocaleDateString()}</span>
-                    </div>
-                    <div className={styles.detail}>
-                      <User size={16} />
-                      <span>Patient: {report.user.name}</span>
-                    </div>
-                    {report.doctor && (
-                      <div className={styles.detail}>
-                        <Stethoscope size={16} />
-                        <span>Doctor: {report.doctor}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={styles.actions}>
-                    <button 
-                      className={`${styles.actionButton} ${styles.viewButton}`}
-                      onClick={() => handleViewDetails(report)}
-                    >
-                      <Eye size={16} />
-                      View
-                    </button>
-                    {report.status === "Completed" && (
-                      <button className={`${styles.actionButton} ${styles.downloadButton}`}>
-                        <Download size={16} />
-                        <a href={report.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                          Download
-                        </a>
-                      </button>
-                    )}
-                    {report.status !== "Completed" && (
-                      <button 
-                        className={`${styles.actionButton} ${styles.completeButton}`}
-                        onClick={() => handleStatusUpdate(report._id, 'Completed')}
-                      >
-                        <CheckCircle size={16} />
-                        Mark Complete
-                      </button>
-                    )}
-                    <button 
-                      className={`${styles.actionButton} ${styles.deleteButton}`}
-                      onClick={() => handleDeleteReport(report._id)}
-                    >
-                      <Trash2 size={16} />
-                      Delete
-                    </button>
-                  </div>
+                <div className={styles.emptyState}>
+                  <FileText size={48} />
+                  <h3>No reports found</h3>
+                  <p>Try adjusting your search criteria.</p>
                 </div>
-              ))
+            ) : (
+                currentReports.map(report => (
+                    <div key={report._id} className={styles.reportCard}>
+                      <div className={styles.reportHeader}>
+                        <h3 className={styles.reportTitle}>{report.title}</h3>
+                        <div className={`${styles.status} ${styles[report.status.toLowerCase()]}`}>
+                          {report.status}
+                        </div>
+                      </div>
+
+                      <div className={styles.details}>
+                        <div className={styles.detail}>
+                          <FileText size={16} />
+                          <span>Type: {report.type}</span>
+                        </div>
+                        <div className={styles.detail}>
+                          <Clock size={16} />
+                          <span>Date: {new Date(report.reportDate).toLocaleDateString()}</span>
+                        </div>
+                        <div className={styles.detail}>
+                          <User size={16} />
+                          <span>Patient: {report.user.name}</span>
+                        </div>
+                        {report.doctor && (
+                            <div className={styles.detail}>
+                              <Stethoscope size={16} />
+                              <span>Doctor: {report.doctor}</span>
+                            </div>
+                        )}
+                      </div>
+
+                      <div className={styles.actions}>
+                        <button
+                            className={`${styles.actionButton} ${styles.viewButton}`}
+                            onClick={() => handleViewDetails(report)}
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                        {report.status === "Completed" && (
+                            <button className={`${styles.actionButton} ${styles.downloadButton}`}>
+                              <Download size={16} />
+                              <a href={report.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                                Download
+                              </a>
+                            </button>
+                        )}
+                        {report.status !== "Completed" && (
+                            <button
+                                className={`${styles.actionButton} ${styles.completeButton}`}
+                                onClick={() => handleStatusUpdate(report._id, 'Completed')}
+                            >
+                              <CheckCircle size={16} />
+                              Mark Complete
+                            </button>
+                        )}
+                        <button
+                            className={`${styles.actionButton} ${styles.deleteButton}`}
+                            onClick={() => handleDeleteReport(report._id)}
+                        >
+                          <Trash2 size={16} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                ))
             )}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <button 
-                className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Prev
-              </button>
+              <div className={styles.pagination}>
+                <button
+                    className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                  Prev
+                </button>
 
-              <div className={styles.pageNumbers}>
-                {/* Show page 1 if not in visible range */}
-                {pageNumbers[0] > 1 && (
-                  <>
-                    <button
-                      className={styles.pageNumber}
-                      onClick={() => handlePageChange(1)}
-                    >
-                      1
-                    </button>
-                    {pageNumbers[0] > 2 && (
-                      <span className={styles.dots}>...</span>
-                    )}
-                  </>
-                )}
+                <div className={styles.pageNumbers}>
+                  {/* Show page 1 if not in visible range */}
+                  {pageNumbers[0] > 1 && (
+                      <>
+                        <button
+                            className={styles.pageNumber}
+                            onClick={() => handlePageChange(1)}
+                        >
+                          1
+                        </button>
+                        {pageNumbers[0] > 2 && (
+                            <span className={styles.dots}>...</span>
+                        )}
+                      </>
+                  )}
 
-                {pageNumbers.map(page => (
-                  <button
-                    key={page}
-                    className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-                
-                {/* Show dots and last page if not in visible range */}
-                {pageNumbers[pageNumbers.length - 1] < totalPages && (
-                  <>
-                    {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                      <span className={styles.dots}>...</span>
-                    )}
-                    <button
-                      className={styles.pageNumber}
-                      onClick={() => handlePageChange(totalPages)}
-                    >
-                      {totalPages}
-                    </button>
-                  </>
-                )}
+                  {pageNumbers.map(page => (
+                      <button
+                          key={page}
+                          className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
+                          onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </button>
+                  ))}
+
+                  {/* Show dots and last page if not in visible range */}
+                  {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                      <>
+                        {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                            <span className={styles.dots}>...</span>
+                        )}
+                        <button
+                            className={styles.pageNumber}
+                            onClick={() => handlePageChange(totalPages)}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                  )}
+                </div>
+
+                <button
+                    className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
               </div>
-
-              <button 
-                className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
           )}
         </main>
 
         {/* Report Detail Modal */}
         {isDetailModalOpen && selectedReport && (
-          <div className={styles.modalOverlay} onClick={() => setIsDetailModalOpen(false)}>
-            <div className={styles.detailModal} onClick={e => e.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <h2>Report Details</h2>
-                <button
-                    className={styles.closeButton}
-                    onClick={() => setIsDetailModalOpen(false)}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className={styles.detailContent}>
-                <div className={styles.reportProfileSection}>
-                  <img 
-                    src={selectedReport.user.profile_pic || "/default-avatar.svg"} 
-                    alt={selectedReport.user.name} 
-                    className={styles.detailUserImage}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/default-avatar.svg";
-                    }}
-                  />
-                  <div className={styles.reportMainInfo}>
-                    <h3>{selectedReport.title}</h3>
-                    <p className={styles.reportType}>{selectedReport.type}</p>
-                    <p className={`${styles.reportStatus} ${styles[selectedReport.status.toLowerCase()]}`}>
-                      {selectedReport.status}
-                    </p>
-                  </div>
+            <div className={styles.modalOverlay} onClick={() => setIsDetailModalOpen(false)}>
+              <div className={styles.detailModal} onClick={e => e.stopPropagation()}>
+                <div className={styles.modalHeader}>
+                  <h2>Report Details</h2>
+                  <button
+                      className={styles.closeButton}
+                      onClick={() => setIsDetailModalOpen(false)}
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
 
-                <div className={styles.detailGrid}>
-                  <div className={styles.detailItem}>
-                    <User size={18} />
-                    <div>
-                      <strong>Patient</strong>
-                      <p>{selectedReport.user.name}</p>
-                      <p className={styles.email}>{selectedReport.user.email}</p>
+                <div className={styles.detailContent}>
+                  <div className={styles.reportProfileSection}>
+                    <img
+                        src={selectedReport.user.profile_pic || "/default-avatar.svg"}
+                        alt={selectedReport.user.name}
+                        className={styles.detailUserImage}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/default-avatar.svg";
+                        }}
+                    />
+                    <div className={styles.reportMainInfo}>
+                      <h3>{selectedReport.title}</h3>
+                      <p className={styles.reportType}>{selectedReport.type}</p>
+                      <p className={`${styles.reportStatus} ${styles[selectedReport.status.toLowerCase()]}`}>
+                        {selectedReport.status}
+                      </p>
                     </div>
                   </div>
-                  
-                  <div className={styles.detailItem}>
-                    <Calendar size={18} />
-                    <div>
-                      <strong>Report Date</strong>
-                      <p>{new Date(selectedReport.reportDate).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  
-                  {selectedReport.doctor && (
+
+                  <div className={styles.detailGrid}>
                     <div className={styles.detailItem}>
-                      <Stethoscope size={18} />
+                      <User size={18} />
                       <div>
-                        <strong>Doctor</strong>
-                        <p>{selectedReport.doctor}</p>
+                        <strong>Patient</strong>
+                        <p>{selectedReport.user.name}</p>
+                        <p className={styles.email}>{selectedReport.user.email}</p>
                       </div>
                     </div>
-                  )}
-                  
-                  <div className={styles.detailItem}>
-                    <FileText size={18} />
-                    <div>
-                      <strong>File Size</strong>
-                      <p>{(selectedReport.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+
+                    <div className={styles.detailItem}>
+                      <Calendar size={18} />
+                      <div>
+                        <strong>Report Date</strong>
+                        <p>{new Date(selectedReport.reportDate).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+
+                    {selectedReport.doctor && (
+                        <div className={styles.detailItem}>
+                          <Stethoscope size={18} />
+                          <div>
+                            <strong>Doctor</strong>
+                            <p>{selectedReport.doctor}</p>
+                          </div>
+                        </div>
+                    )}
+
+                    <div className={styles.detailItem}>
+                      <FileText size={18} />
+                      <div>
+                        <strong>File Size</strong>
+                        <p>{(selectedReport.fileSize / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className={styles.actionSection}>
-                  {selectedReport.status === "Completed" && (
-                    <a 
-                      href={selectedReport.fileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`${styles.actionButton} ${styles.downloadButton}`}
-                    >
-                      <Download size={16} />
-                      Download Report
-                    </a>
-                  )}
-                  {selectedReport.status !== "Completed" && (
-                    <button 
-                      className={`${styles.actionButton} ${styles.completeButton}`}
-                      onClick={() => {
-                        handleStatusUpdate(selectedReport._id, 'Completed')
-                        setIsDetailModalOpen(false)
-                      }}
-                    >
-                      <CheckCircle size={16} />
-                      Mark as Complete
-                    </button>
-                  )}
+                  <div className={styles.actionSection}>
+                    {selectedReport.status === "Completed" && (
+                        <a
+                            href={selectedReport.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${styles.actionButton} ${styles.downloadButton}`}
+                        >
+                          <Download size={16} />
+                          Download Report
+                        </a>
+                    )}
+                    {selectedReport.status !== "Completed" && (
+                        <button
+                            className={`${styles.actionButton} ${styles.completeButton}`}
+                            onClick={() => {
+                              handleStatusUpdate(selectedReport._id, 'Completed')
+                              setIsDetailModalOpen(false)
+                            }}
+                        >
+                          <CheckCircle size={16} />
+                          Mark as Complete
+                        </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
         )}
       </div>
   )
 }
+

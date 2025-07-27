@@ -167,6 +167,10 @@ export default function ProfilePage() {
             <Bell size={20} />
             Reminders
           </NavItem>
+          <NavItem href="/profile/feedback">
+            <Heart size={20} />
+            Feedback
+          </NavItem>
           <NavItem href="/profile" className={styles.active}>
             <User size={20} />
             Profile

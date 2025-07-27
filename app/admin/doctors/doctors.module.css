@@ -123,15 +123,48 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  padding-top: 3.5rem;
-  position: relative;
-  z-index: 40;
 }
 
-.header h1 {
+.headerLeft h1 {
   font-size: 1.875rem;
   font-weight: 700;
   color: #111827;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.adminProfile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #9333ea;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .addButton {
@@ -882,107 +915,107 @@
   .container {
     overflow-x: hidden;
   }
-  
+
   .main {
     margin-left: 0;
     width: 100%;
     max-width: 100vw;
     padding: 1rem 0.5rem;
   }
-  
+
   .sidebar {
     transform: translateX(-100%);
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
-  
+
   .menuToggle {
     display: block;
   }
-  
+
   .header {
     padding-top: 4rem;
   }
-  
+
   .header h1 {
     font-size: 1.5rem;
   }
-  
+
   .addButton {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
   }
-  
+
   .doctorsGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .searchBar {
     min-width: 200px;
     max-width: 100%;
   }
-  
+
   .pagination {
     flex-wrap: wrap;
     gap: 0.25rem;
   }
-  
+
   .pageNumbers {
     order: 3;
     width: 100%;
     justify-content: center;
     margin-top: 0.5rem;
   }
-  
+
   .detailModal {
     width: 95%;
     max-height: 95vh;
   }
-  
+
   .doctorProfileSection {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .detailDoctorImage {
     width: 100px;
     height: 100px;
     align-self: center;
   }
-  
+
   .detailGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .resultsInfo {
     order: 3;
     width: 100%;
     justify-content: center;
     margin-top: 0.5rem;
   }
-  
+
   .filters {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
-  
+
   .filterGroup {
     flex-wrap: wrap;
   }
-  
+
   .modal {
     width: 95%;
     max-width: 95vw;
     margin: 0 auto;
   }
-  
+
   .modalContent {
     padding: 1rem;
   }
-  
+
   .formRow {
     flex-direction: column;
   }

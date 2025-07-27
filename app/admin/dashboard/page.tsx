@@ -18,7 +18,8 @@ import {
   Menu,
   FileText,
   User,
-  Calendar
+  Calendar,
+  MessageSquare
 } from "lucide-react"
 import styles from "./dashboard.module.css"
 
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
   const [isClient, setIsClient] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState<DashboardStats>({
     users: 0,
     doctors: 0,
@@ -100,19 +102,26 @@ export default function AdminDashboard() {
         return
       }
 
+      // Load admin info from localStorage
+      const adminInfo = localStorage.getItem('adminInfo')
+      if (adminInfo) {
+        const admin = JSON.parse(adminInfo)
+        setUser(admin)
+      }
+
       try {
         const response = await axios.get(`http://localhost:5000/api/admin/dashboard-stats`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        
+
         setStats(response.data)
-        
+
         // Fetch recent appointments for activity
         try {
           const appointmentsResponse = await axios.get(`http://localhost:5000/api/admin/appointments?limit=5`, {
             headers: { Authorization: `Bearer ${token}` },
           })
-          
+
           // Check if appointmentsResponse.data has appointments array
           const appointmentsData = appointmentsResponse.data.appointments || []
           const activities = appointmentsData.slice(0, 4).map((appointment: any) => ({
@@ -121,13 +130,13 @@ export default function AdminDashboard() {
             user: appointment.userId?.name || 'Unknown User',
             time: getRelativeTime(appointment.createdAt)
           }))
-          
+
           setRecentActivity(activities)
         } catch (appointmentErr) {
           console.warn("Failed to fetch appointments for recent activity:", appointmentErr)
           // Continue without recent activity data
         }
-        
+
       } catch (err: any) {
         console.error("Failed to fetch dashboard data:", err)
         if (err.response && err.response.status === 401) {
@@ -148,7 +157,7 @@ export default function AdminDashboard() {
     const date = new Date(dateString)
     const now = new Date()
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
+
     if (diffInMinutes < 1) return "Just now"
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`
@@ -192,134 +201,119 @@ export default function AdminDashboard() {
   if (error) return <div className={styles.error}>{error}</div>
 
   return (
-    <div className={styles.container}>
-      <button 
-        className={styles.menuToggle} 
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-      >
-        <Menu size={24} />
-      </button>
-      
-      <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
-        <div className={styles.sidebarHeader}>
-          <Stethoscope size={24} />
-          <span>SymptoSeek Admin</span>
-        </div>
-        
-        <nav className={styles.sidebarNav}>
-          <Link href="/admin/dashboard" className={`${styles.sidebarLink} ${styles.active}`}>
-            <BarChart3 size={20} />
-            Overview
-          </Link>
-          <Link href="/admin/doctors" className={styles.sidebarLink}>
-            <Stethoscope size={20} />
-            Doctors
-          </Link>
-          <Link href="/admin/users" className={styles.sidebarLink}>
-            <User size={20} />
-            Users
-          </Link>
-          <Link href="/admin/appointments" className={styles.sidebarLink}>
-            <Calendar size={20} />
-            Appointments
-          </Link>
-          <Link href="/admin/reports" className={styles.sidebarLink}>
-            <FileText size={20} />
-            Reports
-          </Link>
-          <Link href="/admin/settings" className={styles.sidebarLink}>
-            <Settings size={20} />
-            Settings
-          </Link>
-        </nav>
-
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          <LogOut size={20} />
-          Logout
+      <div className={styles.container}>
+        <button
+            className={styles.menuToggle}
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          <Menu size={24} />
         </button>
-      </aside>
 
-      <main className={styles.main}>
-        <header className={styles.header}>
-          <h1>Admin Overview</h1>
-          <div className={styles.headerActions}>
-            <div className={styles.notificationButton}>
-              <button 
-                className={styles.iconButton}
-                onClick={() => setShowNotifications(!showNotifications)}
-              >
-              <Bell size={20} />
-                <span className={styles.notificationBadge}>3</span>
-              </button>
-              
-              {showNotifications && (
-                <div className={styles.notificationDropdown}>
-                  <div className={styles.notificationHeader}>
-                    <h3>Notifications</h3>
+        <aside className={`${styles.sidebar} ${isSidebarOpen ? styles.open : ''}`}>
+          <div className={styles.sidebarHeader}>
+            <Stethoscope size={24} />
+            <span>SymptoSeek Admin</span>
+          </div>
+
+          <nav className={styles.sidebarNav}>
+            <Link href="/admin/dashboard" className={`${styles.sidebarLink} ${styles.active}`}>
+              <BarChart3 size={20} />
+              Overview
+            </Link>
+            <Link href="/admin/doctors" className={styles.sidebarLink}>
+              <Stethoscope size={20} />
+              Doctors
+            </Link>
+            <Link href="/admin/users" className={styles.sidebarLink}>
+              <User size={20} />
+              Users
+            </Link>
+            <Link href="/admin/appointments" className={styles.sidebarLink}>
+              <Calendar size={20} />
+              Appointments
+            </Link>
+            <Link href="/admin/feedback" className={styles.sidebarLink}>
+              <MessageSquare size={20} />
+              Feedback
+            </Link>
+            <Link href="/admin/reports" className={styles.sidebarLink}>
+              <FileText size={20} />
+              Reports
+            </Link>
+            <Link href="/admin/settings" className={styles.sidebarLink}>
+              <Settings size={20} />
+              Settings
+            </Link>
+          </nav>
+
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            <LogOut size={20} />
+            Logout
+          </button>
+        </aside>
+
+        <main className={styles.main}>
+          <header className={styles.header}>
+            <h1>Admin Overview</h1>
+            <div className={styles.headerActions}>
+              <div className={styles.adminProfile}>
+                {user?.profile_pic ? (
+                    <img
+                        src={user.profile_pic}
+                        alt={user.name}
+                        className={styles.avatar}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove(styles.hidden);
+                        }}
+                    />
+                ) : null}
+                <div className={`${styles.avatar} ${user?.profile_pic ? styles.hidden : ''}`}>
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <span>{user?.name}</span>
+              </div>
+            </div>
+          </header>
+
+          <div className={styles.stats}>
+            {statCards.map((stat, index) => (
+                <div key={index} className={styles.statCard}>
+                  <div className={styles.statHeader}>
+                    {stat.icon}
+                    <span className={styles.statTitle}>{stat.title}</span>
                   </div>
-                  <div className={styles.notificationList}>
-                    {notifications.map((notification) => (
-                      <div key={notification.id} className={styles.notificationItem}>
-                        <div className={styles.notificationIcon}>
-                          {notification.icon}
-                        </div>
-                        <div className={styles.notificationContent}>
-                          <div className={styles.notificationTitle}>
-                            {notification.title}
-                          </div>
-                          <div className={styles.notificationTime}>
-                            {notification.time}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className={styles.statValue}>{stat.value}</div>
+                  <div className={`${styles.statChange} ${stat.change >= 0 ? styles.positive : styles.negative}`}>
+                    {stat.change >= 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                    {Math.abs(stat.change)}%
                   </div>
                 </div>
+            ))}
+          </div>
+
+          <section className={styles.activitySection}>
+            <h2>Recent Activity</h2>
+            <div className={styles.activityList}>
+              {recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => (
+                      <div key={activity._id} className={styles.activityItem}>
+                        <div className={styles.activityContent}>
+                          <span className={styles.activityAction}>{activity.action}</span>
+                          <span className={styles.activityUser}>{activity.user}</span>
+                        </div>
+                        <span className={styles.activityTime}>{activity.time}</span>
+                      </div>
+                  ))
+              ) : (
+                  <div className={styles.emptyActivity}>
+                    <p>No recent activity to display</p>
+                  </div>
               )}
             </div>
-            <Link href="/admin/settings" className={styles.iconButton}>
-              <Settings size={20} />
-            </Link>
-          </div>
-        </header>
-
-        <div className={styles.stats}>
-          {statCards.map((stat, index) => (
-            <div key={index} className={styles.statCard}>
-              <div className={styles.statHeader}>
-                {stat.icon}
-                <span className={styles.statTitle}>{stat.title}</span>
-              </div>
-              <div className={styles.statValue}>{stat.value}</div>
-              <div className={`${styles.statChange} ${stat.change >= 0 ? styles.positive : styles.negative}`}>
-                {stat.change >= 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                {Math.abs(stat.change)}%
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <section className={styles.activitySection}>
-          <h2>Recent Activity</h2>
-          <div className={styles.activityList}>
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity) => (
-                <div key={activity._id} className={styles.activityItem}>
-                  <div className={styles.activityContent}>
-                    <span className={styles.activityAction}>{activity.action}</span>
-                    <span className={styles.activityUser}>{activity.user}</span>
-                  </div>
-                  <span className={styles.activityTime}>{activity.time}</span>
-                </div>
-              ))
-            ) : (
-              <div className={styles.emptyActivity}>
-                <p>No recent activity to display</p>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
-    </div>
+          </section>
+        </main>
+      </div>
   )
 }

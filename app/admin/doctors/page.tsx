@@ -23,7 +23,8 @@ import {
   LogOut,
   Clock,
   Building,
-  User
+  User,
+  MessageSquare
 } from "lucide-react"
 import styles from "./doctors.module.css"
 
@@ -58,6 +59,7 @@ interface DoctorFormData {
 
 export default function DoctorsPage() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [doctors, setDoctors] = useState<Doctor[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -82,11 +84,11 @@ export default function DoctorsPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalDoctors, setTotalDoctors] = useState(0)
-  const doctorsPerPage = 12
+  const doctorsPerPage = 15
 
   // Get available specialties from current doctors
   const specialties = Array.from(new Set(doctors.map(doctor => doctor.speciality)))
@@ -102,21 +104,28 @@ export default function DoctorsPage() {
       router.push("/admin/auth")
       return
     }
+    
+    // Load admin info from localStorage
+    const adminInfo = localStorage.getItem('adminInfo')
+    if (adminInfo) {
+      const admin = JSON.parse(adminInfo)
+      setUser(admin)
+    }
   }
 
   const fetchDoctors = async (page = 1) => {
     try {
       setLoading(true)
       const token = localStorage.getItem("adminToken")
-      
+
       const response = await axios.get(`http://localhost:5000/api/admin/doctors?page=${page}&limit=${doctorsPerPage}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
-      
+
       console.log('Doctors API response:', response.data)
-      
+
       // Handle different response formats
       if (response.data.doctors) {
         setDoctors(response.data.doctors)
@@ -128,7 +137,7 @@ export default function DoctorsPage() {
         setDoctors([])
         setTotalDoctors(0)
       }
-      
+
       setCurrentPage(page)
       setError("")
     } catch (err: any) {
@@ -152,16 +161,16 @@ export default function DoctorsPage() {
     e.preventDefault()
     try {
       const token = localStorage.getItem("adminToken")
-      
+
       const response = await axios.post('http://localhost:5000/api/admin/doctors', newDoctor, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
-      
+
       setIsAddModalOpen(false)
-      
+
       // Reset form
       setNewDoctor({
         image_source: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400",
@@ -176,7 +185,7 @@ export default function DoctorsPage() {
         longitude: "",
         latitude: ""
       })
-      
+
       // Refresh the current page to show the new doctor
       fetchDoctors(currentPage)
       setError("")
@@ -197,17 +206,17 @@ export default function DoctorsPage() {
 
     try {
       const token = localStorage.getItem("adminToken")
-      
+
       const response = await axios.patch(`http://localhost:5000/api/admin/doctors/${editingDoctor._id}`, editingDoctor, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       })
-      
+
       setIsEditModalOpen(false)
       setEditingDoctor(null)
-      
+
       // Refresh the current page
       fetchDoctors(currentPage)
       setError("")
@@ -222,13 +231,13 @@ export default function DoctorsPage() {
 
     try {
       const token = localStorage.getItem("adminToken")
-      
+
       await axios.delete(`http://localhost:5000/api/admin/doctors/${doctorId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
-      
+
       // Refresh the current page
       fetchDoctors(currentPage)
       setError("")
@@ -252,10 +261,10 @@ export default function DoctorsPage() {
   // Filter doctors based on search and specialty
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.speciality.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doctor.hospital_name.toLowerCase().includes(searchTerm.toLowerCase())
+        doctor.speciality.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.hospital_name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSpecialty = !selectedSpecialty || doctor.speciality === selectedSpecialty
-    
+
     return matchesSearch && matchesSpecialty
   })
 
@@ -265,7 +274,7 @@ export default function DoctorsPage() {
   const getPageNumbers = () => {
     const pages = []
     const maxVisiblePages = 5
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages if total pages is less than or equal to max visible
       for (let i = 1; i <= totalPages; i++) {
@@ -275,17 +284,17 @@ export default function DoctorsPage() {
       // Calculate start and end of visible pages
       let start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
       let end = Math.min(totalPages, start + maxVisiblePages - 1)
-      
+
       // Adjust start if we're near the end
       if (end - start < maxVisiblePages - 1) {
         start = Math.max(1, end - maxVisiblePages + 1)
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i)
       }
     }
-    
+
     return pages
   }
 
@@ -323,6 +332,10 @@ export default function DoctorsPage() {
               <Calendar size={20} />
               Appointments
             </Link>
+            <Link href="/admin/feedback" className={styles.sidebarLink}>
+              <MessageSquare size={20} />
+              Feedback
+            </Link>
             <Link href="/admin/reports" className={styles.sidebarLink}>
               <FileText size={20} />
               Reports
@@ -342,16 +355,36 @@ export default function DoctorsPage() {
         <main className={styles.main}>
           <div className={styles.header}>
             <h1>Manage Doctors</h1>
-            <button className={styles.addButton} onClick={() => setIsAddModalOpen(true)}>
-              <Plus size={20} />
-              Add New Doctor
-            </button>
+            <div className={styles.headerActions}>
+              <button className={styles.addButton} onClick={() => setIsAddModalOpen(true)}>
+                <Plus size={20} />
+                Add New Doctor
+              </button>
+              <div className={styles.adminProfile}>
+                {user?.profile_pic ? (
+                  <img
+                    src={user.profile_pic}
+                    alt={user.name}
+                    className={styles.avatar}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove(styles.hidden);
+                    }}
+                  />
+                ) : null}
+                <div className={`${styles.avatar} ${user?.profile_pic ? styles.hidden : ''}`}>
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <span>{user?.name}</span>
+              </div>
+            </div>
           </div>
 
           {error && (
-            <div className={styles.errorMessage}>
-              {error}
-            </div>
+              <div className={styles.errorMessage}>
+                {error}
+              </div>
           )}
 
           <div className={styles.filters}>
@@ -384,94 +417,94 @@ export default function DoctorsPage() {
           </div>
 
           {loading ? (
-            <div className={styles.loading}>
-              <div className={styles.spinner}></div>
-              <p>Loading doctors...</p>
-            </div>
-          ) : (
-            <>
-              <div className={styles.doctorsGrid}>
-                {filteredDoctors.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <Stethoscope size={48} />
-                    <h3>No doctors found</h3>
-                    <p>Try adjusting your search criteria or add a new doctor.</p>
-                  </div>
-                ) : (
-                  filteredDoctors.map((doctor) => (
-                    <div key={doctor._id} className={styles.doctorCard}>
-                      <div className={styles.cardHeader}>
-                        <div className={styles.doctorProfile}>
-                          <img 
-                            src={doctor.image_source || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400"} 
-                            alt={doctor.name} 
-                            className={styles.doctorImage}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400";
-                            }}
-                          />
-                          <div className={styles.doctorInfo}>
-                            <h3 
-                              className={styles.doctorName}
-                              onClick={() => handleViewDetails(doctor)}
-                              title="Click to view details"
-                            >
-                              {doctor.name}
-                            </h3>
-                            <p className={styles.doctorSpecialty}>{doctor.speciality}</p>
-                          </div>
-                        </div>
-                        <div className={styles.headerActions}>
-                          <button
-                              className={styles.actionButton}
-                              onClick={() => handleEditDoctor(doctor)}
-                              title="Edit doctor"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                              className={styles.actionButton}
-                              onClick={() => handleDeleteDoctor(doctor._id)}
-                              title="Delete doctor"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className={styles.details}>
-                        <div className={styles.detail}>
-                          <MapPin size={16} />
-                          <span>{doctor.address}</span>
-                        </div>
-                        <div className={styles.detail}>
-                          <Clock size={16} />
-                          <span>{doctor.visiting_hours}</span>
-                        </div>
-                        <div className={styles.detail}>
-                          <Building size={16} />
-                          <span>{doctor.hospital_name}</span>
-                        </div>
-                        <div className={styles.detail}>
-                          <Phone size={16} />
-                          <span>{doctor.number}</span>
-                        </div>
-                        <div className={styles.detail}>
-                          <span className={styles.degreeLabel}>Degree:</span>
-                          <span>{doctor.degree}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
+              <div className={styles.loading}>
+                <div className={styles.spinner}></div>
+                <p>Loading doctors...</p>
               </div>
+          ) : (
+              <>
+                <div className={styles.doctorsGrid}>
+                  {filteredDoctors.length === 0 ? (
+                      <div className={styles.emptyState}>
+                        <Stethoscope size={48} />
+                        <h3>No doctors found</h3>
+                        <p>Try adjusting your search criteria or add a new doctor.</p>
+                      </div>
+                  ) : (
+                      filteredDoctors.map((doctor) => (
+                          <div key={doctor._id} className={styles.doctorCard}>
+                            <div className={styles.cardHeader}>
+                              <div className={styles.doctorProfile}>
+                                <img
+                                    src={doctor.image_source || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400"}
+                                    alt={doctor.name}
+                                    className={styles.doctorImage}
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.src = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400";
+                                    }}
+                                />
+                                <div className={styles.doctorInfo}>
+                                  <h3
+                                      className={styles.doctorName}
+                                      onClick={() => handleViewDetails(doctor)}
+                                      title="Click to view details"
+                                  >
+                                    {doctor.name}
+                                  </h3>
+                                  <p className={styles.doctorSpecialty}>{doctor.speciality}</p>
+                                </div>
+                              </div>
+                              <div className={styles.headerActions}>
+                                <button
+                                    className={styles.actionButton}
+                                    onClick={() => handleEditDoctor(doctor)}
+                                    title="Edit doctor"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button
+                                    className={styles.actionButton}
+                                    onClick={() => handleDeleteDoctor(doctor._id)}
+                                    title="Delete doctor"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className={styles.pagination}>
-                  {/* First button - only show if current page > 3 */}
-                  {/* {currentPage > 3 && (
+                            <div className={styles.details}>
+                              <div className={styles.detail}>
+                                <MapPin size={16} />
+                                <span>{doctor.address}</span>
+                              </div>
+                              <div className={styles.detail}>
+                                <Clock size={16} />
+                                <span>{doctor.visiting_hours}</span>
+                              </div>
+                              <div className={styles.detail}>
+                                <Building size={16} />
+                                <span>{doctor.hospital_name}</span>
+                              </div>
+                              <div className={styles.detail}>
+                                <Phone size={16} />
+                                <span>{doctor.number}</span>
+                              </div>
+                              <div className={styles.detail}>
+                                <span className={styles.degreeLabel}>Degree:</span>
+                                <span>{doctor.degree}</span>
+                              </div>
+                            </div>
+                          </div>
+                      ))
+                  )}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className={styles.pagination}>
+                      {/* First button - only show if current page > 3 */}
+                      {/* {currentPage > 3 && (
                     <button 
                       className={styles.pageButton}
                       onClick={() => handlePageChange(1)}
@@ -480,66 +513,66 @@ export default function DoctorsPage() {
                     </button>
                   )} */}
 
-                  <button 
-                    className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    Prev
-                  </button>
-
-                  <div className={styles.pageNumbers}>
-                    {/* Show page 1 if not in visible range */}
-                    {pageNumbers[0] > 1 && (
-                      <>
-                        <button
-                          className={styles.pageNumber}
-                          onClick={() => handlePageChange(1)}
-                        >
-                          1
-                        </button>
-                        {pageNumbers[0] > 2 && (
-                          <span className={styles.dots}>...</span>
-                        )}
-                      </>
-                    )}
-
-                    {pageNumbers.map(page => (
                       <button
-                        key={page}
-                        className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
-                        onClick={() => handlePageChange(page)}
+                          className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
                       >
-                        {page}
+                        Prev
                       </button>
-                    ))}
-                    
-                    {/* Show dots and last page if not in visible range */}
-                    {pageNumbers[pageNumbers.length - 1] < totalPages && (
-                      <>
-                        {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
-                          <span className={styles.dots}>...</span>
+
+                      <div className={styles.pageNumbers}>
+                        {/* Show page 1 if not in visible range */}
+                        {pageNumbers[0] > 1 && (
+                            <>
+                              <button
+                                  className={styles.pageNumber}
+                                  onClick={() => handlePageChange(1)}
+                              >
+                                1
+                              </button>
+                              {pageNumbers[0] > 2 && (
+                                  <span className={styles.dots}>...</span>
+                              )}
+                            </>
                         )}
-                        <button
-                          className={styles.pageNumber}
-                          onClick={() => handlePageChange(totalPages)}
-                        >
-                          {totalPages}
-                        </button>
-                      </>
-                    )}
-                  </div>
 
-                  <button 
-                    className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </button>
+                        {pageNumbers.map(page => (
+                            <button
+                                key={page}
+                                className={`${styles.pageNumber} ${currentPage === page ? styles.active : ''}`}
+                                onClick={() => handlePageChange(page)}
+                            >
+                              {page}
+                            </button>
+                        ))}
 
-                  {/* Last button - only show if current page is more than 3 pages from end */}
-                  {/* {currentPage < totalPages - 2 && (
+                        {/* Show dots and last page if not in visible range */}
+                        {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                            <>
+                              {pageNumbers[pageNumbers.length - 1] < totalPages - 1 && (
+                                  <span className={styles.dots}>...</span>
+                              )}
+                              <button
+                                  className={styles.pageNumber}
+                                  onClick={() => handlePageChange(totalPages)}
+                              >
+                                {totalPages}
+                              </button>
+                            </>
+                        )}
+                      </div>
+
+                      <button
+                          className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </button>
+
+                      {/* Last button - only show if current page is more than 3 pages from end */}
+                      {/* {currentPage < totalPages - 2 && (
                     <button 
                       className={styles.pageButton}
                       onClick={() => handlePageChange(totalPages)}
@@ -547,93 +580,93 @@ export default function DoctorsPage() {
                       Last
                     </button>
                   )} */}
-                </div>
-              )}
-            </>
+                    </div>
+                )}
+              </>
           )}
         </main>
 
         {/* Doctor Detail Modal */}
         {isDetailModalOpen && selectedDoctor && (
-          <div className={styles.modalOverlay} onClick={() => setIsDetailModalOpen(false)}>
-            <div className={styles.detailModal} onClick={e => e.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <h2>Doctor Details</h2>
-                <button
-                    className={styles.closeButton}
-                    onClick={() => setIsDetailModalOpen(false)}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className={styles.detailContent}>
-                <div className={styles.doctorProfileSection}>
-                  <img 
-                    src={selectedDoctor.image_source || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400"} 
-                    alt={selectedDoctor.name} 
-                    className={styles.detailDoctorImage}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400";
-                    }}
-                  />
-                  <div className={styles.doctorMainInfo}>
-                    <h3>{selectedDoctor.name}</h3>
-                    <p className={styles.specialty}>{selectedDoctor.speciality}</p>
-                    <p className={styles.degree}>{selectedDoctor.degree}</p>
-                  </div>
+            <div className={styles.modalOverlay} onClick={() => setIsDetailModalOpen(false)}>
+              <div className={styles.detailModal} onClick={e => e.stopPropagation()}>
+                <div className={styles.modalHeader}>
+                  <h2>Doctor Details</h2>
+                  <button
+                      className={styles.closeButton}
+                      onClick={() => setIsDetailModalOpen(false)}
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
 
-                <div className={styles.detailGrid}>
-                  <div className={styles.detailItem}>
-                    <Building size={18} />
-                    <div>
-                      <strong>Hospital</strong>
-                      <p>{selectedDoctor.hospital_name}</p>
+                <div className={styles.detailContent}>
+                  <div className={styles.doctorProfileSection}>
+                    <img
+                        src={selectedDoctor.image_source || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400"}
+                        alt={selectedDoctor.name}
+                        className={styles.detailDoctorImage}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400";
+                        }}
+                    />
+                    <div className={styles.doctorMainInfo}>
+                      <h3>{selectedDoctor.name}</h3>
+                      <p className={styles.specialty}>{selectedDoctor.speciality}</p>
+                      <p className={styles.degree}>{selectedDoctor.degree}</p>
                     </div>
                   </div>
-                  
-                  <div className={styles.detailItem}>
-                    <MapPin size={18} />
-                    <div>
-                      <strong>Address</strong>
-                      <p>{selectedDoctor.address}</p>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.detailItem}>
-                    <Phone size={18} />
-                    <div>
-                      <strong>Phone</strong>
-                      <p>{selectedDoctor.number}</p>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.detailItem}>
-                    <Clock size={18} />
-                    <div>
-                      <strong>Visiting Hours</strong>
-                      <p>{selectedDoctor.visiting_hours}</p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className={styles.aboutSection}>
-                  <h4>About Doctor</h4>
-                  <p>{selectedDoctor.About}</p>
-                </div>
+                  <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                      <Building size={18} />
+                      <div>
+                        <strong>Hospital</strong>
+                        <p>{selectedDoctor.hospital_name}</p>
+                      </div>
+                    </div>
 
-                {(selectedDoctor.longitude && selectedDoctor.latitude) && (
-                  <div className={styles.locationSection}>
-                    <h4>Location Coordinates</h4>
-                    <p>Longitude: {selectedDoctor.longitude}</p>
-                    <p>Latitude: {selectedDoctor.latitude}</p>
+                    <div className={styles.detailItem}>
+                      <MapPin size={18} />
+                      <div>
+                        <strong>Address</strong>
+                        <p>{selectedDoctor.address}</p>
+                      </div>
+                    </div>
+
+                    <div className={styles.detailItem}>
+                      <Phone size={18} />
+                      <div>
+                        <strong>Phone</strong>
+                        <p>{selectedDoctor.number}</p>
+                      </div>
+                    </div>
+
+                    <div className={styles.detailItem}>
+                      <Clock size={18} />
+                      <div>
+                        <strong>Visiting Hours</strong>
+                        <p>{selectedDoctor.visiting_hours}</p>
+                      </div>
+                    </div>
                   </div>
-                )}
+
+                  <div className={styles.aboutSection}>
+                    <h4>About Doctor</h4>
+                    <p>{selectedDoctor.About}</p>
+                  </div>
+
+                  {(selectedDoctor.longitude && selectedDoctor.latitude) && (
+                      <div className={styles.locationSection}>
+                        <h4>Location Coordinates</h4>
+                        <p>Longitude: {selectedDoctor.longitude}</p>
+                        <p>Latitude: {selectedDoctor.latitude}</p>
+                      </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
         )}
 
         {isEditModalOpen && editingDoctor && (
@@ -958,3 +991,4 @@ export default function DoctorsPage() {
       </div>
   )
 }
+

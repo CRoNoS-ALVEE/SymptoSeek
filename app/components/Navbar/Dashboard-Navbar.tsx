@@ -125,4 +125,3 @@ export default function Navbar({ isLoggedIn, userImage, onLogout }: NavbarProps)
         </nav>
     )
 }
-
