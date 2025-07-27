@@ -21,8 +21,8 @@ interface User {
 interface DashboardStats {
   upcomingAppointments: number;
   pastConsultations: number;
-  activeAppointments: number;
-  healthScore: number;
+  activeReminders: number;
+  totalChatInteractions: number;
 }
 
 interface RecentActivity {
@@ -76,8 +76,8 @@ export default function DashboardContent() {
   const [stats, setStats] = useState<DashboardStats>({
     upcomingAppointments: 0,
     pastConsultations: 0,
-    activeAppointments: 0,
-    healthScore: 0
+    activeReminders: 0,
+    totalChatInteractions: 0
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [completedConsultations, setCompletedConsultations] = useState<CompletedAppointment[]>([]);
@@ -156,25 +156,47 @@ export default function DashboardContent() {
       setCompletedConsultations(completedAppts);
       setAllAppointments(appointments); // Store all appointments
 
-      // Fetch reminders for active appointments count
+      // Fetch reminders for active reminders count
       const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
-      const activeAppointments = appointments.filter((apt: any) => 
-        apt.status === 'Approved' && new Date(apt.date) > now
-      ).length;
+      // Calculate active reminders (reminders that are not completed and are active today)
+      const today = new Date();
+      const todayDateString = today.toISOString().split('T')[0];
 
-      // Calculate health score based on completed activities
-      const completedReminders = remindersResponse.data.filter((reminder: any) => reminder.completed).length;
-      const totalReminders = remindersResponse.data.length;
-      const healthScore = totalReminders > 0 ? Math.round((completedReminders / totalReminders) * 100) : 0;
+      const activeReminders = remindersResponse.data.filter((reminder: any) => {
+        // Don't count completed reminders
+        if (reminder.isCompleted) return false;
+
+        // Check if reminder is active today
+        if (reminder.recurring === 'daily') {
+          return true;
+        } else if (reminder.recurring === 'weekly' && reminder.daysOfWeek) {
+          const todayDayOfWeek = today.getDay();
+          return reminder.daysOfWeek.includes(todayDayOfWeek);
+        } else if (reminder.date) {
+          const reminderDate = new Date(reminder.date).toISOString().split('T')[0];
+          return reminderDate === todayDateString;
+        } else if (reminder.recurring === 'none' && !reminder.date) {
+          return true;
+        }
+
+        return false;
+      }).length;
+
+      // Fetch total chat interactions
+      const chatResponse = await axios.get(`http://localhost:5000/api/chat/interactions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const totalChatInteractions = chatResponse.data.length;
 
       setStats({
         upcomingAppointments,
         pastConsultations,
-        activeAppointments,
-        healthScore
+        activeReminders,
+        totalChatInteractions
       });
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -298,8 +320,8 @@ export default function DashboardContent() {
   const dashboardStats = [
     { value: stats.upcomingAppointments.toString(), label: "Upcoming Appointments", link: "/appointments"},
     { value: stats.pastConsultations.toString(), label: "Past Consultations" },
-    { value: stats.activeAppointments.toString(), label: "Active Appointments", link: "/appointments" },
-    { value: `${stats.healthScore}%`, label: "Health Score" },
+    { value: stats.activeReminders.toString(), label: "Active Reminders", link: "/reminders" },
+    { value: stats.totalChatInteractions.toString(), label: "Chat Interactions", link: "/chatbot" },
   ]
 
   if (loading) return <p className={styles.loading}></p>;
