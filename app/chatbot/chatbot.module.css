@@ -149,305 +149,109 @@
 }
 
 .navIconButton {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
+  background: none;
+  border: none;
   color: #6b7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .navIconButton:hover {
   color: #9333ea;
-  border-color: #d1d5db;
-  background: #fafafa;
+  background: #f3f4f6;
 }
 
 .notificationContainer {
   position: relative;
 }
 
-/* Simple notification badge - Dashboard Style */
 .notificationBadge {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 0;
+  right: 0;
   background: #ef4444;
   color: white;
   border-radius: 50%;
-  min-width: 18px;
-  height: 18px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  width: 16px;
+  height: 16px;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* Clean notification dropdown - Dashboard Style */
 .notificationDropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 0.5rem);
   right: 0;
   width: 320px;
-  max-width: 90vw;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   z-index: 200;
   overflow: hidden;
   border: 1px solid #e5e7eb;
-  animation: fadeIn 0.15s ease-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Simple notification header - Dashboard Style */
 .notificationHeader {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f3f4f6;
-  background: #fafafa;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
 .notificationHeader h3 {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: #111827;
   margin: 0;
 }
 
-.unreadCount {
-  background: #9333ea;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-/* Clean notification list - Dashboard Style */
 .notificationList {
   max-height: 300px;
   overflow-y: auto;
 }
 
-/* Simple notification items - Dashboard Style */
 .notificationItem {
-  padding: 12px 20px;
-  border-bottom: 1px solid #f9fafb;
-  transition: background-color 0.15s ease;
+  padding: 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
   cursor: pointer;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  position: relative;
 }
 
 .notificationItem:hover {
   background: #f9fafb;
 }
 
-.notificationItem:last-child {
-  border-bottom: none;
-}
-
 .notificationItem.unread {
-  background: #fefbff;
-  border-left: 3px solid #9333ea;
-}
-
-.notificationItem.appointmentItem {
-  border-left: 3px solid #10b981;
-}
-
-.notificationIcon {
-  width: 32px;
-  height: 32px;
-  background: #f3f4f6;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  flex-shrink: 0;
-  color: #6b7280;
+  background: #fef3c7;
+  border-left: 3px solid #f59e0b;
 }
 
 .notificationContent {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
+  gap: 0.25rem;
 }
 
 .notificationTitle {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
-  line-height: 1.3;
-  margin: 0;
+  color: #111827;
 }
 
 .notificationMessage {
   font-size: 0.75rem;
   color: #6b7280;
   line-height: 1.4;
-  margin: 0;
 }
 
 .notificationTime {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #9ca3af;
-  font-weight: 500;
-  margin-top: 4px;
-}
-
-/* Simple section headers - Dashboard Style */
-.sectionHeader {
-  padding: 8px 20px;
-  background: #f9fafb;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-/* Simple mark complete button - Dashboard Style */
-.markCompleteButton {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  background: #10b981;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-  transition: all 0.15s ease;
-  opacity: 0;
-  transform: scale(0.9);
-}
-
-.notificationItem:hover .markCompleteButton {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.markCompleteButton:hover {
-  background: #059669;
-}
-
-.completed {
-  opacity: 0.6;
-}
-
-/* Simple loading and empty states - Dashboard Style */
-.loadingState {
-  padding: 32px 20px;
-  text-align: center;
-  color: #6b7280;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.loadingSpinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #f3f4f6;
-  border-top: 2px solid #9333ea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.emptyState {
-  padding: 32px 20px;
-  text-align: center;
-  color: #6b7280;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.emptyState h4 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #374151;
-  margin: 0;
-}
-
-.emptyState p {
-  font-size: 0.8rem;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Simple notification footer - Dashboard Style */
-.notificationFooter {
-  padding: 12px 20px;
-  background: #fafafa;
-  border-top: 1px solid #f3f4f6;
-  display: flex;
-  gap: 8px;
-}
-
-.footerButton {
-  flex: 1;
-  padding: 6px 12px;
-  background: #9333ea;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.footerButton:hover {
-  background: #7c3aed;
 }
 
 .userProfile {
@@ -462,8 +266,8 @@
 }
 
 .profileImage {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #e5e7eb;
