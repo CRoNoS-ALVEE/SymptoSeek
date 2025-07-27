@@ -5,7 +5,7 @@ export default function Statistics() {
     <section className={styles.statistics}>
       <div className={styles.container}>
         <div className={styles.stat}>
-          <div className={styles.number}>500+</div>
+          <div className={styles.number}>1000+</div>
           <div className={styles.label}>Doctors</div>
         </div>
         <div className={styles.stat}>

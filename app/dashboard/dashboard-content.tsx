@@ -185,12 +185,15 @@ export default function DashboardContent() {
         return false;
       }).length;
 
-      // Fetch total chat interactions
-      const chatResponse = await axios.get(`http://localhost:5000/api/chat/interactions`, {
+      // Fetch total chat interactions from chat history
+      const chatResponse = await axios.get(`http://localhost:5000/api/chat/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const totalChatInteractions = chatResponse.data.length;
+      // Count total interactions (messages) across all conversations
+      const totalChatInteractions = chatResponse.data.conversations
+        ? chatResponse.data.conversations.reduce((total: number, conv: any) => total + (conv.message_count || 0), 0)
+        : 0;
 
       setStats({
         upcomingAppointments,
@@ -235,13 +238,39 @@ export default function DashboardContent() {
             type: 'reminder'
           }));
 
-      // Add chatbot activity
-      activities.push({
-        icon: <MessageSquare size={20} />,
-        title: "Chat session with AI Health Assistant",
-        time: "Today",
-        type: 'chat'
-      });
+      // Fetch recent chat conversations
+      try {
+        const chatResponse = await axios.get(`http://localhost:5000/api/chat/history`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const recentChatActivities = chatResponse.data.conversations
+          ? chatResponse.data.conversations
+              .slice(0, 2)
+              .map((conversation: any) => ({
+                icon: <MessageSquare size={20} />,
+                title: `Chat: ${conversation.title || 'Health consultation'}`,
+                time: getRelativeTime(conversation.last_updated || conversation.created_at),
+                type: 'chat'
+              }))
+          : [{
+              icon: <MessageSquare size={20} />,
+              title: "AI Health Assistant available",
+              time: "Now",
+              type: 'chat'
+            }];
+
+        activities.push(...recentChatActivities);
+      } catch (chatError) {
+        console.error("Error fetching chat history:", chatError);
+        // Add default chat activity if API fails
+        activities.push({
+          icon: <MessageSquare size={20} />,
+          title: "Chat with AI Health Assistant",
+          time: "Available now",
+          type: 'chat'
+        });
+      }
 
       setRecentActivity([...recentAppointments, ...recentReminders, ...activities].slice(0, 4));
 
