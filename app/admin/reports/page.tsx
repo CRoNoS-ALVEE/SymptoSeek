@@ -79,7 +79,7 @@ export default function ReportsPage() {
       router.push("/admin/auth")
       return
     }
-
+    
     // Load admin info from localStorage
     const adminInfo = localStorage.getItem('adminInfo')
     if (adminInfo) {

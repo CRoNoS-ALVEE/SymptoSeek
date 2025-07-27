@@ -73,6 +73,8 @@ export default function BookAppointmentPage() {
   const [notes, setNotes] = useState("")
   const [submitLoading, setSubmitLoading] = useState(false)
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [bookingDetails, setBookingDetails] = useState<any>(null)
 
   // Fetch user data and check authentication
   useEffect(() => {
@@ -124,19 +126,55 @@ export default function BookAppointmentPage() {
 
   // Function to parse visiting_hours and generate time slots
   const generateTimeSlots = (visitingHours: string): TimeSlot[] => {
-    // Example: "4pm to 9pm (Sat, Mon, Wed & Fri)"
-    const match = visitingHours.match(/(\d+)(?::\d+)?\s*(am|pm)\s*to\s*(\d+)(?::\d+)?\s*(am|pm)\s*\(([^)]+)\)/i)
-    if (!match) return []
+    console.log('Generating time slots for visiting hours:', visitingHours)
 
-    const [, startHour, startPeriod, endHour, endPeriod, days] = match
+    // Try multiple regex patterns to handle different formats
+    let match = visitingHours.match(/(\d+)(?::\d+)?\s*(am|pm)\s*to\s*(\d+)(?::\d+)?\s*(am|pm)\s*\(([^)]+)\)/i)
+
+    // If first pattern doesn't match, try without parentheses (for "Everyday" cases)
+    if (!match) {
+      match = visitingHours.match(/(\d+)(?::\d+)?\s*(am|pm)\s*to\s*(\d+)(?::\d+)?\s*(am|pm)/i)
+      console.log('Trying pattern without parentheses:', match)
+    }
+
+    // If still no match, try with different separators
+    if (!match) {
+      match = visitingHours.match(/(\d+)(?::\d+)?\s*(am|pm)\s*[-–—]\s*(\d+)(?::\d+)?\s*(am|pm)/i)
+      console.log('Trying pattern with dash separator:', match)
+    }
+
+    if (!match) {
+      console.log('No matching pattern found for visiting hours:', visitingHours)
+      // Return default slots if we can't parse the format
+      return [
+        { time: "9:00 AM", available: true },
+        { time: "9:30 AM", available: true },
+        { time: "10:00 AM", available: true },
+        { time: "10:30 AM", available: true },
+        { time: "11:00 AM", available: true },
+        { time: "11:30 AM", available: true },
+        { time: "2:00 PM", available: true },
+        { time: "2:30 PM", available: true },
+        { time: "3:00 PM", available: true },
+        { time: "3:30 PM", available: true },
+        { time: "4:00 PM", available: true },
+        { time: "4:30 PM", available: true }
+      ]
+    }
+
+    const [, startHour, startPeriod, endHour, endPeriod] = match
     let start = parseInt(startHour)
     let end = parseInt(endHour)
     
+    console.log('Parsed time:', { startHour, startPeriod, endHour, endPeriod })
+
     // Convert to 24-hour format for calculation
     if (startPeriod.toLowerCase() === "pm" && start !== 12) start += 12
     if (startPeriod.toLowerCase() === "am" && start === 12) start = 0
     if (endPeriod.toLowerCase() === "pm" && end !== 12) end += 12
     if (endPeriod.toLowerCase() === "am" && end === 12) end = 0
+
+    console.log('Converted to 24-hour:', { start, end })
 
     const slots: TimeSlot[] = []
     for (let hour = start; hour < end; hour++) {
@@ -161,32 +199,112 @@ export default function BookAppointmentPage() {
   const isValidDate = (date: string): boolean => {
     if (!doctor || !date) return false
     
-    // Check if date is in the future
+    // Check if date is in the future or today
     const selectedDateObj = new Date(date)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    selectedDateObj.setHours(0, 0, 0, 0)
+
     if (selectedDateObj < today) return false
     
+    // Try to extract days from visiting hours
     const match = doctor.visiting_hours.match(/\(([^)]+)\)/)
-    if (!match) return true // If no days specified, assume all days are valid
-    
-    const daysString = match[1].toLowerCase()
-    const selectedDay = selectedDateObj.toLocaleString("en-US", { weekday: "short" }).toLowerCase()
-    
-    // Handle various day formats
+    if (!match) {
+      console.log('No specific days found in visiting hours, allowing all days')
+      return true // If no days specified, assume all days are valid
+    }
+
+    const daysString = match[1].toLowerCase().trim()
+
+    // Handle "Everyday" case
+    if (daysString === 'everyday' || daysString === 'every day' || daysString === 'daily') {
+      console.log('Doctor available everyday, allowing all dates')
+      return true
+    }
+
+    const selectedDay = selectedDateObj.toLocaleDateString("en-US", { weekday: "short" }).toLowerCase()
+
+    console.log('Date validation debug:', {
+      selectedDate: date,
+      selectedDay: selectedDay,
+      daysString: daysString,
+      visitingHours: doctor.visiting_hours
+    })
+
+    // Improved day matching logic - handle common abbreviations and full names
     const dayMappings: { [key: string]: string[] } = {
-      'sun': ['sun', 'sunday'],
-      'mon': ['mon', 'monday'], 
-      'tue': ['tue', 'tuesday'],
-      'wed': ['wed', 'wednesday'],
-      'thu': ['thu', 'thursday'],
-      'fri': ['fri', 'friday'],
-      'sat': ['sat', 'saturday']
+      'sun': ['sun', 'sunday', 'sn'],
+      'mon': ['mon', 'monday', 'mn'],
+      'tue': ['tue', 'tuesday', 'tu', 'tues'],
+      'wed': ['wed', 'wednesday', 'wd'],
+      'thu': ['thu', 'thursday', 'th', 'thurs'],
+      'fri': ['fri', 'friday', 'fr'],
+      'sat': ['sat', 'saturday', 'st']
     }
     
     const validDays = dayMappings[selectedDay] || [selectedDay]
-    return validDays.some(day => daysString.includes(day))
+
+    // Check if any of the valid day formats match what's in the visiting hours
+    const isValidDay = validDays.some(day => {
+      // Check for exact match or word boundary match to avoid partial matches
+      const regex = new RegExp(`\\b${day}\\b`, 'i')
+      return regex.test(daysString) || daysString.includes(day)
+    })
+
+    console.log('Day validation result:', {
+      validDays,
+      isValidDay,
+      selectedDay,
+      daysString
+    })
+
+    return isValidDay
   }
+
+  // Generate list of valid dates for the next 30 days
+  const getValidDates = (): string[] => {
+    if (!doctor) return []
+
+    const validDates: string[] = []
+    const today = new Date()
+
+    // Check next 30 days
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date(today)
+      checkDate.setDate(today.getDate() + i)
+      const dateString = checkDate.toISOString().split('T')[0]
+
+      if (isValidDate(dateString)) {
+        validDates.push(dateString)
+      }
+    }
+
+    return validDates
+  }
+
+  // Get the next valid date
+  const getNextValidDate = (): string => {
+    const validDates = getValidDates()
+    return validDates.length > 0 ? validDates[0] : ''
+  }
+
+  // Extract visiting days for display
+  const getVisitingDays = (): string => {
+    if (!doctor) return 'Not available'
+
+    const match = doctor.visiting_hours.match(/\(([^)]+)\)/)
+    return match ? match[1] : 'All days'
+  }
+
+  // Effect to auto-select first valid date if current selection is invalid
+  useEffect(() => {
+    if (doctor && (!selectedDate || !isValidDate(selectedDate))) {
+      const nextValid = getNextValidDate()
+      if (nextValid) {
+        setSelectedDate(nextValid)
+      }
+    }
+  }, [doctor])
 
   // Convert time format from "11:00 AM" to "11:00" (24-hour format)
   const convertTo24HourFormat = (time12h: string): string => {
@@ -202,13 +320,15 @@ export default function BookAppointmentPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!isValidDate(selectedDate)) {
-      alert("Selected date is not within the doctor's visiting days.")
-      return
-    }
-    
+
+    // Validation checks
     if (!selectedDate || !selectedTime) {
       alert("Please select both date and time for your appointment.")
+      return
+    }
+
+    if (!isValidDate(selectedDate)) {
+      alert("Selected date is not within the doctor's visiting days. Please choose a valid date.")
       return
     }
 
@@ -217,41 +337,82 @@ export default function BookAppointmentPage() {
     try {
       const token = localStorage.getItem("token")
       if (!token) {
+        alert("Please log in to book an appointment.")
         router.push("/auth")
         return
       }
 
-      // API call to book appointment
-      // Convert time format from "11:00 AM" to "11:00"
+      // Convert time format from "11:00 AM" to "11:00" (24-hour format)
       const timeIn24Format = convertTo24HourFormat(selectedTime)
       const appointmentDateTime = new Date(`${selectedDate}T${timeIn24Format}:00`)
       
+      // Prepare appointment data for backend
+      const appointmentData = {
+        doctors_id: doctor?._id,
+        date: appointmentDateTime.toISOString(),
+        reason: notes || `${appointmentType.charAt(0).toUpperCase() + appointmentType.slice(1)} appointment with Dr. ${doctor?.name}`,
+        appointmentType: appointmentType
+      }
+
+      console.log("Submitting appointment data:", appointmentData)
+
       const response = await axios.post(
         "http://localhost:5000/api/appointments",
+        appointmentData,
         {
-          doctors_id: doctor?._id,
-          date: appointmentDateTime.toISOString(),
-          reason: notes || `${appointmentType.charAt(0).toUpperCase() + appointmentType.slice(1)} appointment with Dr. ${doctor?.name}`
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       )
       
       console.log("Appointment booked successfully:", response.data)
-      alert("Appointment request submitted successfully! Please wait for admin approval.")
-      router.push("/appointments")
+
+      // Store booking details and show success modal
+      setBookingDetails({
+        doctor: doctor?.name,
+        date: selectedDate,
+        time: selectedTime,
+        type: appointmentType.charAt(0).toUpperCase() + appointmentType.slice(1)
+      })
+      setShowSuccessModal(true)
+
     } catch (error: any) {
       console.error("Error booking appointment:", error)
+
+      // Enhanced error handling
       if (error.response?.status === 401) {
-        alert("Please log in to book an appointment.")
+        alert("Your session has expired. Please log in again to book an appointment.")
         router.push("/auth")
       } else if (error.response?.status === 400) {
-        alert(error.response?.data?.message || "Invalid appointment details. Please check your inputs.")
+        const errorMessage = error.response?.data?.message || "Invalid appointment details"
+        alert(`❌ Booking Failed: ${errorMessage}
+        
+Please check:
+• Selected date and time are valid
+• Doctor is available at this time
+• All required fields are filled`)
+      } else if (error.response?.status === 404) {
+        alert("❌ Doctor not found. Please try selecting a different doctor.")
+      } else if (error.response?.status === 500) {
+        alert("❌ Server error occurred. Please try again later or contact support.")
       } else {
-        alert(error.response?.data?.message || "Failed to book appointment. Please try again.")
+        const errorMessage = error.response?.data?.message || "Failed to book appointment"
+        alert(`❌ Booking Failed: ${errorMessage}
+        
+Please try again. If the problem persists, contact our support team.`)
       }
     } finally {
       setSubmitLoading(false)
     }
+  }
+
+  const handleModalClose = () => {
+    setShowSuccessModal(false)
+    setBookingDetails(null)
+    // Redirect to appointments page
+    router.push("/appointments")
   }
 
   if (loading) {
@@ -303,6 +464,42 @@ export default function BookAppointmentPage() {
                   min={new Date().toISOString().split("T")[0]}
                   required
                 />
+                {/* Show doctor's available days */}
+                <div style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  marginTop: '5px',
+                  padding: '8px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '4px',
+                  border: '1px solid #e9ecef'
+                }}>
+                  📅 <strong>Doctor available on:</strong> {getVisitingDays()}<br/>
+                  🕒 <strong>Hours:</strong> {doctor.visiting_hours.split('(')[0].trim()}
+                  {getValidDates().length > 0 && (
+                    <>
+                      <br/>✅ <strong>Next available dates:</strong> {getValidDates().slice(0, 3).map(date =>
+                        new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                      ).join(', ')}
+                      {getValidDates().length > 3 && '...'}
+                    </>
+                  )}
+                </div>
+
+                {/* Show warning if selected date is invalid */}
+                {selectedDate && !isValidDate(selectedDate) && (
+                  <div style={{
+                    color: '#dc3545',
+                    fontSize: '12px',
+                    marginTop: '5px',
+                    padding: '8px',
+                    backgroundColor: '#f8d7da',
+                    borderRadius: '4px',
+                    border: '1px solid #f5c6cb'
+                  }}>
+                    ⚠️ This date is not available. Doctor is only available on: {getVisitingDays()}
+                  </div>
+                )}
               </div>
 
               <div className={styles.timeSlots}>
@@ -390,31 +587,70 @@ export default function BookAppointmentPage() {
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={submitLoading || !selectedDate || !selectedTime || !isValidDate(selectedDate)}
-              onClick={() => {
-                console.log('Button clicked - Debug info:', {
-                  submitLoading,
-                  selectedDate,
-                  selectedTime,
-                  isValidDate: isValidDate(selectedDate),
-                  doctor: doctor?.visiting_hours
-                })
+              disabled={submitLoading || !selectedDate || !selectedTime}
+              style={{
+                display: 'block',
+                margin: '2rem 0',
+                width: '100%',
+                minHeight: '50px',
+                fontSize: '16px',
+                fontWeight: '600'
               }}
             >
               {submitLoading ? "Booking..." : "Confirm Booking"}
             </button>
             
-            {/* Debug information - remove this in production */}
-            {process.env.NODE_ENV === 'development' && (
-              <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-                Debug: Date: {selectedDate ? '✓' : '✗'} | 
-                Time: {selectedTime ? '✓' : '✗'} | 
-                Valid Date: {selectedDate && isValidDate(selectedDate) ? '✓' : '✗'} | 
-                Loading: {submitLoading ? '✓' : '✗'}
+            {/* Show validation messages */}
+            {!selectedDate && (
+              <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '10px' }}>
+                ⚠️ Please select an appointment date
               </div>
             )}
+            {!selectedTime && selectedDate && (
+              <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '10px' }}>
+                ⚠️ Please select an appointment time
+              </div>
+            )}
+            {selectedDate && !isValidDate(selectedDate) && (
+              <div style={{ color: '#ef4444', fontSize: '14px', marginBottom: '10px' }}>
+                ⚠️ Selected date is not available for this doctor
+              </div>
+            )}
+
+            {/* Debug information */}
+            <div style={{ marginTop: '10px', fontSize: '12px', color: '#666', padding: '10px', background: '#f5f5f5', borderRadius: '5px' }}>
+              <strong>Debug Info:</strong><br/>
+              Date Selected: {selectedDate ? '✅ ' + selectedDate : '❌ Not selected'}<br/>
+              Time Selected: {selectedTime ? '✅ ' + selectedTime : '❌ Not selected'}<br/>
+              Valid Date: {selectedDate && isValidDate(selectedDate) ? '✅ Valid' : '❌ Invalid'}<br/>
+              Button Enabled: {!submitLoading && selectedDate && selectedTime ? '✅ Enabled' : '❌ Disabled'}<br/>
+              Doctor Visiting Hours: {doctor?.visiting_hours || 'Not available'}
+            </div>
         </form>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && bookingDetails && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Appointment Request Submitted</h2>
+            <p>🎉 Your appointment request has been submitted successfully!</p>
+            <div className={styles.modalDetails}>
+              <div><strong>Doctor:</strong> Dr. {bookingDetails.doctor}</div>
+              <div><strong>Date:</strong> {bookingDetails.date}</div>
+              <div><strong>Time:</strong> {bookingDetails.time}</div>
+              <div><strong>Type:</strong> {bookingDetails.type}</div>
+            </div>
+            <p>
+              You will receive an email confirmation shortly.<br/>
+              Please wait for the admin to approve your appointment.
+            </p>
+            <button onClick={handleModalClose} className={styles.closeButton}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

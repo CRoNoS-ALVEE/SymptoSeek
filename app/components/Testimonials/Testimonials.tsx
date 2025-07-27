@@ -11,6 +11,7 @@ interface Testimonial {
   feedback: string
   createdAt: string
   category: string
+  userProfilePic?: string | null
 }
 
 export default function Testimonials() {
@@ -113,7 +114,28 @@ export default function Testimonials() {
               </p>
               <div className={styles.author}>
                 <div className={styles.avatar}>
-                  <span className={styles.initials}>{getInitials(testimonial.userName)}</span>
+                  {testimonial.userProfilePic ? (
+                    <img
+                      src={testimonial.userProfilePic}
+                      alt={testimonial.userName}
+                      className={styles.profileImage}
+                      onError={(e) => {
+                        // Hide the image and show initials fallback on error
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const initialsSpan = target.nextElementSibling as HTMLElement;
+                        if (initialsSpan) {
+                          initialsSpan.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <span
+                    className={styles.initials}
+                    style={{ display: testimonial.userProfilePic ? 'none' : 'flex' }}
+                  >
+                    {getInitials(testimonial.userName)}
+                  </span>
                 </div>
                 <div className={styles.info}>
                   <h4>{testimonial.userName}</h4>

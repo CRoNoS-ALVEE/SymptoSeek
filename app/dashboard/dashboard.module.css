@@ -129,11 +129,18 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .activityItem:hover {
   transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #fafafa;
+}
+
+.activityStatus {
+  margin-top: 0.5rem;
 }
 
 .activityIcon {
@@ -168,6 +175,91 @@
   color: #6b7280;
 }
 
+/* Activity Meta Information */
+.activityMeta {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.completedIndicator {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.completedBadgeSmall {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Empty Activity State */
+.emptyActivityState {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px dashed #d1d5db;
+}
+
+.emptyActivityIcon {
+  color: #d1d5db;
+  flex-shrink: 0;
+}
+
+.emptyActivityTitle {
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.emptyActivityText {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.emptyActivityLink {
+  color: #9333ea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.emptyActivityLink:hover {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+
+/* View More Activity Link */
+.viewMoreActivity {
+  text-align: center;
+  padding: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.viewMoreActivityLink {
+  color: #9333ea;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.viewMoreActivityLink:hover {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -179,22 +271,217 @@
   }
 }
 
-@media (max-width: 1024px) {
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
+/* Activity Item Clickable */
+.activityItem {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.activityItem:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: #fafafa;
+}
+
+/* Activity Status */
+.activityStatus {
+  margin-top: 0.5rem;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 16px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.modalClose:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.modalSection {
+  margin-bottom: 1.5rem;
+}
+
+.modalSectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.modalInfoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f9fafb;
+}
+
+.modalInfoLabel {
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 120px;
+}
+
+.modalInfoValue {
+  color: #111827;
+  text-align: right;
+  flex: 1;
+}
+
+.modalDetailRow {
+  margin-bottom: 1rem;
+}
+
+.modalDetailLabel {
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.modalDetailValue {
+  color: #111827;
+  padding: 0.5rem;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.modalButton {
+  background: linear-gradient(135deg, #9333ea, #7c3aed);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modalButton:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
+/* Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
-@media (max-width: 640px) {
-  .welcomeTitle {
-    font-size: 2rem;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile Modal Responsive */
+@media (max-width: 768px) {
+  .modalContent {
+    margin: 1rem;
+    max-height: 85vh;
   }
 
-  .statsGrid {
-    grid-template-columns: 1fr;
+  .modalHeader {
+    padding: 1rem;
   }
 
-  .welcomeSection {
-    padding: 4rem 1rem;
+  .modalBody {
+    padding: 1rem;
+  }
+
+  .modalInfoRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .modalInfoLabel {
+    min-width: unset;
+    font-size: 0.875rem;
+  }
+
+  .modalInfoValue {
+    text-align: left;
   }
 }
