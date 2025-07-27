@@ -14,79 +14,79 @@ const MapComponent: React.FC<{ mapData: any }> = ({ mapData }) => {
 
   if (!mapData || !mapData.doctors || mapData.doctors.length === 0) {
     return (
-      <div className={styles.mapContainer}>
-        <div className={styles.mapPlaceholder}>
-          <MapPin size={24} />
-          <p>No location data available</p>
+        <div className={styles.mapContainer}>
+          <div className={styles.mapPlaceholder}>
+            <MapPin size={24} />
+            <p>No location data available</p>
+          </div>
         </div>
-      </div>
     )
   }
 
   return (
-    <div className={styles.mapContainer}>
-      <div className={styles.mapHeader}>
-        <h4>📍 Doctor Locations Near You</h4>
-        <p>Click on a doctor below to see their location</p>
-      </div>
-      
-      <div className={styles.doctorsList}>
-        {mapData.doctors.map((doctor: any, index: number) => (
-          <div 
-            key={doctor.id || index}
-            className={`${styles.doctorCard} ${selectedDoctor?.id === doctor.id ? styles.selected : ''}`}
-            onClick={() => setSelectedDoctor(doctor)}
-          >
-            <div className={styles.doctorInfo}>
-              <h5>{doctor.name}</h5>
-              <p className={styles.specialty}>{doctor.specialty}</p>
-              <p className={styles.distance}>📍 {doctor.distance} away</p>
-              <p className={styles.address}>{doctor.address}</p>
-              <p className={styles.phone}>📞 {doctor.phone}</p>
-            </div>
-            <div className={styles.doctorActions}>
-              {doctor.map_url && (
-                <a 
-                  href={doctor.map_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className={styles.mapButton}
-                  onClick={(e) => e.stopPropagation()}
+      <div className={styles.mapContainer}>
+        <div className={styles.mapHeader}>
+          <h4>📍 Doctor Locations Near You</h4>
+          <p>Click on a doctor below to see their location</p>
+        </div>
+
+        <div className={styles.doctorsList}>
+          {mapData.doctors.map((doctor: any, index: number) => (
+              <div
+                  key={doctor.id || index}
+                  className={`${styles.doctorCard} ${selectedDoctor?.id === doctor.id ? styles.selected : ''}`}
+                  onClick={() => setSelectedDoctor(doctor)}
+              >
+                <div className={styles.doctorInfo}>
+                  <h5>{doctor.name}</h5>
+                  <p className={styles.specialty}>{doctor.specialty}</p>
+                  <p className={styles.distance}>📍 {doctor.distance} away</p>
+                  <p className={styles.address}>{doctor.address}</p>
+                  <p className={styles.phone}>📞 {doctor.phone}</p>
+                </div>
+                <div className={styles.doctorActions}>
+                  {doctor.map_url && (
+                      <a
+                          href={doctor.map_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.mapButton}
+                          onClick={(e) => e.stopPropagation()}
+                      >
+                        <ExternalLink size={16} />
+                        View on Map
+                      </a>
+                  )}
+                </div>
+              </div>
+          ))}
+        </div>
+
+        {selectedDoctor && (
+            <div className={styles.selectedDoctorInfo}>
+              <h5>Selected: {selectedDoctor.name}</h5>
+              <p>📍 Coordinates: {selectedDoctor.lat.toFixed(4)}, {selectedDoctor.lng.toFixed(4)}</p>
+              <div className={styles.mapActions}>
+                <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${selectedDoctor.lat},${selectedDoctor.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.directionsButton}
                 >
-                  <ExternalLink size={16} />
+                  Get Directions
+                </a>
+                <a
+                    href={selectedDoctor.map_url || `https://www.openstreetmap.org/?mlat=${selectedDoctor.lat}&mlon=${selectedDoctor.lng}&zoom=16`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.viewMapButton}
+                >
                   View on Map
                 </a>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
+        )}
       </div>
-
-      {selectedDoctor && (
-        <div className={styles.selectedDoctorInfo}>
-          <h5>Selected: {selectedDoctor.name}</h5>
-          <p>📍 Coordinates: {selectedDoctor.lat.toFixed(4)}, {selectedDoctor.lng.toFixed(4)}</p>
-          <div className={styles.mapActions}>
-            <a 
-              href={`https://www.google.com/maps/dir/?api=1&destination=${selectedDoctor.lat},${selectedDoctor.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.directionsButton}
-            >
-              Get Directions
-            </a>
-            <a 
-              href={selectedDoctor.map_url || `https://www.openstreetmap.org/?mlat=${selectedDoctor.lat}&mlon=${selectedDoctor.lng}&zoom=16`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.viewMapButton}
-            >
-              View on Map
-            </a>
-          </div>
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -209,7 +209,7 @@ export default function ChatbotPage() {
 
       if (response.data.success) {
         setCurrentChatId(chatId);
-        
+
         // Convert database messages to frontend format
         const formattedMessages = response.data.messages.map((msg: any) => ({
           text: msg.content,
@@ -217,7 +217,7 @@ export default function ChatbotPage() {
           timestamp: new Date(msg.timestamp),
           type: msg.message_type || 'text'
         }));
-        
+
         setMessages(formattedMessages);
       }
     } catch (error) {
@@ -246,7 +246,7 @@ export default function ChatbotPage() {
         setCurrentChatId(newChatId);
         setCurrentConversation(null);
         setMessages([]);
-        
+
         // Refresh chat history
         loadChatHistory();
       }
@@ -263,16 +263,16 @@ export default function ChatbotPage() {
   // Function to delete a chat
   const deleteChat = async (chatId: string, event?: React.MouseEvent) => {
     if (event) event.stopPropagation();
-    
+
     try {
       const token = localStorage.getItem('token');
       await axios.delete(`http://localhost:5000/api/chat/${chatId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       // Remove from local state
       setConversations(prev => prev.filter(conv => conv.chat_id !== chatId))
-      
+
       // If this was the current chat, create a new one
       if (currentChatId === chatId) {
         createNewChat();
@@ -425,7 +425,7 @@ export default function ChatbotPage() {
     if (!loggedIn) {
       setTimeout(() => {
         const response = getBotResponse(userMessage);
-        
+
         const botResponse: Message = {
           text: response.text,
           isUser: false,
@@ -434,7 +434,7 @@ export default function ChatbotPage() {
         }
         setMessages((prev: Message[]) => [...prev, botResponse])
         setIsTyping(false)
-        
+
         // Show login modal if suggested by response
         if (response.showModal) {
           setTimeout(() => setShowLoginModal(true), 1000);
@@ -466,23 +466,23 @@ export default function ChatbotPage() {
       }
 
       const response = await axios.post(
-        'http://localhost:5000/api/chat',  // Changed to Node.js backend port
-        {
-          message: userMessage,
-          chat_id: currentChatId,
-          latitude: userLocation.latitude,
-          longitude: userLocation.longitude
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+          'http://localhost:5000/api/chat',  // Changed to Node.js backend port
+          {
+            message: userMessage,
+            chat_id: currentChatId,
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           }
-        }
       )
 
       const data = response.data
-      
+
       // Update current chat ID if returned from backend
       if (data.chat_id && !currentChatId) {
         setCurrentChatId(data.chat_id)
@@ -512,7 +512,7 @@ export default function ChatbotPage() {
               }
               doctorText += `\n`
             })
-            
+
             const doctorMessage: Message = {
               text: doctorText,
               isUser: false,
@@ -546,14 +546,14 @@ export default function ChatbotPage() {
     } catch (error: any) {
       console.error('Send message error:', error)
       let errorMessage = "I'm having trouble connecting right now. Please try again."
-      
+
       if (error.response?.status === 401) {
         errorMessage = "Your session has expired. Please login again."
         router.push("/auth")
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message
       }
-      
+
       const errorResponse: Message = {
         text: errorMessage,
         isUser: false,
@@ -578,7 +578,7 @@ export default function ChatbotPage() {
 
   const quickActions = [
     "I have a headache",
-    "I'm feeling nauseous", 
+    "I'm feeling nauseous",
     "I have chest pain",
     "I have a fever",
     "I have stomach pain",
@@ -745,16 +745,16 @@ export default function ChatbotPage() {
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/reminder/${reminderId}`,
-        { isCompleted: true },
-        { headers: { Authorization: `Bearer ${token}` } }
+          `http://localhost:5000/api/reminder/${reminderId}`,
+          { isCompleted: true },
+          { headers: { Authorization: `Bearer ${token}` } }
       )
 
       // Update local state
       setTodayReminders(prev =>
-        prev.map(r =>
-          r._id === reminderId ? { ...r, isCompleted: true } : r
-        )
+          prev.map(r =>
+              r._id === reminderId ? { ...r, isCompleted: true } : r
+          )
       )
 
       // Update total count
@@ -775,25 +775,25 @@ export default function ChatbotPage() {
   // Bot response function for non-logged-in users
   const getBotResponse = (userMessage: string) => {
     const message = userMessage.toLowerCase().trim();
-    
+
     // Greeting responses
-    if (message.includes('hi') || message.includes('hello') || message.includes('hey') || 
-        message.includes('good morning') || message.includes('good afternoon') || 
+    if (message.includes('hi') || message.includes('hello') || message.includes('hey') ||
+        message.includes('good morning') || message.includes('good afternoon') ||
         message.includes('good evening') || message === 'sup') {
       return {
         text: "Hello! 👋 Nice to meet you! I'm SymptoSeek AI, your health companion. To get personalized health advice and doctor recommendations, please log in first. If you're new here, signing up is very easy! Would you like to continue?",
         showModal: true
       };
     }
-    
-    // Thank you responses  
+
+    // Thank you responses
     if (message.includes('thank') || message.includes('thanks')) {
       return {
         text: "You're welcome! 😊 For better health insights and personalized care, consider creating an account with us. It's quick and easy!",
         showModal: true
       };
     }
-    
+
     // Health-related queries
     if (message.includes('pain') || message.includes('hurt') || message.includes('sick') ||
         message.includes('fever') || message.includes('headache') || message.includes('doctor') ||
@@ -803,7 +803,7 @@ export default function ChatbotPage() {
         showModal: true
       };
     }
-    
+
     // Default response for other queries
     return {
       text: "I can help you with health-related questions, but to provide personalized advice and local doctor recommendations, please log in first. If you're new here, signing up is very easy! Would you like to continue?",
@@ -873,104 +873,104 @@ export default function ChatbotPage() {
                           <div className={styles.notificationHeader}>
                             <h3>Today's Schedule</h3>
                             {totalNotificationCount > 0 && (
-                              <span className={styles.unreadCount}>{totalNotificationCount} items</span>
+                                <span className={styles.unreadCount}>{totalNotificationCount} items</span>
                             )}
                           </div>
                           <div className={styles.notificationList}>
                             {loadingNotifications ? (
-                              <div className={styles.loadingState}>
-                                <div className={styles.loadingSpinner}></div>
-                                <span>Loading today's items...</span>
-                              </div>
+                                <div className={styles.loadingState}>
+                                  <div className={styles.loadingSpinner}></div>
+                                  <span>Loading today's items...</span>
+                                </div>
                             ) : totalNotificationCount === 0 ? (
-                              <div className={styles.emptyState}>
-                                <Bell size={48} />
-                                <h4>No Items Today</h4>
-                                <p>You have no appointments or reminders scheduled for today.</p>
-                              </div>
+                                <div className={styles.emptyState}>
+                                  <Bell size={48} />
+                                  <h4>No Items Today</h4>
+                                  <p>You have no appointments or reminders scheduled for today.</p>
+                                </div>
                             ) : (
-                              <>
-                                {/* Today's Appointments */}
-                                {todayAppointments.length > 0 && (
-                                  <>
-                                    <div className={styles.sectionHeader}>
-                                      <span>📅 Today's Appointments</span>
-                                    </div>
-                                    {todayAppointments.map((appointment) => (
-                                      <div
-                                        key={`apt-${appointment._id}`}
-                                        className={`${styles.notificationItem} ${styles.appointmentItem}`}
-                                      >
-                                        <div className={styles.notificationIcon}>
-                                          {getNotificationIcon('appointment', 'appointment')}
+                                <>
+                                  {/* Today's Appointments */}
+                                  {todayAppointments.length > 0 && (
+                                      <>
+                                        <div className={styles.sectionHeader}>
+                                          <span>📅 Today's Appointments</span>
                                         </div>
-                                        <div className={styles.notificationContent}>
-                                          <div className={styles.notificationTitle}>
-                                            Dr. {appointment.doctors_id?.name || 'Unknown'}
-                                          </div>
-                                          <div className={styles.notificationMessage}>
-                                            {appointment.appointmentType} - {appointment.reason}
-                                          </div>
-                                          <div className={styles.notificationTime}>
-                                            {formatNotificationTime(appointment.date)}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </>
-                                )}
+                                        {todayAppointments.map((appointment) => (
+                                            <div
+                                                key={`apt-${appointment._id}`}
+                                                className={`${styles.notificationItem} ${styles.appointmentItem}`}
+                                            >
+                                              <div className={styles.notificationIcon}>
+                                                {getNotificationIcon('appointment', 'appointment')}
+                                              </div>
+                                              <div className={styles.notificationContent}>
+                                                <div className={styles.notificationTitle}>
+                                                  Dr. {appointment.doctors_id?.name || 'Unknown'}
+                                                </div>
+                                                <div className={styles.notificationMessage}>
+                                                  {appointment.appointmentType} - {appointment.reason}
+                                                </div>
+                                                <div className={styles.notificationTime}>
+                                                  {formatNotificationTime(appointment.date)}
+                                                </div>
+                                              </div>
+                                            </div>
+                                        ))}
+                                      </>
+                                  )}
 
-                                {/* Today's Reminders */}
-                                {todayReminders.length > 0 && (
-                                  <>
-                                    <div className={styles.sectionHeader}>
-                                      <span>🔔 Today's Reminders</span>
-                                    </div>
-                                    {todayReminders.map((reminder) => (
-                                      <div
-                                        key={`rem-${reminder._id}`}
-                                        className={`${styles.notificationItem} ${!reminder.isCompleted ? styles.unread : styles.completed}`}
-                                      >
-                                        <div className={styles.notificationIcon}>
-                                          {getNotificationIcon(reminder.type, 'reminder')}
+                                  {/* Today's Reminders */}
+                                  {todayReminders.length > 0 && (
+                                      <>
+                                        <div className={styles.sectionHeader}>
+                                          <span>🔔 Today's Reminders</span>
                                         </div>
-                                        <div className={styles.notificationContent}>
-                                          <div className={styles.notificationTitle}>
-                                            {reminder.title}
-                                          </div>
-                                          <div className={styles.notificationMessage}>
-                                            {reminder.description}
-                                          </div>
-                                          <div className={styles.notificationTime}>
-                                            {formatNotificationTime(`${new Date().toISOString().split('T')[0]}T${reminder.time}:00`)}
-                                          </div>
-                                        </div>
-                                        {!reminder.isCompleted && (
-                                          <button
-                                            className={styles.markCompleteButton}
-                                            onClick={() => markReminderAsCompleted(reminder._id)}
-                                            title="Mark as completed"
-                                          >
-                                            ✓
-                                          </button>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </>
-                                )}
-                              </>
+                                        {todayReminders.map((reminder) => (
+                                            <div
+                                                key={`rem-${reminder._id}`}
+                                                className={`${styles.notificationItem} ${!reminder.isCompleted ? styles.unread : styles.completed}`}
+                                            >
+                                              <div className={styles.notificationIcon}>
+                                                {getNotificationIcon(reminder.type, 'reminder')}
+                                              </div>
+                                              <div className={styles.notificationContent}>
+                                                <div className={styles.notificationTitle}>
+                                                  {reminder.title}
+                                                </div>
+                                                <div className={styles.notificationMessage}>
+                                                  {reminder.description}
+                                                </div>
+                                                <div className={styles.notificationTime}>
+                                                  {formatNotificationTime(`${new Date().toISOString().split('T')[0]}T${reminder.time}:00`)}
+                                                </div>
+                                              </div>
+                                              {!reminder.isCompleted && (
+                                                  <button
+                                                      className={styles.markCompleteButton}
+                                                      onClick={() => markReminderAsCompleted(reminder._id)}
+                                                      title="Mark as completed"
+                                                  >
+                                                    ✓
+                                                  </button>
+                                              )}
+                                            </div>
+                                        ))}
+                                      </>
+                                  )}
+                                </>
                             )}
                           </div>
                           <div className={styles.notificationFooter}>
                             <button
-                              className={styles.footerButton}
-                              onClick={() => window.location.href = '/appointments'}
+                                className={styles.footerButton}
+                                onClick={() => window.location.href = '/appointments'}
                             >
                               View All Appointments
                             </button>
                             <button
-                              className={styles.footerButton}
-                              onClick={() => window.location.href = '/reminders'}
+                                className={styles.footerButton}
+                                onClick={() => window.location.href = '/reminders'}
                             >
                               View All Reminders
                             </button>
@@ -1020,42 +1020,42 @@ export default function ChatbotPage() {
 
                 <div className={styles.conversationsList}>
                   {loadingHistory ? (
-                    <div className={styles.loadingHistory}>
-                      <div className={styles.loadingSpinner}></div>
-                      <p>Loading chat history...</p>
-                    </div>
-                  ) : conversations.length === 0 ? (
-                    <div className={styles.emptyHistory}>
-                      <p>No previous conversations</p>
-                      <p>Start a new chat to begin!</p>
-                    </div>
-                  ) : (
-                    conversations.map((conversation) => (
-                      <div
-                          key={conversation.chat_id}
-                          className={`${styles.conversationItem} ${currentConversation === conversation.chat_id ? styles.active : ''}`}
-                          onClick={() => selectConversation(conversation.chat_id)}
-                      >
-                        <div className={styles.conversationContent}>
-                          <div className={styles.conversationTitle}>{conversation.title}</div>
-                          <div className={styles.conversationPreview}>{conversation.last_message}</div>
-                          <div className={styles.conversationMeta}>
-                            <span className={styles.conversationTime}>{formatTime(conversation.last_updated)}</span>
-                            <span className={styles.messageCount}>{conversation.message_count} messages</span>
-                          </div>
-                        </div>
-                        <button 
-                          className={styles.deleteButton}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteChat(conversation.chat_id, e)
-                          }}
-                          title="Delete conversation"
-                        >
-                          ×
-                        </button>
+                      <div className={styles.loadingHistory}>
+                        <div className={styles.loadingSpinner}></div>
+                        <p>Loading chat history...</p>
                       </div>
-                    ))
+                  ) : conversations.length === 0 ? (
+                      <div className={styles.emptyHistory}>
+                        <p>No previous conversations</p>
+                        <p>Start a new chat to begin!</p>
+                      </div>
+                  ) : (
+                      conversations.map((conversation) => (
+                          <div
+                              key={conversation.chat_id}
+                              className={`${styles.conversationItem} ${currentConversation === conversation.chat_id ? styles.active : ''}`}
+                              onClick={() => selectConversation(conversation.chat_id)}
+                          >
+                            <div className={styles.conversationContent}>
+                              <div className={styles.conversationTitle}>{conversation.title}</div>
+                              <div className={styles.conversationPreview}>{conversation.last_message}</div>
+                              <div className={styles.conversationMeta}>
+                                <span className={styles.conversationTime}>{formatTime(conversation.last_updated)}</span>
+                                <span className={styles.messageCount}>{conversation.message_count} messages</span>
+                              </div>
+                            </div>
+                            <button
+                                className={styles.deleteButton}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  deleteChat(conversation.chat_id, e)
+                                }}
+                                title="Delete conversation"
+                            >
+                              ×
+                            </button>
+                          </div>
+                      ))
                   )}
                 </div>
 
@@ -1134,9 +1134,9 @@ export default function ChatbotPage() {
 
                   <div className={styles.disclaimer}>
                     <Stethoscope size={16} />
-                    <span>{loggedIn 
-                      ? 'SymptoSeek uses AI. Check for mistakes. Conversations are used to train AI and SymptoSeek can learn about your health patterns.'
-                      : 'SymptoSeek uses AI. Check for mistakes. Sign up for personalized health tracking and doctor recommendations.'
+                    <span>{loggedIn
+                        ? 'SymptoSeek uses AI. Check for mistakes. Conversations are used to train AI and SymptoSeek can learn about your health patterns.'
+                        : 'SymptoSeek uses AI. Check for mistakes. Sign up for personalized health tracking and doctor recommendations.'
                     }</span>
                   </div>
                 </div>
@@ -1154,53 +1154,53 @@ export default function ChatbotPage() {
                         )}
                         <div className={`${styles.message} ${message.isUser ? styles.userMessage : styles.assistantMessage}`}>
                           {message.type === 'map' && message.mapData ? (
-                            <MapComponent mapData={message.mapData} />
+                              <MapComponent mapData={message.mapData} />
                           ) : (
-                            <div className={styles.messageText}>
-                              {message.text?.split('\n').map((line, lineIndex) => {
-                                // Enhanced text formatting for better readability
-                                if (line.startsWith('**') && line.endsWith('**')) {
-                                  return <strong key={lineIndex}>{line.slice(2, -2)}</strong>
-                                }
-                                if (line.startsWith('# ')) {
-                                  return <h3 key={lineIndex} className={styles.messageHeading}>{line.slice(2)}</h3>
-                                }
-                                if (line.startsWith('## ')) {
-                                  return <h4 key={lineIndex} className={styles.messageSubheading}>{line.slice(3)}</h4>
-                                }
-                                if (line.startsWith('• ')) {
-                                  return <li key={lineIndex} className={styles.messageBullet}>{line.slice(2)}</li>
-                                }
-                                if (line.includes('🔗') || line.includes('[') && line.includes('](')) {
-                                  // Handle markdown links
-                                  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
-                                  const parts = line.split(linkRegex)
-                                  return (
-                                    <p key={lineIndex}>
-                                      {parts.map((part, partIndex) => {
-                                        if (partIndex % 3 === 1) {
-                                          return (
-                                            <a 
-                                              key={partIndex}
-                                              href={parts[partIndex + 1]}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className={styles.messageLink}
-                                            >
-                                              {part}
-                                            </a>
-                                          )
-                                        } else if (partIndex % 3 === 2) {
-                                          return null // Skip URL part
-                                        }
-                                        return part
-                                      })}
-                                    </p>
-                                  )
-                                }
-                                return line ? <p key={lineIndex}>{line}</p> : <br key={lineIndex} />
-                              })}
-                            </div>
+                              <div className={styles.messageText}>
+                                {message.text?.split('\n').map((line, lineIndex) => {
+                                  // Enhanced text formatting for better readability
+                                  if (line.startsWith('**') && line.endsWith('**')) {
+                                    return <strong key={lineIndex}>{line.slice(2, -2)}</strong>
+                                  }
+                                  if (line.startsWith('# ')) {
+                                    return <h3 key={lineIndex} className={styles.messageHeading}>{line.slice(2)}</h3>
+                                  }
+                                  if (line.startsWith('## ')) {
+                                    return <h4 key={lineIndex} className={styles.messageSubheading}>{line.slice(3)}</h4>
+                                  }
+                                  if (line.startsWith('• ')) {
+                                    return <li key={lineIndex} className={styles.messageBullet}>{line.slice(2)}</li>
+                                  }
+                                  if (line.includes('🔗') || line.includes('[') && line.includes('](')) {
+                                    // Handle markdown links
+                                    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+                                    const parts = line.split(linkRegex)
+                                    return (
+                                        <p key={lineIndex}>
+                                          {parts.map((part, partIndex) => {
+                                            if (partIndex % 3 === 1) {
+                                              return (
+                                                  <a
+                                                      key={partIndex}
+                                                      href={parts[partIndex + 1]}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className={styles.messageLink}
+                                                  >
+                                                    {part}
+                                                  </a>
+                                              )
+                                            } else if (partIndex % 3 === 2) {
+                                              return null // Skip URL part
+                                            }
+                                            return part
+                                          })}
+                                        </p>
+                                    )
+                                  }
+                                  return line ? <p key={lineIndex}>{line}</p> : <br key={lineIndex} />
+                                })}
+                              </div>
                           )}
                         </div>
                       </div>
@@ -1259,62 +1259,61 @@ export default function ChatbotPage() {
 
         {/* Login Modal for non-logged-in users */}
         {!loggedIn && showLoginModal && (
-            <div 
+            <div
                 className={styles.modalOverlay}
                 onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                        setShowLoginModal(false);
-                    }
+                  if (e.target === e.currentTarget) {
+                    setShowLoginModal(false);
+                  }
                 }}
             >
-                <div className={styles.modalContent}>
-                    <button
-                        onClick={() => setShowLoginModal(false)}
-                        className={styles.closeButton}
-                    >
-                        <X size={20} />
-                    </button>
-                    
-                    <div className={styles.modalHeader}>
-                        <div className={styles.modalIcon}>
-                            <Stethoscope />
-                        </div>
-                        <h3 className={styles.modalTitle}>
-                            Welcome to SymptoSeek!
-                        </h3>
-                        <p className={styles.modalDescription}>
-                            Sign in to unlock personalized health recommendations, save your chat history, and get the most accurate medical guidance.
-                        </p>
-                    </div>
-                    
-                    <div className={styles.modalActions}>
-                        <button
-                            onClick={handleLoginRedirect}
-                            className={styles.primaryButton}
-                        >
-                            <User size={20} />
-                            Sign In to Continue
-                        </button>
-                        
-                        <div className={styles.divider}>
-                            <span className={styles.dividerText}>or</span>
-                        </div>
-                        
-                        <button
-                            onClick={handleContinueWithoutLogin}
-                            className={styles.secondaryButton}
-                        >
-                            Continue as Guest
-                        </button>
-                    </div>
-                    
-                    <div className={styles.modalFooter}>
-                        <p>🔒 Your privacy is our priority. All data is encrypted and secure.</p>
-                    </div>
+              <div className={styles.modalContent}>
+                <button
+                    onClick={() => setShowLoginModal(false)}
+                    className={styles.closeButton}
+                >
+                  <X size={20} />
+                </button>
+
+                <div className={styles.modalHeader}>
+                  <div className={styles.modalIcon}>
+                    <Stethoscope />
+                  </div>
+                  <h3 className={styles.modalTitle}>
+                    Welcome to SymptoSeek!
+                  </h3>
+                  <p className={styles.modalDescription}>
+                    Sign in to unlock personalized health recommendations, save your chat history, and get the most accurate medical guidance.
+                  </p>
                 </div>
+
+                <div className={styles.modalActions}>
+                  <button
+                      onClick={handleLoginRedirect}
+                      className={styles.primaryButton}
+                  >
+                    <User size={20} />
+                    Sign In to Continue
+                  </button>
+
+                  <div className={styles.divider}>
+                    <span className={styles.dividerText}>or</span>
+                  </div>
+
+                  <button
+                      onClick={handleContinueWithoutLogin}
+                      className={styles.secondaryButton}
+                  >
+                    Continue as Guest
+                  </button>
+                </div>
+
+                <div className={styles.modalFooter}>
+                  <p>🔒 Your privacy is our priority. All data is encrypted and secure.</p>
+                </div>
+              </div>
             </div>
         )}
       </div>
   )
 }
-

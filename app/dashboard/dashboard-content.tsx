@@ -89,13 +89,13 @@ export default function DashboardContent() {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
       console.log("Token from localStorage:", token ? "exists" : "missing");
-      
+
       if (!token) {
         console.log("No token found, redirecting to auth");
         router.push("/auth");
         return;
       }
-      
+
       try {
         console.log("Attempting to fetch user data...");
         const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
@@ -103,15 +103,15 @@ export default function DashboardContent() {
         });
         console.log("User data fetched successfully:", response.data);
         setUser(response.data);
-        
+
         // Fetch dashboard stats after user data is loaded
         await fetchDashboardStats(token);
         await fetchRecentActivity(token);
-        
+
       } catch (err: any) {
         console.error("Failed to fetch user data:", err);
         console.log("Error response:", err.response);
-        
+
         if (err.response && err.response.status === 401) {
           console.log("Token is invalid/expired, clearing localStorage and redirecting");
           localStorage.removeItem("token");
@@ -134,23 +134,23 @@ export default function DashboardContent() {
       const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       const appointments = appointmentsResponse.data;
       const now = new Date();
-      
+
       // Calculate upcoming appointments (approved and in future)
       const upcomingAppointments = appointments.filter((apt: any) =>
-        new Date(apt.date) > now && apt.status === 'Approved'
+          new Date(apt.date) > now && apt.status === 'Approved'
       ).length;
-      
+
       // Past consultations should only count COMPLETED appointments
       const pastConsultations = appointments.filter((apt: any) =>
-        apt.status === 'Completed'
+          apt.status === 'Completed'
       ).length;
 
       // Store completed consultations for display
       const completedAppts = appointments.filter((apt: any) =>
-        apt.status === 'Completed'
+          apt.status === 'Completed'
       ).sort((a: any, b: any) => new Date(b.completedAt || b.date).getTime() - new Date(a.completedAt || a.date).getTime());
 
       setCompletedConsultations(completedAppts);
@@ -160,7 +160,7 @@ export default function DashboardContent() {
       const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       // Calculate active reminders (reminders that are not completed and are active today)
       const today = new Date();
       const todayDateString = today.toISOString().split('T')[0];
@@ -211,29 +211,29 @@ export default function DashboardContent() {
       const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       const recentAppointments = appointmentsResponse.data
-        .slice(0, 2)
-        .map((apt: any) => ({
-          icon: <Calendar size={20} />,
-          title: `Appointment ${apt.status.toLowerCase()} with Dr. ${apt.doctors_id?.name || 'Unknown'}`,
-          time: getRelativeTime(apt.createdAt),
-          type: 'appointment'
-        }));
+          .slice(0, 2)
+          .map((apt: any) => ({
+            icon: <Calendar size={20} />,
+            title: `Appointment ${apt.status.toLowerCase()} with Dr. ${apt.doctors_id?.name || 'Unknown'}`,
+            time: getRelativeTime(apt.createdAt),
+            type: 'appointment'
+          }));
 
       // Fetch recent reminders
       const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       const recentReminders = remindersResponse.data
-        .slice(0, 2)
-        .map((reminder: any) => ({
-          icon: reminder.type === 'medication' ? <Stethoscope size={20} /> : <Clock size={20} />,
-          title: reminder.title,
-          time: getRelativeTime(reminder.createdAt),
-          type: 'reminder'
-        }));
+          .slice(0, 2)
+          .map((reminder: any) => ({
+            icon: reminder.type === 'medication' ? <Stethoscope size={20} /> : <Clock size={20} />,
+            title: reminder.title,
+            time: getRelativeTime(reminder.createdAt),
+            type: 'reminder'
+          }));
 
       // Add chatbot activity
       activities.push({
@@ -263,7 +263,7 @@ export default function DashboardContent() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return "Just now";
     if (diffInHours < 24) return `${diffInHours} hours ago`;
     if (diffInHours < 48) return "Yesterday";
@@ -298,16 +298,16 @@ export default function DashboardContent() {
     };
     const colors = statusColors[status as keyof typeof statusColors] || { bg: '#6b7280', text: 'white' };
     return (
-      <span style={{
-        background: colors.bg,
-        color: colors.text,
-        padding: '0.25rem 0.75rem',
-        borderRadius: '12px',
-        fontSize: '0.75rem',
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px'
-      }}>
+        <span style={{
+          background: colors.bg,
+          color: colors.text,
+          padding: '0.25rem 0.75rem',
+          borderRadius: '12px',
+          fontSize: '0.75rem',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
         {status}
       </span>
     );
@@ -432,47 +432,47 @@ export default function DashboardContent() {
             <h2 className={styles.sectionTitle}>Upcoming Appointments</h2>
             <div className={styles.activityList}>
               {allAppointments.filter(apt =>
-                new Date(apt.date) > new Date() && apt.status === 'Approved'
-              ).slice(0, 5).length > 0 ? (
-                allAppointments.filter(apt =>
                   new Date(apt.date) > new Date() && apt.status === 'Approved'
-                ).slice(0, 5).map((appointment, index) => (
-                  <div key={appointment._id} className={styles.activityItem} onClick={() => handleAppointmentClick(appointment)}>
-                    <div className={styles.activityIcon}>
-                      <Calendar size={20} />
-                    </div>
-                    <div className={styles.activityContent}>
-                      <div className={styles.activityTitle}>
-                        Dr. {appointment.doctors_id.name} - {appointment.doctors_id.speciality}
+              ).slice(0, 5).length > 0 ? (
+                  allAppointments.filter(apt =>
+                      new Date(apt.date) > new Date() && apt.status === 'Approved'
+                  ).slice(0, 5).map((appointment, index) => (
+                      <div key={appointment._id} className={styles.activityItem} onClick={() => handleAppointmentClick(appointment)}>
+                        <div className={styles.activityIcon}>
+                          <Calendar size={20} />
+                        </div>
+                        <div className={styles.activityContent}>
+                          <div className={styles.activityTitle}>
+                            Dr. {appointment.doctors_id.name} - {appointment.doctors_id.speciality}
+                          </div>
+                          <div className={styles.activityTime}>
+                            {new Date(appointment.date).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric'
+                            })} at {new Date(appointment.date).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                          </div>
+                          <div className={styles.activityMeta}>
+                            {appointment.appointmentType || 'Consultation'} • {appointment.doctors_id.hospital_name}
+                            <div className={styles.activityStatus}>{getStatusBadge(appointment.status)}</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className={styles.activityTime}>
-                        {new Date(appointment.date).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric'
-                        })} at {new Date(appointment.date).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                      </div>
-                      <div className={styles.activityMeta}>
-                        {appointment.appointmentType || 'Consultation'} • {appointment.doctors_id.hospital_name}
-                        <div className={styles.activityStatus}>{getStatusBadge(appointment.status)}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  ))
               ) : (
-                <div className={styles.emptyActivityState}>
-                  <Calendar size={24} className={styles.emptyActivityIcon} />
-                  <div>
-                    <div className={styles.emptyActivityTitle}>No upcoming appointments</div>
-                    <div className={styles.emptyActivityText}>
-                      <Link href="/doctors" className={styles.emptyActivityLink}>Book your next appointment</Link>
+                  <div className={styles.emptyActivityState}>
+                    <Calendar size={24} className={styles.emptyActivityIcon} />
+                    <div>
+                      <div className={styles.emptyActivityTitle}>No upcoming appointments</div>
+                      <div className={styles.emptyActivityText}>
+                        <Link href="/doctors" className={styles.emptyActivityLink}>Book your next appointment</Link>
+                      </div>
                     </div>
                   </div>
-                </div>
               )}
             </div>
           </section>
@@ -482,128 +482,128 @@ export default function DashboardContent() {
             <h2 className={styles.sectionTitle}>Past Consultations</h2>
             <div className={styles.activityList}>
               {completedConsultations.length > 0 ? (
-                completedConsultations.slice(0, 5).map((consultation, index) => (
-                  <div key={consultation._id} className={styles.activityItem} onClick={() => handleAppointmentClick(consultation)}>
-                    <div className={styles.activityIcon}>
-                      <Stethoscope size={20} />
-                    </div>
-                    <div className={styles.activityContent}>
-                      <div className={styles.activityTitle}>
-                        Dr. {consultation.doctors_id.name} - {consultation.doctors_id.speciality}
+                  completedConsultations.slice(0, 5).map((consultation, index) => (
+                      <div key={consultation._id} className={styles.activityItem} onClick={() => handleAppointmentClick(consultation)}>
+                        <div className={styles.activityIcon}>
+                          <Stethoscope size={20} />
+                        </div>
+                        <div className={styles.activityContent}>
+                          <div className={styles.activityTitle}>
+                            Dr. {consultation.doctors_id.name} - {consultation.doctors_id.speciality}
+                          </div>
+                          <div className={styles.activityTime}>
+                            {new Date(consultation.date).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric'
+                            })} at {new Date(consultation.date).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                          </div>
+                          <div className={styles.activityMeta}>
+                            {consultation.appointmentType || 'Consultation'} • {consultation.doctors_id.hospital_name}
+                            {consultation.completedAt && (
+                                <span className={styles.completedIndicator}> • Completed {getRelativeTime(consultation.completedAt)}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.completedBadgeSmall}>✓</div>
                       </div>
-                      <div className={styles.activityTime}>
-                        {new Date(consultation.date).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric'
-                        })} at {new Date(consultation.date).toLocaleTimeString('en-US', {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                      </div>
-                      <div className={styles.activityMeta}>
-                        {consultation.appointmentType || 'Consultation'} • {consultation.doctors_id.hospital_name}
-                        {consultation.completedAt && (
-                          <span className={styles.completedIndicator}> • Completed {getRelativeTime(consultation.completedAt)}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className={styles.completedBadgeSmall}>✓</div>
-                  </div>
-                ))
+                  ))
               ) : (
-                <div className={styles.emptyActivityState}>
-                  <Stethoscope size={24} className={styles.emptyActivityIcon} />
-                  <div>
-                    <div className={styles.emptyActivityTitle}>No completed consultations yet</div>
-                    <div className={styles.emptyActivityText}>Your completed appointments will appear here</div>
+                  <div className={styles.emptyActivityState}>
+                    <Stethoscope size={24} className={styles.emptyActivityIcon} />
+                    <div>
+                      <div className={styles.emptyActivityTitle}>No completed consultations yet</div>
+                      <div className={styles.emptyActivityText}>Your completed appointments will appear here</div>
+                    </div>
                   </div>
-                </div>
               )}
 
               {completedConsultations.length > 5 && (
-                <div className={styles.viewMoreActivity}>
-                  <Link href="/appointments" className={styles.viewMoreActivityLink}>
-                    View all {completedConsultations.length} consultations
-                  </Link>
-                </div>
+                  <div className={styles.viewMoreActivity}>
+                    <Link href="/appointments" className={styles.viewMoreActivityLink}>
+                      View all {completedConsultations.length} consultations
+                    </Link>
+                  </div>
               )}
             </div>
           </section>
 
           {showAppointmentModal && selectedAppointment && (
-            <div className={styles.modalOverlay}>
-              <div className={styles.modalContent}>
-                <div className={styles.modalHeader}>
-                  <h2 className={styles.modalTitle}>Appointment Details</h2>
-                  <button className={styles.modalClose} onClick={closeModal}>×</button>
-                </div>
-                <div className={styles.modalBody}>
-                  <div className={styles.modalSection}>
-                    <h3 className={styles.modalSectionTitle}>Appointment Info</h3>
-                    <div className={styles.modalInfoRow}>
-                      <div className={styles.modalInfoLabel}>Doctor:</div>
-                      <div className={styles.modalInfoValue}>Dr. {selectedAppointment.doctors_id.name}</div>
-                    </div>
-                    <div className={styles.modalInfoRow}>
-                      <div className={styles.modalInfoLabel}>Speciality:</div>
-                      <div className={styles.modalInfoValue}>{selectedAppointment.doctors_id.speciality}</div>
-                    </div>
-                    <div className={styles.modalInfoRow}>
-                      <div className={styles.modalInfoLabel}>Hospital:</div>
-                      <div className={styles.modalInfoValue}>{selectedAppointment.doctors_id.hospital_name}</div>
-                    </div>
-                    <div className={styles.modalInfoRow}>
-                      <div className={styles.modalInfoLabel}>Type:</div>
-                      <div className={styles.modalInfoValue}>{selectedAppointment.appointmentType || 'Consultation'}</div>
-                    </div>
-                    <div className={styles.modalInfoRow}>
-                      <div className={styles.modalInfoLabel}>Date & Time:</div>
-                      <div className={styles.modalInfoValue}>
-                        {new Date(selectedAppointment.date).toLocaleString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                      </div>
-                    </div>
-                    <div className={styles.modalInfoRow}>
-                      <div className={styles.modalInfoLabel}>Status:</div>
-                      <div className={styles.modalInfoValue}>
-                        {getStatusBadge(selectedAppointment.status)}
-                      </div>
-                    </div>
+              <div className={styles.modalOverlay}>
+                <div className={styles.modalContent}>
+                  <div className={styles.modalHeader}>
+                    <h2 className={styles.modalTitle}>Appointment Details</h2>
+                    <button className={styles.modalClose} onClick={closeModal}>×</button>
                   </div>
+                  <div className={styles.modalBody}>
+                    <div className={styles.modalSection}>
+                      <h3 className={styles.modalSectionTitle}>Appointment Info</h3>
+                      <div className={styles.modalInfoRow}>
+                        <div className={styles.modalInfoLabel}>Doctor:</div>
+                        <div className={styles.modalInfoValue}>Dr. {selectedAppointment.doctors_id.name}</div>
+                      </div>
+                      <div className={styles.modalInfoRow}>
+                        <div className={styles.modalInfoLabel}>Speciality:</div>
+                        <div className={styles.modalInfoValue}>{selectedAppointment.doctors_id.speciality}</div>
+                      </div>
+                      <div className={styles.modalInfoRow}>
+                        <div className={styles.modalInfoLabel}>Hospital:</div>
+                        <div className={styles.modalInfoValue}>{selectedAppointment.doctors_id.hospital_name}</div>
+                      </div>
+                      <div className={styles.modalInfoRow}>
+                        <div className={styles.modalInfoLabel}>Type:</div>
+                        <div className={styles.modalInfoValue}>{selectedAppointment.appointmentType || 'Consultation'}</div>
+                      </div>
+                      <div className={styles.modalInfoRow}>
+                        <div className={styles.modalInfoLabel}>Date & Time:</div>
+                        <div className={styles.modalInfoValue}>
+                          {new Date(selectedAppointment.date).toLocaleString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </div>
+                      </div>
+                      <div className={styles.modalInfoRow}>
+                        <div className={styles.modalInfoLabel}>Status:</div>
+                        <div className={styles.modalInfoValue}>
+                          {getStatusBadge(selectedAppointment.status)}
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className={styles.modalSection}>
-                    <h3 className={styles.modalSectionTitle}>Additional Details</h3>
-                    <div className={styles.modalDetailRow}>
-                      <div className={styles.modalDetailLabel}>Reason for Visit:</div>
-                      <div className={styles.modalDetailValue}>{selectedAppointment.reason || 'General consultation'}</div>
-                    </div>
-                    <div className={styles.modalDetailRow}>
-                      <div className={styles.modalDetailLabel}>Admin Note:</div>
-                      <div className={styles.modalDetailValue}>{selectedAppointment.adminNote || 'No additional notes'}</div>
-                    </div>
-                    {selectedAppointment.completedAt && (
+                    <div className={styles.modalSection}>
+                      <h3 className={styles.modalSectionTitle}>Additional Details</h3>
                       <div className={styles.modalDetailRow}>
-                        <div className={styles.modalDetailLabel}>Completed:</div>
-                        <div className={styles.modalDetailValue}>{getRelativeTime(selectedAppointment.completedAt)}</div>
+                        <div className={styles.modalDetailLabel}>Reason for Visit:</div>
+                        <div className={styles.modalDetailValue}>{selectedAppointment.reason || 'General consultation'}</div>
                       </div>
-                    )}
-                  </div>
+                      <div className={styles.modalDetailRow}>
+                        <div className={styles.modalDetailLabel}>Admin Note:</div>
+                        <div className={styles.modalDetailValue}>{selectedAppointment.adminNote || 'No additional notes'}</div>
+                      </div>
+                      {selectedAppointment.completedAt && (
+                          <div className={styles.modalDetailRow}>
+                            <div className={styles.modalDetailLabel}>Completed:</div>
+                            <div className={styles.modalDetailValue}>{getRelativeTime(selectedAppointment.completedAt)}</div>
+                          </div>
+                      )}
+                    </div>
 
-                  <div className={styles.modalActions}>
-                    <button className={styles.modalButton} onClick={closeModal}>Close</button>
+                    <div className={styles.modalActions}>
+                      <button className={styles.modalButton} onClick={closeModal}>Close</button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
           )}
         </main>
         <Footer />

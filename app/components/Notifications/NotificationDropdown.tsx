@@ -49,7 +49,7 @@ export default function NotificationDropdown({ className }: NotificationDropdown
 
   useEffect(() => {
     if (!mounted) return
-    
+
     // Fetch data immediately when component mounts
     fetchTodayItems()
 
@@ -171,8 +171,8 @@ export default function NotificationDropdown({ className }: NotificationDropdown
           ...reminder,
           // Fix time formatting - create proper datetime string
           scheduleTime: reminder.date
-            ? `${reminder.date.split('T')[0]}T${reminder.time}:00`
-            : `${todayDateString}T${reminder.time}:00`
+              ? `${reminder.date.split('T')[0]}T${reminder.time}:00`
+              : `${todayDateString}T${reminder.time}:00`
         }))
 
         console.log("Filtered today's reminders:", todayRemindersList)
@@ -236,16 +236,16 @@ export default function NotificationDropdown({ className }: NotificationDropdown
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/reminder/${reminderId}`,
-        { isCompleted: true },
-        { headers: { Authorization: `Bearer ${token}` } }
+          `http://localhost:5000/api/reminder/${reminderId}`,
+          { isCompleted: true },
+          { headers: { Authorization: `Bearer ${token}` } }
       )
-      
+
       // Update local state
       setTodayReminders(prev =>
-        prev.map(r =>
-          r._id === reminderId ? { ...r, isCompleted: true } : r
-        )
+          prev.map(r =>
+              r._id === reminderId ? { ...r, isCompleted: true } : r
+          )
       )
     } catch (error) {
       console.error("Error marking reminder as completed:", error)
@@ -291,147 +291,147 @@ export default function NotificationDropdown({ className }: NotificationDropdown
   // Don't render anything until component is mounted
   if (!mounted) {
     return (
-      <div className={`${styles.notificationContainer} ${className}`}>
-        <button className={styles.notificationButton}>
-          <Bell size={20} />
-        </button>
-      </div>
+        <div className={`${styles.notificationContainer} ${className}`}>
+          <button className={styles.notificationButton}>
+            <Bell size={20} />
+          </button>
+        </div>
     )
   }
 
   return (
-    <div className={`${styles.notificationContainer} ${className}`} ref={notificationRef}>
-      <button
-        className={styles.notificationButton}
-        onClick={toggleNotifications}
-      >
-        <Bell size={20} />
-        {totalCount > 0 && (
-          <span className={styles.notificationBadge}>
+      <div className={`${styles.notificationContainer} ${className}`} ref={notificationRef}>
+        <button
+            className={styles.notificationButton}
+            onClick={toggleNotifications}
+        >
+          <Bell size={20} />
+          {totalCount > 0 && (
+              <span className={styles.notificationBadge}>
             {totalCount > 99 ? '99+' : totalCount}
           </span>
-        )}
-      </button>
-      
-      {showNotifications && (
-        <div className={styles.notificationDropdown}>
-          <div className={styles.notificationHeader}>
-            <h3>Today's Schedule</h3>
-            {totalCount > 0 && (
-              <span className={styles.unreadCount}>{totalCount} items</span>
-            )}
-          </div>
-          
-          <div className={styles.notificationList}>
-            {loading ? (
-              <div className={styles.loadingState}>
-                <Clock size={24} />
-                <span>Loading today's items...</span>
+          )}
+        </button>
+
+        {showNotifications && (
+            <div className={styles.notificationDropdown}>
+              <div className={styles.notificationHeader}>
+                <h3>Today's Schedule</h3>
+                {totalCount > 0 && (
+                    <span className={styles.unreadCount}>{totalCount} items</span>
+                )}
               </div>
-            ) : totalCount === 0 ? (
-              <div className={styles.emptyState}>
-                <Calendar size={48} />
-                <h4>No Items Today</h4>
-                <p>You have no appointments or reminders scheduled for today.</p>
-              </div>
-            ) : (
-              <>
-                {/* Today's Appointments */}
-                {todayAppointments.length > 0 && (
-                  <>
-                    <div className={styles.sectionHeader}>
-                      <Calendar size={16} />
-                      <span>Today's Appointments</span>
+
+              <div className={styles.notificationList}>
+                {loading ? (
+                    <div className={styles.loadingState}>
+                      <Clock size={24} />
+                      <span>Loading today's items...</span>
                     </div>
-                    {todayAppointments.map((appointment) => (
-                      <div
-                        key={`apt-${appointment._id}`}
-                        className={`${styles.notificationItem} ${styles.appointmentItem}`}
-                      >
-                        <div className={styles.notificationIcon}>
-                          {getItemIcon('appointment', 'appointment')}
-                        </div>
-                        <div className={styles.notificationContent}>
-                          <div className={styles.notificationTitle}>
-                            Dr. {appointment.doctors_id?.name || 'Unknown'}
-                          </div>
-                          <div className={styles.notificationMessage}>
-                            {appointment.appointmentType} - {appointment.reason}
-                          </div>
-                          <div className={styles.notificationMeta}>
+                ) : totalCount === 0 ? (
+                    <div className={styles.emptyState}>
+                      <Calendar size={48} />
+                      <h4>No Items Today</h4>
+                      <p>You have no appointments or reminders scheduled for today.</p>
+                    </div>
+                ) : (
+                    <>
+                      {/* Today's Appointments */}
+                      {todayAppointments.length > 0 && (
+                          <>
+                            <div className={styles.sectionHeader}>
+                              <Calendar size={16} />
+                              <span>Today's Appointments</span>
+                            </div>
+                            {todayAppointments.map((appointment) => (
+                                <div
+                                    key={`apt-${appointment._id}`}
+                                    className={`${styles.notificationItem} ${styles.appointmentItem}`}
+                                >
+                                  <div className={styles.notificationIcon}>
+                                    {getItemIcon('appointment', 'appointment')}
+                                  </div>
+                                  <div className={styles.notificationContent}>
+                                    <div className={styles.notificationTitle}>
+                                      Dr. {appointment.doctors_id?.name || 'Unknown'}
+                                    </div>
+                                    <div className={styles.notificationMessage}>
+                                      {appointment.appointmentType} - {appointment.reason}
+                                    </div>
+                                    <div className={styles.notificationMeta}>
                             <span className={styles.notificationTime}>
                               <Clock size={12} />
                               {formatTime(appointment.date)}
                             </span>
-                            <span className={`${styles.notificationType} ${styles.statusBadge} ${styles[appointment.status.toLowerCase()]}`}>
+                                      <span className={`${styles.notificationType} ${styles.statusBadge} ${styles[appointment.status.toLowerCase()]}`}>
                               {appointment.status}
                             </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                )}
+                                    </div>
+                                  </div>
+                                </div>
+                            ))}
+                          </>
+                      )}
 
-                {/* Today's Reminders */}
-                {todayReminders.length > 0 && (
-                  <>
-                    <div className={styles.sectionHeader}>
-                      <Bell size={16} />
-                      <span>Today's Reminders</span>
-                    </div>
-                    {todayReminders.map((reminder) => (
-                      <div
-                        key={`rem-${reminder._id}`}
-                        className={`${styles.notificationItem} ${!reminder.isCompleted ? styles.unread : styles.completed}`}
-                      >
-                        <div className={styles.notificationIcon}>
-                          {getItemIcon(reminder.type, 'reminder')}
-                        </div>
-                        <div className={styles.notificationContent}>
-                          <div className={styles.notificationTitle}>
-                            {reminder.title}
-                          </div>
-                          <div className={styles.notificationMessage}>
-                            {reminder.description}
-                          </div>
-                          <div className={styles.notificationMeta}>
+                      {/* Today's Reminders */}
+                      {todayReminders.length > 0 && (
+                          <>
+                            <div className={styles.sectionHeader}>
+                              <Bell size={16} />
+                              <span>Today's Reminders</span>
+                            </div>
+                            {todayReminders.map((reminder) => (
+                                <div
+                                    key={`rem-${reminder._id}`}
+                                    className={`${styles.notificationItem} ${!reminder.isCompleted ? styles.unread : styles.completed}`}
+                                >
+                                  <div className={styles.notificationIcon}>
+                                    {getItemIcon(reminder.type, 'reminder')}
+                                  </div>
+                                  <div className={styles.notificationContent}>
+                                    <div className={styles.notificationTitle}>
+                                      {reminder.title}
+                                    </div>
+                                    <div className={styles.notificationMessage}>
+                                      {reminder.description}
+                                    </div>
+                                    <div className={styles.notificationMeta}>
                             <span className={styles.notificationTime}>
                               <Clock size={12} />
                               {formatTime(reminder.scheduleTime)}
                             </span>
-                            <span className={styles.notificationType}>
+                                      <span className={styles.notificationType}>
                               {reminder.type.charAt(0).toUpperCase() + reminder.type.slice(1)}
                             </span>
-                          </div>
-                        </div>
-                        {!reminder.isCompleted && (
-                          <button
-                            className={styles.markReadButton}
-                            onClick={() => markReminderAsCompleted(reminder._id)}
-                            title="Mark as completed"
-                          >
-                            <CheckCircle size={16} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </>
+                                    </div>
+                                  </div>
+                                  {!reminder.isCompleted && (
+                                      <button
+                                          className={styles.markReadButton}
+                                          onClick={() => markReminderAsCompleted(reminder._id)}
+                                          title="Mark as completed"
+                                      >
+                                        <CheckCircle size={16} />
+                                      </button>
+                                  )}
+                                </div>
+                            ))}
+                          </>
+                      )}
+                    </>
                 )}
-              </>
-            )}
-          </div>
-          
-          <div className={styles.notificationFooter}>
-            <button className={styles.footerButton} onClick={() => window.location.href = '/appointments'}>
-              View All Appointments
-            </button>
-            <button className={styles.footerButton} onClick={() => window.location.href = '/reminders'}>
-              View All Reminders
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+              </div>
+
+              <div className={styles.notificationFooter}>
+                <button className={styles.footerButton} onClick={() => window.location.href = '/appointments'}>
+                  View All Appointments
+                </button>
+                <button className={styles.footerButton} onClick={() => window.location.href = '/reminders'}>
+                  View All Reminders
+                </button>
+              </div>
+            </div>
+        )}
+      </div>
   )
 }
