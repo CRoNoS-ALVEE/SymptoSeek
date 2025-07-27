@@ -425,3 +425,210 @@
 .viewMore:hover {
   color: #7928ca;
 }
+
+/* Recent Activities Styles */
+.activitySection {
+  margin-bottom: 2rem;
+}
+
+.activitySection:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f3e8ff;
+  position: relative;
+}
+
+.sectionTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #9333ea;
+  border-radius: 1px;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  background: #fefefe;
+  position: relative;
+  overflow: hidden;
+}
+
+.activityItem::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #9333ea;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.activityItem:hover {
+  background: #f8fafc;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.activityItem:hover::before {
+  opacity: 1;
+}
+
+.activityIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9333ea;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.activityIcon::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #9333ea 0%, #7928ca 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: inherit;
+}
+
+.activityItem:hover .activityIcon::before {
+  opacity: 0.1;
+}
+
+.activityIcon svg {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+
+.activityItem:hover .activityIcon svg {
+  transform: scale(1.1);
+}
+
+.activityContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.activityTitle {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.activityMeta {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activityDescription {
+  color: #4b5563;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #9ca3af;
+  font-style: italic;
+  background: #f9fafb;
+  border-radius: 0.75rem;
+  border: 2px dashed #e5e7eb;
+}
+
+/* Responsive adjustments for activities */
+@media (max-width: 768px) {
+  .activityItem {
+    padding: 0.875rem;
+    gap: 0.75rem;
+  }
+
+  .activityIcon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .activityTitle {
+    font-size: 0.875rem;
+  }
+
+  .activityMeta {
+    font-size: 0.75rem;
+  }
+
+  .activityDescription {
+    font-size: 0.8rem;
+  }
+
+  .sectionTitle {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .activitySection {
+    margin-bottom: 1.5rem;
+  }
+
+  .activityItem {
+    padding: 0.75rem;
+    gap: 0.625rem;
+  }
+
+  .activityIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .emptyState {
+    padding: 1.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}

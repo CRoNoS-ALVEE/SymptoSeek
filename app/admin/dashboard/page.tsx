@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import axios from "axios"
@@ -9,12 +9,8 @@ import {
   Heart,
   Stethoscope,
   BarChart3,
-  ArrowUp,
-  ArrowDown,
-  Shield,
   LogOut,
   Settings,
-  Bell,
   Menu,
   FileText,
   User,
@@ -26,7 +22,6 @@ import styles from "./dashboard.module.css"
 interface StatCard {
   title: string
   value: string
-  change: number
   icon: React.ReactNode
 }
 
@@ -168,25 +163,21 @@ export default function AdminDashboard() {
     {
       title: "Total Users",
       value: stats.users.toString(),
-      change: 12.5,
       icon: <Heart className={styles.statIcon} />
     },
     {
       title: "Active Doctors",
       value: stats.doctors.toString(),
-      change: 8.3,
       icon: <Stethoscope className={styles.statIcon} />
     },
     {
       title: "Total Appointments",
       value: stats.appointments.toString(),
-      change: 8.7,
       icon: <Activity className={styles.statIcon} />
     },
     {
       title: "Pending Appointments",
       value: stats.appointmentStatusBreakdown.pending.toString(),
-      change: -5.2,
       icon: <Calendar className={styles.statIcon} />
     }
   ]
@@ -285,10 +276,6 @@ export default function AdminDashboard() {
                     <span className={styles.statTitle}>{stat.title}</span>
                   </div>
                   <div className={styles.statValue}>{stat.value}</div>
-                  <div className={`${styles.statChange} ${stat.change >= 0 ? styles.positive : styles.negative}`}>
-                    {stat.change >= 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
-                    {Math.abs(stat.change)}%
-                  </div>
                 </div>
             ))}
           </div>

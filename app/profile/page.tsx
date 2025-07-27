@@ -18,12 +18,6 @@ import {
   Hash,
   Activity,
   Heart,
-  Pill,
-  LineChart,
-  Moon,
-  Footprints,
-  Scale,
-  Timer,
   Edit,
   Menu,
 } from "lucide-react"
@@ -88,11 +82,141 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chatActivities, setChatActivities] = useState<any[]>([]);
+  const [otherActivities, setOtherActivities] = useState<any[]>([]);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove token from local storage
     setUser(null); // Reset user state
     router.push("/auth"); // Redirect to auth page
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+  };
+
+  const fetchChatActivities = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await axios.get(`http://localhost:5000/api/chat/history`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data.success) {
+        setChatActivities(response.data.conversations || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch chat activities:", error);
+    }
+  };
+
+  const fetchOtherActivities = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const activities: any[] = [];
+
+      // Fetch appointments from the correct endpoint
+      try {
+        const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Add appointment activities
+        if (appointmentsResponse.data && appointmentsResponse.data.length > 0) {
+          appointmentsResponse.data.forEach((appointment: any) => {
+            activities.push({
+              title: `Appointment with Dr. ${appointment.doctors_id?.name || 'Unknown'}`,
+              description: `${appointment.appointmentType || 'Medical'} appointment - ${appointment.reason || 'No reason provided'}`,
+              timestamp: appointment.createdAt,
+              icon: <Calendar size={16} />,
+              type: 'appointment'
+            });
+          });
+        }
+      } catch (appointmentError) {
+        console.error("Failed to fetch appointments:", appointmentError);
+      }
+
+      // Add profile update activity (when user data changes)
+      if (user) {
+        activities.push({
+          title: 'Profile Updated',
+          description: 'Updated profile information and personal details',
+          timestamp: user.date || new Date().toISOString(),
+          icon: <User size={16} />,
+          type: 'profile'
+        });
+      }
+
+      // Fetch feedback activities
+      try {
+        const feedbackResponse = await axios.get(`http://localhost:5000/api/feedback/user`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (feedbackResponse.data && feedbackResponse.data.length > 0) {
+          feedbackResponse.data.forEach((feedback: any) => {
+            activities.push({
+              title: 'Feedback Submitted',
+              description: `Submitted feedback: ${feedback.message?.substring(0, 50)}...`,
+              timestamp: feedback.createdAt,
+              icon: <Heart size={16} />,
+              type: 'feedback'
+            });
+          });
+        }
+      } catch (feedbackError) {
+        console.error("Failed to fetch feedback:", feedbackError);
+      }
+
+      // Fetch reminders
+      try {
+        const remindersResponse = await axios.get(`http://localhost:5000/api/reminders`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (remindersResponse.data && remindersResponse.data.length > 0) {
+          remindersResponse.data.forEach((reminder: any) => {
+            activities.push({
+              title: 'Reminder Created',
+              description: `Set reminder: ${reminder.title || reminder.message}`,
+              timestamp: reminder.createdAt,
+              icon: <Bell size={16} />,
+              type: 'reminder'
+            });
+          });
+        }
+      } catch (reminderError) {
+        console.error("Failed to fetch reminders:", reminderError);
+      }
+
+      // Sort activities by timestamp (most recent first)
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      setOtherActivities(activities.slice(0, 15)); // Show last 15 activities
+    } catch (error) {
+      console.error("Failed to fetch other activities:", error);
+      // Set some default activities if all API calls fail
+      setOtherActivities([
+        {
+          title: 'Account Created',
+          description: 'Welcome to SymptoSeek! Your account has been successfully created.',
+          timestamp: new Date().toISOString(),
+          icon: <User size={16} />,
+          type: 'account'
+        }
+      ]);
+    }
   };
 
   useEffect(() => {
@@ -108,6 +232,10 @@ export default function ProfilePage() {
         });
         console.log(response.data)
         setUser(response.data);
+
+        // Fetch activities after user data is loaded
+        await fetchChatActivities();
+        await fetchOtherActivities();
       } catch (err) {
         console.error("Failed to fetch user data:", err);
         // localStorage.removeItem("token");
@@ -117,12 +245,15 @@ export default function ProfilePage() {
       }
     };
 
-    fetchUserData();
-  }, [router]);
+    if (isMounted) {
+      fetchUserData();
+    }
+  }, [router, isMounted]);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
 
   const toggleSidebar = () => {
     if (isMounted) {
@@ -222,128 +353,63 @@ export default function ProfilePage() {
           </Link>
         </div>
 
-        <div className={styles.grid}>
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>
-              <Activity size={20} />
-              Analysis history
-            </h2>
-            <div className={styles.historyItem}>
-              <div className={styles.historyIcon}>
-                <Heart size={20} />
-              </div>
-              <div className={styles.historyContent}>
-                <div className={styles.historyTitle}>Recommendation test</div>
-                <div className={styles.historyMeta}>Dr. Lisa Smith</div>
-                <Link href="/dashboard" className={styles.viewMore}>View in Dashboard</Link>
-              </div>
-            </div>
-            <div className={styles.historyItem}>
-              <div className={styles.historyIcon}>
-                <Activity size={20} />
-              </div>
-              <div className={styles.historyContent}>
-                <div className={styles.historyTitle}>X-ray scan</div>
-                <div className={styles.historyMeta}>Dr. Michael Johnson</div>
-                <Link href="/dashboard" className={styles.viewMore}>View in Dashboard</Link>
-              </div>
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>
+            <Activity size={20} />
+            Recent Activities
+          </h2>
+
+          {/* Chat Activities Section */}
+          <div className={styles.activitySection}>
+            <h3 className={styles.sectionTitle}>Chat Activities</h3>
+            <div className={styles.activityList}>
+              {chatActivities.length > 0 ? (
+                chatActivities.map((chat, index) => (
+                  <div key={index} className={styles.activityItem}>
+                    <div className={styles.activityIcon}>
+                      <Hash size={16} />
+                    </div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityTitle}>{chat.title}</div>
+                      <div className={styles.activityMeta}>
+                        {chat.message_count} messages • {formatDate(chat.last_updated)}
+                      </div>
+                      <div className={styles.activityDescription}>
+                        {chat.last_message}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>No chat activities yet</div>
+              )}
             </div>
           </div>
 
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>
-              <Heart size={20} />
-              Health status
-            </h2>
-            <div className={styles.healthStatus}>
-              <div className={styles.statusItem}>
-                <div className={styles.statusIcon}>
-                  <Activity size={16} />
-                </div>
-                Vitamin deficiency
-              </div>
-              <div className={styles.statusItem}>
-                <div className={styles.statusIcon}>
-                  <Heart size={16} />
-                </div>
-                Blood pressure normal
-              </div>
-              <div className={styles.statusItem}>
-                <div className={styles.statusIcon}>
-                  <LineChart size={16} />
-                </div>
-                Sugar levels stable
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>
-              <Pill size={20} />
-              Medication history
-            </h2>
-            <div className={styles.historyItem}>
-              <div className={styles.historyIcon}>
-                <Pill size={20} />
-              </div>
-              <div className={styles.historyContent}>
-                <div className={styles.historyTitle}>Ibuprofen 200mg</div>
-                <div className={styles.historyMeta}>Prescribed weekly</div>
-              </div>
-            </div>
-            <div className={styles.historyItem}>
-              <div className={styles.historyIcon}>
-                <Pill size={20} />
-              </div>
-              <div className={styles.historyContent}>
-                <div className={styles.historyTitle}>Omeprazole</div>
-                <div className={styles.historyMeta}>As needed</div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>
-              <Activity size={20} />
-              Daily Statistics
-            </h2>
-            <div className={styles.statsGrid}>
-              <div className={styles.statItem}>
-                <div className={styles.statIcon}>
-                  <Moon size={20} />
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statLabel}>Sleep</div>
-                  <div className={styles.statValue}>avg. 8h 15 min</div>
-                </div>
-              </div>
-              <div className={styles.statItem}>
-                <div className={styles.statIcon}>
-                  <Footprints size={20} />
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statLabel}>Activity</div>
-                  <div className={styles.statValue}>10,502 steps</div>
-                </div>
-              </div>
-              <div className={styles.statItem}>
-                <div className={styles.statIcon}>
-                  <Scale size={20} />
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statLabel}>Body mass</div>
-                  <div className={styles.statValue}>70 kg</div>
-                </div>
-              </div>
-              <div className={styles.statItem}>
-                <div className={styles.statIcon}>
-                  <Timer size={20} />
-                </div>
-                <div className={styles.statContent}>
-                  <div className={styles.statLabel}>Calories</div>
-                  <div className={styles.statValue}>2,300 kcal</div>
-                </div>
-              </div>
+          {/* Other Activities Section */}
+          <div className={styles.activitySection}>
+            <h3 className={styles.sectionTitle}>Other Activities</h3>
+            <div className={styles.activityList}>
+              {otherActivities.length > 0 ? (
+                otherActivities.map((activity, index) => (
+                  <div key={index} className={styles.activityItem}>
+                    <div className={styles.activityIcon}>
+                      {activity.icon}
+                    </div>
+                    <div className={styles.activityContent}>
+                      <div className={styles.activityTitle}>{activity.title}</div>
+                      <div className={styles.activityMeta}>
+                        {formatDate(activity.timestamp)}
+                      </div>
+                      <div className={styles.activityDescription}>
+                        {activity.description}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>No other activities yet</div>
+              )}
             </div>
           </div>
         </div>

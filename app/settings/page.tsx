@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import {type ReactNode, useState} from "react"
+import {type ReactNode, useState, useEffect} from "react"
 import { useRouter } from 'next/navigation'
+import axios from "axios"
 import {
   LayoutDashboard,
   FileText,
@@ -21,7 +22,6 @@ import {
   Mail
 } from "lucide-react"
 import styles from "./settings.module.css"
-import router from "next/router";
 
 interface NavItemProps {
   href?: string;
@@ -29,9 +29,12 @@ interface NavItemProps {
   className?: string;
   onClick?: () => void;
 }
+
 interface User {
+  _id: string;
   profile_pic?: string;
   name?: string;
+  email?: string;
 }
 
 export default function SettingsPage() {
@@ -40,6 +43,8 @@ export default function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
   const [language, setLanguage] = useState("en")
+  const [isMounted, setIsMounted] = useState(false)
+  const [loading, setLoading] = useState(true)
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
 
@@ -48,6 +53,50 @@ export default function SettingsPage() {
     setUser(null); // Reset user state
     router.push("/auth"); // Redirect to auth page
   };
+
+  // Authentication check and user data fetch
+  useEffect(() => {
+    const checkAuthAndFetchUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/auth");
+        return;
+      }
+
+      try {
+        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data);
+      } catch (err) {
+        console.error("Failed to fetch user data:", err);
+        localStorage.removeItem("token");
+        router.push("/auth");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isMounted) {
+      checkAuthAndFetchUser();
+    }
+  }, [router, isMounted]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingSpinner}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to auth
+  }
 
   return (
     <div className={styles.container}>
