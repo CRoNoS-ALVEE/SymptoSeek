@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Star, Send, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import styles from './feedback.module.css'
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface Feedback {
   _id: string
@@ -49,7 +50,7 @@ export default function FeedbackPage() {
         return
       }
 
-      const response = await fetch('http://localhost:5000/api/feedback/my-feedback', {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FEEDBACK.MY_FEEDBACK), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -91,7 +92,7 @@ export default function FeedbackPage() {
         return
       }
 
-      const url = editingId ? `http://localhost:5000/api/feedback/${editingId}` : 'http://localhost:5000/api/feedback/submit'
+      const url = editingId ? getApiUrl(`${API_CONFIG.ENDPOINTS.FEEDBACK.DETAIL}/${editingId}`) : getApiUrl(API_CONFIG.ENDPOINTS.FEEDBACK.SUBMIT)
       const method = editingId ? 'PUT' : 'POST'
 
       console.log('Submitting feedback:', { url, method, formData })
@@ -152,7 +153,7 @@ export default function FeedbackPage() {
         return
       }
 
-      const response = await fetch(`http://localhost:5000/api/feedback/${id}`, {
+      const response = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.FEEDBACK.DETAIL}/${id}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

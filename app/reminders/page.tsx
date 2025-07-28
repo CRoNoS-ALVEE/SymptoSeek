@@ -21,6 +21,7 @@ import {
   X
 } from "lucide-react"
 import styles from "./reminders.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface Reminder {
   _id: string
@@ -87,13 +88,13 @@ export default function RemindersPage() {
       
       try {
         // Fetch user data
-        const userResponse = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const userResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(userResponse.data);
 
         // Fetch reminders
-        const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
+        const remindersResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setActiveReminders(remindersResponse.data);
@@ -129,7 +130,7 @@ export default function RemindersPage() {
       if (!reminder) return;
 
       const response = await axios.put(
-        `http://localhost:5000/api/reminder/${id}`,
+        getApiUrl(`${API_CONFIG.ENDPOINTS.REMINDERS.DELETE}/${id}`),
         { completed: !reminder.completed },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -170,7 +171,7 @@ export default function RemindersPage() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/reminder`,
+        getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST),
         newReminder,
         { headers: { Authorization: `Bearer ${token}` } }
       );

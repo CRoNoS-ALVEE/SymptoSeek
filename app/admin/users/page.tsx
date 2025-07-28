@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import styles from "./users.module.css"
 import axios from "axios"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface User {
   _id: string
@@ -136,7 +137,7 @@ export default function UsersPage() {
           return
         }
 
-        const response = await axios.get('http://localhost:5000/api/admin/users', {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN.USERS), {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             page: currentPage,
@@ -206,7 +207,7 @@ export default function UsersPage() {
         password: 'tempPassword123' // Default password - user will need to change
       }
 
-      const response = await axios.post('http://localhost:5000/api/admin/users', userData, {
+      const response = await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN.USERS), userData, {
         headers: { Authorization: `Bearer ${token}` }
       })
 
@@ -262,7 +263,7 @@ export default function UsersPage() {
         country: formData.get('country') as string,
       }
 
-      const response = await axios.put(`http://localhost:5000/api/admin/users/${editingUser._id}`, userData, {
+      const response = await axios.put(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.USERS}/${editingUser._id}`), userData, {
         headers: { Authorization: `Bearer ${token}` }
       })
 
@@ -295,7 +296,7 @@ export default function UsersPage() {
       }
 
       console.log('Deleting user:', userId)
-      const response = await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, {
+      const response = await axios.delete(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.USERS}/${userId}`), {
         headers: { Authorization: `Bearer ${token}` }
       })
 

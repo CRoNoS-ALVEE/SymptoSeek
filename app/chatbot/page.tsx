@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import Link from "next/link"
 import Navbar from "../components/Navbar/Navbar"
+import { API_CONFIG, getApiUrl, getFlaskUrl } from "../../config/api"
 
 // MapComponent for displaying doctor locations
 const MapComponent: React.FC<{ mapData: any }> = ({ mapData }) => {
@@ -147,7 +148,7 @@ export default function ChatbotPage() {
         return
       }
       try {
-        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         })
         setUser(response.data)
@@ -176,7 +177,7 @@ export default function ChatbotPage() {
     setLoadingHistory(true)
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/chat/history', {
+      const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -195,7 +196,7 @@ export default function ChatbotPage() {
     setLoadingMessages(true)
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/chat/${chatId}/messages`, {
+      const response = await axios.get(getApiUrl(`${API_CONFIG.ENDPOINTS.CHAT.MESSAGES}/${chatId}/messages`), {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -229,7 +230,7 @@ export default function ChatbotPage() {
   const createNewChat = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/chat/new', {}, {
+      const response = await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.NEW), {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -258,7 +259,7 @@ export default function ChatbotPage() {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/chat/${chatId}`, {
+      await axios.delete(getApiUrl(`${API_CONFIG.ENDPOINTS.CHAT.DELETE}/${chatId}`), {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -302,6 +303,7 @@ export default function ChatbotPage() {
   // File upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [stagedFile, setStagedFile] = useState<File | null>(null) // File ready to send
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -395,22 +397,57 @@ export default function ChatbotPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Check file type
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/bmp', 'image/tiff']
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please upload only PDF or image files (JPEG, JPG, PNG, BMP, TIFF)')
-        return
+      processFile(file)
+    }
+  }
+
+  // Process and validate file (for both upload and paste)
+  const processFile = (file: File) => {
+    // Check file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/bmp', 'image/tiff']
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload only PDF or image files (JPEG, JPG, PNG, BMP, TIFF)')
+      return
+    }
+    
+    // Check file size (max 16MB)
+    const maxSize = 16 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert('File size must be less than 16MB')
+      return
+    }
+    
+    // Stage the file instead of immediately uploading
+    setStagedFile(file)
+    setSelectedFile(file)
+  }
+
+  // Handle paste events for images
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.type.indexOf('image') !== -1) {
+        e.preventDefault()
+        const blob = item.getAsFile()
+        if (blob) {
+          // Convert blob to File with proper name
+          const file = new File([blob], `pasted-image-${Date.now()}.png`, { type: blob.type })
+          processFile(file)
+        }
+        break
       }
-      
-      // Check file size (max 16MB)
-      const maxSize = 16 * 1024 * 1024
-      if (file.size > maxSize) {
-        alert('File size must be less than 16MB')
-        return
-      }
-      
-      setSelectedFile(file)
-      uploadFile(file)
+    }
+  }
+
+  // Remove staged file
+  const removeStagedFile = () => {
+    setStagedFile(null)
+    setSelectedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
     }
   }
 
@@ -434,7 +471,7 @@ export default function ChatbotPage() {
       formData.append('file', file)
 
       // Upload to Flask backend
-      const response = await axios.post('http://localhost:5001/api/upload-report', formData, {
+      const response = await axios.post(getFlaskUrl(API_CONFIG.ENDPOINTS.FLASK.UPLOAD_REPORT), formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -456,10 +493,10 @@ export default function ChatbotPage() {
           await new Promise(resolve => setTimeout(resolve, 500))
         }
 
-        // Save to chat history if logged in
+        // Save file upload to chat history if logged in
         if (loggedIn && currentChatId) {
           try {
-            await axios.post('http://localhost:5000/api/chat/save', {
+            await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.SAVE), {
               chat_id: currentChatId,
               message: fileMessage.text,
               response: botResponseParts.map((part: any) => part.content).join('\n\n'),
@@ -468,9 +505,12 @@ export default function ChatbotPage() {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`
               }
-            })
+            });
+            
+            // Refresh chat history to show the new messages
+            loadChatHistory();
           } catch (saveError) {
-            console.error('Error saving chat history:', saveError)
+            console.error('Error saving file upload to chat history:', saveError);
           }
         }
       } else {
@@ -488,6 +528,7 @@ export default function ChatbotPage() {
       setIsUploading(false)
       setIsTyping(false)
       setSelectedFile(null)
+      setStagedFile(null) // Clear staged file after upload
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -497,7 +538,13 @@ export default function ChatbotPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputMessage.trim() || isTyping) return
+    if ((!inputMessage.trim() && !stagedFile) || isTyping) return
+
+    // Handle file upload if there's a staged file
+    if (stagedFile) {
+      await uploadFile(stagedFile)
+      return
+    }
 
     const newMessage: Message = {
       text: inputMessage,
@@ -568,7 +615,7 @@ export default function ChatbotPage() {
       }
 
       const response = await axios.post(
-        'http://localhost:5000/api/chat',  // Changed to Node.js backend port
+        getApiUrl(API_CONFIG.ENDPOINTS.CHAT.MESSAGES),  // Changed to dynamic URL
         {
           message: userMessage,
           chat_id: currentChatId,
@@ -976,21 +1023,69 @@ export default function ChatbotPage() {
                         </button>
                     ))}
                   </div>
+
+                  {/* File Upload Section for Welcome Screen */}
+                  <div className={styles.welcomeFileUpload}>
+                    {/* <div className={styles.fileUploadHeader}>
+                      <h3>📋 Upload Medical Report</h3>
+                      <p>Upload your medical reports, lab results, or prescriptions for instant AI analysis</p>
+                    </div> */}
+                    {/* <button 
+                      className={styles.welcomeFileButton}
+                      onClick={handleFileButtonClick}
+                      disabled={isUploading}
+                    >
+                      <Paperclip size={20} />
+                      {isUploading ? 'Uploading...' : 'Choose Medical Report'}
+                      <span className={styles.fileFormats}>(PDF, JPEG, PNG)</span>
+                    </button> */}
+                    {selectedFile && (
+                      <div className={styles.selectedFileInfo}>
+                        <span>Selected: {selectedFile.name}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className={styles.inputSection}>
+                  {/* File Preview Section */}
+                  {stagedFile && (
+                    <div className={styles.filePreview}>
+                      <div className={styles.filePreviewContent}>
+                        <div className={styles.fileIcon}>
+                          <Paperclip size={16} />
+                        </div>
+                        <div className={styles.fileInfo}>
+                          <span className={styles.fileName}>{stagedFile.name}</span>
+                          <span className={styles.fileSize}>
+                            {(stagedFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </span>
+                        </div>
+                        <button 
+                          type="button"
+                          className={styles.removeFileButton}
+                          onClick={removeStagedFile}
+                          title="Remove file"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <form onSubmit={handleSubmit} className={styles.inputContainer}>
                     <div className={styles.inputWrapper}>
                       <input
                           type="text"
                           value={inputMessage}
                           onChange={(e) => setInputMessage(e.target.value)}
-                          placeholder="Ask anything..."
+                          onPaste={handlePaste}
+                          placeholder={stagedFile ? `Press Enter to send ${stagedFile.name}` : "Ask anything..."}
                           className={styles.input}
                           disabled={isTyping}
                       />
                       <div className={styles.inputActions}>
-                        <button 
+                        <button
                           type="button" 
                           className={styles.actionButton}
                           onClick={handleFileButtonClick}
@@ -1002,7 +1097,11 @@ export default function ChatbotPage() {
                         <button type="button" className={styles.actionButton}>
                           <Mic size={18} />
                         </button>
-                        <button type="submit" className={styles.sendButton} disabled={!inputMessage.trim() || isTyping}>
+                        <button 
+                          type="submit" 
+                          className={styles.sendButton} 
+                          disabled={(!inputMessage.trim() && !stagedFile) || isTyping}
+                        >
                           <Send size={18} />
                         </button>
                       </div>
@@ -1098,24 +1197,43 @@ export default function ChatbotPage() {
                 </div>
 
                 <div className={styles.inputSection}>
+                  {/* File Preview Section */}
+                  {stagedFile && (
+                    <div className={styles.filePreview}>
+                      <div className={styles.filePreviewContent}>
+                        <div className={styles.fileIcon}>
+                          <Paperclip size={16} />
+                        </div>
+                        <div className={styles.fileInfo}>
+                          <span className={styles.fileName}>{stagedFile.name}</span>
+                          <span className={styles.fileSize}>
+                            {(stagedFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </span>
+                        </div>
+                        <button 
+                          type="button"
+                          className={styles.removeFileButton}
+                          onClick={removeStagedFile}
+                          title="Remove file"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <form onSubmit={handleSubmit} className={styles.inputContainer}>
                     <div className={styles.inputWrapper}>
                       <input
                           type="text"
                           value={inputMessage}
                           onChange={(e) => setInputMessage(e.target.value)}
-                          placeholder="Ask anything..."
+                          onPaste={handlePaste}
+                          placeholder={stagedFile ? `Press Enter to send ${stagedFile.name}` : "Ask anything..."}
                           className={styles.input}
                           disabled={isTyping}
                       />
                       <div className={styles.inputActions}>
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          onChange={handleFileChange}
-                          accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff"
-                          style={{ display: 'none' }}
-                        />
                         <button 
                           type="button" 
                           className={styles.actionButton}
@@ -1128,21 +1246,16 @@ export default function ChatbotPage() {
                         <button type="button" className={styles.actionButton}>
                           <Mic size={18} />
                         </button>
-                        <button type="submit" className={styles.sendButton} disabled={!inputMessage.trim() || isTyping}>
+                        <button 
+                          type="submit" 
+                          className={styles.sendButton} 
+                          disabled={(!inputMessage.trim() && !stagedFile) || isTyping}
+                        >
                           <Send size={18} />
                         </button>
                       </div>
                     </div>
                   </form>
-                  
-                  {/* Hidden file input */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff"
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                  />
                 </div>
               </div>
           )}
@@ -1213,6 +1326,15 @@ export default function ChatbotPage() {
                 </div>
             </div>
         )}
+
+        {/* Global hidden file input for both welcome screen and chat */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff"
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
       </div>
   )
 }

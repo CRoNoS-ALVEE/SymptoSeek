@@ -22,6 +22,7 @@ import {
   Menu,
 } from "lucide-react"
 import styles from "./profile.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface NavItemProps {
   href?: string;
@@ -107,7 +108,7 @@ export default function ProfilePage() {
     if (!token) return;
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/chat/history`, {
+      const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data.success) {
@@ -127,7 +128,7 @@ export default function ProfilePage() {
 
       // Fetch appointments from the correct endpoint
       try {
-        const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+        const appointmentsResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.MY_APPOINTMENTS), {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -160,7 +161,7 @@ export default function ProfilePage() {
 
       // Fetch feedback activities
       try {
-        const feedbackResponse = await axios.get(`http://localhost:5000/api/feedback/user`, {
+        const feedbackResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.FEEDBACK.USER), {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -181,7 +182,7 @@ export default function ProfilePage() {
 
       // Fetch reminders
       try {
-        const remindersResponse = await axios.get(`http://localhost:5000/api/reminders`, {
+        const remindersResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST), {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -227,7 +228,7 @@ export default function ProfilePage() {
         return;
       }
       try {
-        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: {Authorization: `Bearer ${token}`},
         });
         console.log(response.data)

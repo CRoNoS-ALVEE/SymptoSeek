@@ -6,6 +6,7 @@ import { Calendar as CalendarIcon, Clock, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import axios from "axios"
 import styles from "./book.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface Doctor {
   _id: string
@@ -87,7 +88,7 @@ export default function BookAppointmentPage() {
         return
       }
       try {
-        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         })
         setUser(response.data)
@@ -110,7 +111,7 @@ export default function BookAppointmentPage() {
     const fetchDoctor = async () => {
       if (!doctorId) return
       try {
-        const response = await axios.get<Doctor>(`http://localhost:5000/api/doctors/${doctorId}`)
+        const response = await axios.get<Doctor>(getApiUrl(`${API_CONFIG.ENDPOINTS.DOCTORS.DETAIL}/${doctorId}`))
         setDoctor(response.data)
         // Generate time slots from visiting_hours
         const slots = generateTimeSlots(response.data.visiting_hours)
@@ -357,7 +358,7 @@ export default function BookAppointmentPage() {
       console.log("Submitting appointment data:", appointmentData)
 
       const response = await axios.post(
-        "http://localhost:5000/api/appointments",
+        getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE),
         appointmentData,
         {
           headers: {

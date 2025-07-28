@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import styles from "./notifications.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface Notification {
   _id: string
@@ -49,7 +50,7 @@ export default function NotificationsPage() {
 
     try {
       setLoading(true)
-      const response = await axios.get("http://localhost:5000/api/notifications", {
+      const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.NOTIFICATIONS.LIST), {
         headers: { Authorization: `Bearer ${token}` }
       })
       setNotifications(response.data)
@@ -71,7 +72,7 @@ export default function NotificationsPage() {
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/notifications/${notificationId}/read`,
+        getApiUrl(`${API_CONFIG.ENDPOINTS.NOTIFICATIONS.READ}/${notificationId}/read`),
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -91,7 +92,7 @@ export default function NotificationsPage() {
     if (!token) return
 
     try {
-      await axios.delete(`http://localhost:5000/api/notifications/${notificationId}`, {
+      await axios.delete(getApiUrl(`${API_CONFIG.ENDPOINTS.NOTIFICATIONS.DELETE}/${notificationId}`), {
         headers: { Authorization: `Bearer ${token}` }
       })
       

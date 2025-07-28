@@ -20,6 +20,7 @@ import {
   CreditCard
 } from "lucide-react"
 import styles from "./edit.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 type TabId = "personal" | "medical" | "security" | "subscription"
 
@@ -97,7 +98,7 @@ export default function EditProfilePage() {
           throw new Error("No authentication token found")
         }
 
-        const response = await fetch(`http://localhost:5000/api/auth/profile`, {
+        const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -227,7 +228,7 @@ export default function EditProfilePage() {
         family_medical_history: formData.family_medical_history
       }
 
-      const response = await fetch(`http://localhost:5000/api/auth/profile/edit`, {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.EDIT_PROFILE), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -288,7 +289,7 @@ export default function EditProfilePage() {
         throw new Error("No authentication token found")
       }
 
-      const response = await fetch(`http://localhost:5000/api/auth/change-password`, {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.CHANGE_PASSWORD), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

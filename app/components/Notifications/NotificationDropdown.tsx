@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import axios from "axios"
 import { Bell, Clock, CheckCircle, Calendar, Pill, AlertCircle } from "lucide-react"
 import styles from "./NotificationDropdown.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface TodayReminder {
   _id: string
@@ -121,8 +122,8 @@ export default function NotificationDropdown({ className }: NotificationDropdown
 
       // Fetch today's reminders from the correct endpoint
       try {
-        console.log("Fetching reminders from: http://localhost:5000/api/reminder")
-        const remindersResponse = await axios.get("http://localhost:5000/api/reminder", {
+        console.log("Fetching reminders from:", getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST))
+        const remindersResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST), {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000
         })
@@ -186,8 +187,8 @@ export default function NotificationDropdown({ className }: NotificationDropdown
 
       // Fetch today's appointments
       try {
-        console.log("Fetching appointments from: http://localhost:5000/api/appointments/my-appointments")
-        const appointmentsResponse = await axios.get("http://localhost:5000/api/appointments/my-appointments", {
+        console.log("Fetching appointments from:", getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.MY_APPOINTMENTS))
+        const appointmentsResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.MY_APPOINTMENTS), {
           headers: { Authorization: `Bearer ${token}` },
           timeout: 10000
         })
@@ -236,7 +237,7 @@ export default function NotificationDropdown({ className }: NotificationDropdown
 
     try {
       await axios.patch(
-          `http://localhost:5000/api/reminder/${reminderId}`,
+          getApiUrl(`${API_CONFIG.ENDPOINTS.REMINDERS.DELETE}/${reminderId}`),
           { isCompleted: true },
           { headers: { Authorization: `Bearer ${token}` } }
       )

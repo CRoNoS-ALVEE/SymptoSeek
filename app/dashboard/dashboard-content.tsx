@@ -11,6 +11,7 @@ import { Calendar, Clock, MessageSquare, Stethoscope, User, Plus } from "lucide-
 import Navbar from "../components/Navbar/Dashboard-Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
+import { getApiUrl, API_CONFIG } from "../../config/api"
 
 interface User {
   profile_pic?: string;
@@ -98,7 +99,7 @@ export default function DashboardContent() {
 
       try {
         console.log("Attempting to fetch user data...");
-        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("User data fetched successfully:", response.data);
@@ -131,7 +132,7 @@ export default function DashboardContent() {
   const fetchDashboardStats = async (token: string) => {
     try {
       // Fetch appointments
-      const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+      const appointmentsResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.MY_APPOINTMENTS), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -157,7 +158,7 @@ export default function DashboardContent() {
       setAllAppointments(appointments); // Store all appointments
 
       // Fetch reminders for active reminders count
-      const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
+      const remindersResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -186,7 +187,7 @@ export default function DashboardContent() {
       }).length;
 
       // Fetch total chat interactions from chat history
-      const chatResponse = await axios.get(`http://localhost:5000/api/chat/history`, {
+      const chatResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -211,7 +212,7 @@ export default function DashboardContent() {
       const activities: RecentActivity[] = [];
 
       // Fetch recent appointments
-      const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+      const appointmentsResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.MY_APPOINTMENTS), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -225,7 +226,7 @@ export default function DashboardContent() {
           }));
 
       // Fetch recent reminders
-      const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
+      const remindersResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -240,7 +241,7 @@ export default function DashboardContent() {
 
       // Fetch recent chat conversations
       try {
-        const chatResponse = await axios.get(`http://localhost:5000/api/chat/history`, {
+        const chatResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.CHAT.HISTORY), {
           headers: { Authorization: `Bearer ${token}` },
         });
 

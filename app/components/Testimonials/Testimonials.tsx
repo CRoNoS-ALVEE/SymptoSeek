@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { User } from 'lucide-react'
 import styles from './Testimonials.module.css'
+import { getApiUrl, API_CONFIG } from '../../../config/api'
 
 interface Testimonial {
   _id: string
@@ -24,7 +25,7 @@ export default function Testimonials() {
 
   const fetchTestimonials = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/feedback/public?limit=6')
+      const response = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.FEEDBACK.PUBLIC}?limit=6`))
       if (response.ok) {
         const data = await response.json()
         setTestimonials(data.data)

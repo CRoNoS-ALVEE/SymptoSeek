@@ -20,6 +20,7 @@ import {
   X
 } from "lucide-react"
 import styles from "./reports.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface NavItemProps {
   href?: string;
@@ -77,13 +78,13 @@ export default function ReportsPage() {
       
       try {
         // Fetch user data
-        const userResponse = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const userResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(userResponse.data);
 
         // Fetch reports
-        const reportsResponse = await axios.get(`http://localhost:5000/api/reports`, {
+        const reportsResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REPORTS.LIST), {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("Reports response:", reportsResponse.data);
@@ -132,7 +133,7 @@ export default function ReportsPage() {
       formData.append("reportFile", newReport.file);
 
       const response = await axios.post(
-        "http://localhost:5000/api/reports",
+        getApiUrl(API_CONFIG.ENDPOINTS.REPORTS.CREATE),
         formData,
         { 
           headers: { 

@@ -22,6 +22,7 @@ import {
   Mail
 } from "lucide-react"
 import styles from "./settings.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface NavItemProps {
   href?: string;
@@ -64,7 +65,7 @@ export default function SettingsPage() {
       }
 
       try {
-        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);

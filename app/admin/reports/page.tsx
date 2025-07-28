@@ -27,6 +27,7 @@ import {
   MessageSquare
 } from "lucide-react"
 import styles from "./reports.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface UserInfo {
   _id: string
@@ -93,7 +94,7 @@ export default function ReportsPage() {
       setLoading(true)
       const token = localStorage.getItem("adminToken")
 
-      const response = await axios.get(`http://localhost:5000/api/admin/reports?page=${page}&limit=${reportsPerPage}`, {
+      const response = await axios.get(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.REPORTS}?page=${page}&limit=${reportsPerPage}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -132,7 +133,7 @@ export default function ReportsPage() {
     try {
       const token = localStorage.getItem("adminToken")
 
-      const response = await axios.patch(`http://localhost:5000/api/admin/reports/${reportId}`, {
+      const response = await axios.patch(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.REPORTS}/${reportId}`), {
         status
       }, {
         headers: {
@@ -160,7 +161,7 @@ export default function ReportsPage() {
     try {
       const token = localStorage.getItem("adminToken")
 
-      await axios.delete(`http://localhost:5000/api/admin/reports/${reportId}`, {
+      await axios.delete(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.REPORTS}/${reportId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }

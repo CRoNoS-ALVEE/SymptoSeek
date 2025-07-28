@@ -8,6 +8,7 @@ import Navbar from "../components/Navbar/Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./appointments.module.css"
 import {useRouter} from "next/navigation";
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface NavItemProps {
   href?: string;
@@ -75,19 +76,19 @@ export default function AppointmentsPage() {
       
       try {
         // Fetch user data
-        const userResponse = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const userResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(userResponse.data);
 
         // Fetch appointments
-        const appointmentsResponse = await axios.get(`http://localhost:5000/api/appointments/my-appointments`, {
+        const appointmentsResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.MY_APPOINTMENTS), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAppointments(appointmentsResponse.data);
 
         // Fetch reminders
-        const remindersResponse = await axios.get(`http://localhost:5000/api/reminder`, {
+        const remindersResponse = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.REMINDERS.LIST), {
           headers: { Authorization: `Bearer ${token}` },
         });
         setReminders(remindersResponse.data);
@@ -147,7 +148,7 @@ export default function AppointmentsPage() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/appointments`,
+        getApiUrl(API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE),
         {
           title: newAppointment.title,
           date: newAppointment.date,
@@ -179,7 +180,7 @@ export default function AppointmentsPage() {
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/appointments/${appointmentId}`,
+        getApiUrl(`${API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE}/${appointmentId}`),
         { status: "Cancelled" },
         { headers: { Authorization: `Bearer ${token}` } }
       );

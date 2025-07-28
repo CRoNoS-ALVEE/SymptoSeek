@@ -18,6 +18,7 @@ import {
   User
 } from 'lucide-react'
 import styles from './feedback.module.css'
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface FeedbackItem {
   _id: string
@@ -85,7 +86,7 @@ export default function AdminFeedbackPage() {
   const fetchAllFeedback = async () => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch('http://localhost:5000/api/feedback/admin/all', {
+      const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FEEDBACK.ADMIN_ALL), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -108,7 +109,7 @@ export default function AdminFeedbackPage() {
   const handleApproval = async (feedbackId: string, isApproved: boolean) => {
     try {
       const token = localStorage.getItem('adminToken')
-      const response = await fetch(`http://localhost:5000/api/feedback/admin/${feedbackId}/approve`, {
+      const response = await fetch(getApiUrl(`${API_CONFIG.ENDPOINTS.FEEDBACK.ADMIN_APPROVE}/${feedbackId}/approve`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

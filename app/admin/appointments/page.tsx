@@ -25,6 +25,7 @@ import {
   MessageSquare
 } from "lucide-react"
 import styles from "./appointments.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface User {
   _id: string
@@ -88,7 +89,7 @@ export default function AppointmentsPage() {
 
       try {
         setLoading(true)
-        const response = await axios.get(`http://localhost:5000/api/admin/appointments?page=${page}&limit=${appointmentsPerPage}`, {
+        const response = await axios.get(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}?page=${page}&limit=${appointmentsPerPage}`), {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -139,7 +140,7 @@ export default function AppointmentsPage() {
 
         try {
           setLoading(true)
-          const response = await axios.get(`http://localhost:5000/api/admin/appointments?page=${page}&limit=${appointmentsPerPage}`, {
+          const response = await axios.get(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}?page=${page}&limit=${appointmentsPerPage}`), {
             headers: { Authorization: `Bearer ${token}` },
           })
 
@@ -161,7 +162,7 @@ export default function AppointmentsPage() {
   const handleApprove = async (appointmentId: string) => {
     try {
       const token = localStorage.getItem('adminToken')
-      await axios.patch(`http://localhost:5000/api/admin/appointments/${appointmentId}/approve`, {}, {
+      await axios.patch(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}/${appointmentId}/approve`), {}, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -181,7 +182,7 @@ export default function AppointmentsPage() {
   const handleReject = async (appointmentId: string) => {
     try {
       const token = localStorage.getItem('adminToken')
-      await axios.patch(`http://localhost:5000/api/admin/appointments/${appointmentId}/reject`, {}, {
+      await axios.patch(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}/${appointmentId}/reject`), {}, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -208,8 +209,8 @@ export default function AppointmentsPage() {
       // For other status updates like 'Completed'
       try {
         const token = localStorage.getItem('adminToken')
-        console.log('Making PUT request to:', `http://localhost:5000/api/admin/appointments/${appointmentId}`)
-        const response = await axios.put(`http://localhost:5000/api/admin/appointments/${appointmentId}`, {
+        console.log('Making PUT request to:', getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}/${appointmentId}`))
+        const response = await axios.put(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}/${appointmentId}`), {
           status
         }, {
           headers: { Authorization: `Bearer ${token}` },

@@ -18,6 +18,7 @@ import {
   MessageSquare
 } from "lucide-react"
 import styles from "./dashboard.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface StatCard {
   title: string
@@ -105,7 +106,7 @@ export default function AdminDashboard() {
       }
 
       try {
-        const response = await axios.get(`http://localhost:5000/api/admin/dashboard-stats`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN.DASHBOARD_STATS), {
           headers: { Authorization: `Bearer ${token}` },
         })
 
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
 
         // Fetch recent appointments for activity
         try {
-          const appointmentsResponse = await axios.get(`http://localhost:5000/api/admin/appointments?limit=5`, {
+          const appointmentsResponse = await axios.get(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.APPOINTMENTS}?limit=5`), {
             headers: { Authorization: `Bearer ${token}` },
           })
 

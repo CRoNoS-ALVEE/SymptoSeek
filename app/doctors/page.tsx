@@ -8,6 +8,7 @@ import { MapPin, Clock, Star, Phone, Mail, Building, Search, X, Calendar, Award,
 import styles from "./doctors.module.css"
 import { useRouter } from "next/navigation"
 import axios from "axios"
+import { getApiUrl, API_CONFIG } from "../../config/api"
 
 interface Doctor {
   _id: string
@@ -88,7 +89,7 @@ export default function DoctorsPage() {
         return
       }
       try {
-        const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+        const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
           headers: { Authorization: `Bearer ${token}` },
         })
         setUser(response.data)
@@ -109,7 +110,7 @@ export default function DoctorsPage() {
     const fetchDoctors = async () => {
       try {
         const response = await axios.get<ApiResponse>(
-          `http://localhost:5000/api/doctors?page=${currentPage}&limit=12`
+          getApiUrl(`${API_CONFIG.ENDPOINTS.DOCTORS.LIST}?page=${currentPage}&limit=12`)
         )
         setDoctors(response.data.doctors)
         setPagination(response.data.pagination)

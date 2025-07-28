@@ -11,6 +11,7 @@ import Testimonials from "./components/Testimonials/Testimonials"
 import Footer from "./components/Footer/Footer"
 import styles from "./page.module.css"
 import { useEffect, useState } from "react"
+import { getApiUrl, API_CONFIG } from "../config/api"
 
 
 export default function Home() {
@@ -35,7 +36,7 @@ export default function Home() {
                 return;
             }
             try {
-                const response = await axios.get(`http://localhost:5000/api/auth/profile`, {
+                const response = await axios.get(getApiUrl(API_CONFIG.ENDPOINTS.AUTH.PROFILE), {
                     headers: {Authorization: `Bearer ${token}`},
                 });
                 if(response){

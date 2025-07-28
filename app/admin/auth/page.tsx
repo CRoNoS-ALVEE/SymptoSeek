@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import { Stethoscope, AlertCircle } from "lucide-react"
 import styles from "./auth.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 export default function AdminAuth() {
   const [email, setEmail] = useState("")
@@ -19,7 +20,7 @@ export default function AdminAuth() {
     setError("")
 
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/login', {
+      const response = await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN.LOGIN), {
         email,
         password
       })

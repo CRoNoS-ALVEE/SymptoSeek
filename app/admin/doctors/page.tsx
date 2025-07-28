@@ -27,6 +27,7 @@ import {
   MessageSquare
 } from "lucide-react"
 import styles from "./doctors.module.css"
+import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface Doctor {
   _id: string
@@ -118,7 +119,7 @@ export default function DoctorsPage() {
       setLoading(true)
       const token = localStorage.getItem("adminToken")
 
-      const response = await axios.get(`http://localhost:5000/api/admin/doctors?page=${page}&limit=${doctorsPerPage}`, {
+      const response = await axios.get(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.DOCTORS}?page=${page}&limit=${doctorsPerPage}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -162,7 +163,7 @@ export default function DoctorsPage() {
     try {
       const token = localStorage.getItem("adminToken")
 
-      const response = await axios.post('http://localhost:5000/api/admin/doctors', newDoctor, {
+      const response = await axios.post(getApiUrl(API_CONFIG.ENDPOINTS.ADMIN.DOCTORS), newDoctor, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -207,7 +208,7 @@ export default function DoctorsPage() {
     try {
       const token = localStorage.getItem("adminToken")
 
-      const response = await axios.patch(`http://localhost:5000/api/admin/doctors/${editingDoctor._id}`, editingDoctor, {
+      const response = await axios.patch(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.DOCTORS}/${editingDoctor._id}`), editingDoctor, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -232,7 +233,7 @@ export default function DoctorsPage() {
     try {
       const token = localStorage.getItem("adminToken")
 
-      await axios.delete(`http://localhost:5000/api/admin/doctors/${doctorId}`, {
+      await axios.delete(getApiUrl(`${API_CONFIG.ENDPOINTS.ADMIN.DOCTORS}/${doctorId}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
