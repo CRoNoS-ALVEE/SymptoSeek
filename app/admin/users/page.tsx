@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import styles from "./users.module.css"
 import axios from "axios"
+import Loading from "../../components/Loading/Loading";
 import { getApiUrl, API_CONFIG } from '@/config/api';
 
 interface User {
@@ -167,24 +168,7 @@ export default function UsersPage() {
 
   // Show loading while checking authentication
   if (authLoading) {
-    return (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          background: '#f9fafb'
-        }}>
-          <div style={{
-            padding: '2rem',
-            background: 'white',
-            borderRadius: '1rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
-            Loading...
-          </div>
-        </div>
-    )
+    return <Loading />;
   }
 
   // Don't render if not authenticated
@@ -433,8 +417,13 @@ export default function UsersPage() {
             </div>
           </div>
 
-          <div className={styles.usersGrid}>
-            {filteredUsers.map((user) => (
+          {loading ? (
+            <div className={styles.loadingContainer}>
+              <Loading fullScreen={false} />
+            </div>
+          ) : (
+            <div className={styles.usersGrid}>
+              {filteredUsers.map((user) => (
                 <div key={user._id} className={styles.userCard}>
                   <div className={styles.cardHeader}>
                     <div className={styles.userProfile}>
@@ -486,8 +475,10 @@ export default function UsersPage() {
                     </div>
                   </div>
                 </div>
-            ))}
+              ))
+            }
           </div>
+          )}
 
           {totalPages > 1 && (
               <div className={styles.pagination}>

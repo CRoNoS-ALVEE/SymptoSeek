@@ -12,6 +12,7 @@ import Navbar from "../components/Navbar/Dashboard-Navbar"
 import Footer from "../components/Footer/Footer"
 import styles from "./dashboard.module.css"
 import { getApiUrl, API_CONFIG } from "../../config/api"
+import Loading from "../components/Loading/Loading"
 
 interface User {
   profile_pic?: string;
@@ -354,7 +355,7 @@ export default function DashboardContent() {
     { value: stats.totalChatInteractions.toString(), label: "Chat Interactions", link: "/chatbot" },
   ]
 
-  if (loading) return <p className={styles.loading}></p>;
+  if (loading) return <Loading />;
   if (error) return <p className={styles.error}>{error}</p>;
 
   return (

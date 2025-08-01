@@ -32,8 +32,8 @@ export default function AuthContent() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false)
-  const [signupOtpTimer, setSignupOtpTimer] = useState(60)
-  const [forgotOtpTimer, setForgotOtpTimer] = useState(60)
+  const [signupOtpTimer, setSignupOtpTimer] = useState(300) // 5 minutes for testing
+  const [forgotOtpTimer, setForgotOtpTimer] = useState(300) // 5 minutes for testing
   const [showForgotOtpField, setShowForgotOtpField] = useState(false)
   const [signupTimerActive, setSignupTimerActive] = useState(false)
   const [forgotTimerActive, setForgotTimerActive] = useState(false)
@@ -41,6 +41,8 @@ export default function AuthContent() {
   const router = useRouter()
   const [showErrorModal, setShowErrorModal] = useState(false)
   const [errorModalMessage, setErrorModalMessage] = useState("")
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [successModalMessage, setSuccessModalMessage] = useState("")
 
   // Timer effect for signup OTP
   useEffect(() => {
@@ -89,6 +91,11 @@ export default function AuthContent() {
   const closeErrorModal = () => {
     setShowErrorModal(false)
     setErrorModalMessage("")
+  }
+
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false)
+    setSuccessModalMessage("")
   }
 
   const login = useGoogleLogin({
@@ -202,7 +209,7 @@ export default function AuthContent() {
         console.log("Sign-up successful")
         setSignupEmail(email) // Store email for OTP verification
         setShowOtpModal(true)
-        setSignupOtpTimer(600) // 10 minutes = 600 seconds
+        setSignupOtpTimer(300) // 5 minutes for testing
         setSignupTimerActive(true)
         setLoading(false)
       } else {
@@ -259,7 +266,8 @@ export default function AuthContent() {
       if (result.status === 200) {
         console.log("Email verification successful")
         setShowOtpModal(false)
-        alert("Email verified successfully! You can now log in.")
+        setSuccessModalMessage("Email verified successfully! You can now log in.")
+        setShowSuccessModal(true)
         // Reset form and switch to sign in mode
         setIsSignUpMode(false)
         setEmail("")
@@ -320,7 +328,7 @@ export default function AuthContent() {
       if (result.status === 200) {
         // Show OTP field and start timer
         setShowForgotOtpField(true)
-        setForgotOtpTimer(900) // 15 minutes = 900 seconds
+        setForgotOtpTimer(300) // 5 minutes for testing
         setForgotTimerActive(true)
         console.log("Password reset code sent successfully")
       }
@@ -433,7 +441,8 @@ export default function AuthContent() {
 
       if (result.status === 200) {
         // On successful reset
-        alert("Password reset successfully! Please login with your new password.")
+        setSuccessModalMessage("Password reset successfully! Please login with your new password.")
+        setShowSuccessModal(true)
         setShowResetPasswordModal(false)
         // Reset all states
         setForgotEmail("")
@@ -477,7 +486,7 @@ export default function AuthContent() {
     setOtp("")
     setError("")
     setSignupTimerActive(false)
-    setSignupOtpTimer(600) // Reset to 10 minutes
+    setSignupOtpTimer(300) // 5 minutes for testing
   }
 
   const closeForgotPasswordModal = () => {
@@ -486,7 +495,7 @@ export default function AuthContent() {
     setForgotOtp("")
     setShowForgotOtpField(false)
     setForgotTimerActive(false)
-    setForgotOtpTimer(60)
+    setForgotOtpTimer(300) // 5 minutes for testing
     setError("")
   }
 
@@ -506,7 +515,7 @@ export default function AuthContent() {
       })
 
       if (result.status === 200) {
-        setSignupOtpTimer(600) // Reset to 10 minutes
+        setSignupOtpTimer(300) // 5 minutes for testing
         setSignupTimerActive(true)
         console.log("Signup OTP resent successfully")
         // Show success message briefly
@@ -531,7 +540,7 @@ export default function AuthContent() {
   }
 
   const handleResendForgotOtp = () => {
-    setForgotOtpTimer(900) // 15 minutes = 900 seconds
+    setForgotOtpTimer(300) // 5 minutes for testing
     setForgotTimerActive(true)
     
     // Make API call to resend reset code
@@ -869,6 +878,30 @@ export default function AuthContent() {
                       onClick={closeErrorModal}
                   >
                     Try Again
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* Success Modal */}
+        {showSuccessModal && (
+            <div className={styles.modalOverlay}>
+              <div className={styles.modal}>
+                <button className={styles.closeButton} onClick={closeSuccessModal}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+                <div className={styles.modalContent}>
+                  <h2 className={styles.modalTitle}>Success!</h2>
+                  <p className={styles.modalDescription}>
+                    {successModalMessage}
+                  </p>
+                  <button
+                      type="button"
+                      className={styles.btn}
+                      onClick={closeSuccessModal}
+                  >
+                    Continue
                   </button>
                 </div>
               </div>

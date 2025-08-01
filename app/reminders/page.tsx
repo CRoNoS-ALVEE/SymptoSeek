@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import styles from "./reminders.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../components/Loading/Loading";
 
 interface Reminder {
   _id: string
@@ -235,7 +236,7 @@ export default function RemindersPage() {
     return "One time";
   }
 
-  if (loading) return <div className={styles.loading}>Loading reminders...</div>;
+  if (loading) return <Loading />;
   if (error) return <div className={styles.error}>{error}</div>;
 
   return (

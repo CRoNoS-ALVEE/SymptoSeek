@@ -36,6 +36,7 @@ export const API_CONFIG = {
     APPOINTMENTS: {
       CREATE: '/api/appointments',
       MY_APPOINTMENTS: '/api/appointments/my-appointments',
+      CANCEL: '/api/appointments',
     },
     
     // Reminder endpoints

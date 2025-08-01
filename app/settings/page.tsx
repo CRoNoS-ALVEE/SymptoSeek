@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import styles from "./settings.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../components/Loading/Loading";
 
 interface NavItemProps {
   href?: string;
@@ -88,11 +89,7 @@ export default function SettingsPage() {
   }, []);
 
   if (!isMounted || loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className={styles.loadingSpinner}>Loading...</div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!user) {

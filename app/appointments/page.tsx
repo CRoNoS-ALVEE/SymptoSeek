@@ -9,6 +9,7 @@ import Footer from "../components/Footer/Footer"
 import styles from "./appointments.module.css"
 import {useRouter} from "next/navigation";
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../components/Loading/Loading";
 
 interface NavItemProps {
   href?: string;
@@ -138,7 +139,7 @@ export default function AppointmentsPage() {
     }
   };
 
-  if (loading) return <div className={styles.loading}>Loading appointments...</div>;
+  if (loading) return <Loading />;
   if (error) return <div className={styles.error}>{error}</div>;
 
   const handleAddAppointment = async (e: React.FormEvent) => {
@@ -180,8 +181,8 @@ export default function AppointmentsPage() {
 
     try {
       await axios.patch(
-        getApiUrl(`${API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE}/${appointmentId}`),
-        { status: "Cancelled" },
+        getApiUrl(`${API_CONFIG.ENDPOINTS.APPOINTMENTS.CANCEL}/${appointmentId}/cancel`),
+        { reason: "Cancelled by user" },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Star, Send, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import styles from './feedback.module.css'
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from '../../components/Loading/Loading';
 
 interface Feedback {
   _id: string
@@ -192,11 +193,7 @@ export default function FeedbackPage() {
   }
 
   if (loading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading your feedback...</div>
-      </div>
-    )
+    return <Loading />;
   }
 
   return (

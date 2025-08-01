@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import styles from './feedback.module.css'
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../../components/Loading/Loading";
 
 interface FeedbackItem {
   _id: string
@@ -163,12 +164,7 @@ export default function AdminFeedbackPage() {
   }
 
   if (loading) {
-    return (
-      <div className={styles.loading}>
-        <div className={styles.spinner}></div>
-        <p>Loading feedback...</p>
-      </div>
-    )
+    return <Loading />
   }
 
   return (

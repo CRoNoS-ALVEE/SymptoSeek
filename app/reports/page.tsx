@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import styles from "./reports.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../components/Loading/Loading";
 
 interface NavItemProps {
   href?: string;
@@ -186,7 +187,7 @@ export default function ReportsPage() {
     });
   };
 
-  if (loading) return <div className={styles.loading}>Loading reports...</div>;
+  if (loading) return <Loading />;
   if (error) return <div className={styles.error}>{error}</div>;
 
   return (

@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import styles from "./dashboard.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../../components/Loading/Loading";
 
 interface StatCard {
   title: string
@@ -189,7 +190,7 @@ export default function AdminDashboard() {
   }
 
   if (!isClient) return null
-  if (loading) return <div className={styles.loading}>Loading dashboard...</div>
+  if (loading) return <Loading />
   if (error) return <div className={styles.error}>{error}</div>
 
   return (

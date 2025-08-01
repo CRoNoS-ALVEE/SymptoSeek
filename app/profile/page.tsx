@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import styles from "./profile.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../components/Loading/Loading";
 
 interface NavItemProps {
   href?: string;
@@ -262,8 +263,8 @@ export default function ProfilePage() {
     }
   };
 
-  if (!isMounted) {
-    return null;
+  if (!isMounted || loading) {
+    return <Loading />;
   }
 
   return (

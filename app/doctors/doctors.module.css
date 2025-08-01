@@ -453,3 +453,11 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+}

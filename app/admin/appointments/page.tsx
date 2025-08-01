@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import styles from "./appointments.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../../components/Loading/Loading";
 
 interface User {
   _id: string
@@ -300,7 +301,7 @@ export default function AppointmentsPage() {
     }
   }
 
-  if (loading) return <div className={styles.loading}>Loading appointments...</div>
+  if (loading) return <Loading />
   if (error) return <div className={styles.error}>{error}</div>
 
   return (

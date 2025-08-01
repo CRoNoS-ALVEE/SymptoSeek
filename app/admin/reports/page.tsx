@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import styles from "./reports.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../../components/Loading/Loading";
 
 interface UserInfo {
   _id: string
@@ -247,14 +248,7 @@ export default function ReportsPage() {
   const pageNumbers = getPageNumbers()
 
   if (loading && reports.length === 0) {
-    return (
-        <div className={styles.container}>
-          <div className={styles.loading}>
-            <div className={styles.spinner}></div>
-            <p>Loading reports...</p>
-          </div>
-        </div>
-    )
+    return <Loading />
   }
 
   return (

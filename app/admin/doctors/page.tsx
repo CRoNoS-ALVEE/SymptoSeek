@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import styles from "./doctors.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../../components/Loading/Loading";
 
 interface Doctor {
   _id: string
@@ -418,10 +419,7 @@ export default function DoctorsPage() {
           </div>
 
           {loading ? (
-              <div className={styles.loading}>
-                <div className={styles.spinner}></div>
-                <p>Loading doctors...</p>
-              </div>
+              <Loading fullScreen={false} />
           ) : (
               <>
                 <div className={styles.doctorsGrid}>

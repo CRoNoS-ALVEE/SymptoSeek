@@ -9,6 +9,7 @@ import styles from "./doctors.module.css"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { getApiUrl, API_CONFIG } from "../../config/api"
+import Loading from "../components/Loading/Loading"
 
 interface Doctor {
   _id: string
@@ -70,10 +71,11 @@ export default function DoctorsPage() {
   }
 
   const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Changed to false since doctors should load independently
   const [error, setError] = useState("")
   const [loggedIn, setLoggedIn] = useState(false)
   const [doctors, setDoctors] = useState<Doctor[]>([])
+  const [doctorsLoading, setDoctorsLoading] = useState(true) // Separate loading for doctors
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
@@ -86,6 +88,7 @@ export default function DoctorsPage() {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token")
       if (!token) {
+        setLoggedIn(false)
         return
       }
       try {
@@ -98,8 +101,6 @@ export default function DoctorsPage() {
         console.error("Failed to fetch user data:", err)
         setError("Failed to fetch user data.")
         setLoggedIn(false)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -108,6 +109,7 @@ export default function DoctorsPage() {
 
   useEffect(() => {
     const fetchDoctors = async () => {
+      setDoctorsLoading(true)
       try {
         const response = await axios.get<ApiResponse>(
           getApiUrl(`${API_CONFIG.ENDPOINTS.DOCTORS.LIST}?page=${currentPage}&limit=12`)
@@ -117,6 +119,8 @@ export default function DoctorsPage() {
       } catch (err) {
         console.error("Failed to fetch doctors:", err)
         setError("Failed to fetch doctors data.")
+      } finally {
+        setDoctorsLoading(false)
       }
     }
 
@@ -257,14 +261,19 @@ export default function DoctorsPage() {
           </div>
         </section>
 
-        <div className={styles.doctorsGrid}>
-          {filteredDoctors.length > 0 ? (
-            filteredDoctors.map(doctor => (
-              <div key={doctor._id} className={styles.doctorCard}>
-                <img src={doctor.image_source} alt={doctor.name} className={styles.doctorImage} />
-                <div className={styles.doctorInfo}>
-                  <h2 className={styles.doctorName}>{doctor.name}</h2>
-                  <p className={styles.doctorSpecialty}>{doctor.speciality}</p>
+        {doctorsLoading ? (
+          <div className={styles.loadingContainer}>
+            <Loading fullScreen={false} />
+          </div>
+        ) : (
+          <div className={styles.doctorsGrid}>
+            {filteredDoctors.length > 0 ? (
+              filteredDoctors.map(doctor => (
+                <div key={doctor._id} className={styles.doctorCard}>
+                  <img src={doctor.image_source} alt={doctor.name} className={styles.doctorImage} />
+                  <div className={styles.doctorInfo}>
+                    <h2 className={styles.doctorName}>{doctor.name}</h2>
+                    <p className={styles.doctorSpecialty}>{doctor.speciality}</p>
                   <div className={styles.doctorDetails}>
                     <div className={styles.detailItem}>
                       <MapPin size={16} />
@@ -303,6 +312,7 @@ export default function DoctorsPage() {
             </div>
           )}
         </div>
+        )}
 
         {pagination.totalPages > 0 && (
           <div className={styles.pagination}>

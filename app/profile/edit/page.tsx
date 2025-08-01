@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import styles from "./edit.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Loading from "../../components/Loading/Loading";
 
 type TabId = "personal" | "medical" | "security" | "subscription"
 
@@ -358,24 +359,7 @@ export default function EditProfilePage() {
 
   // Show loading while checking authentication
   if (authLoading) {
-    return (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          background: '#f9fafb'
-        }}>
-          <div style={{
-            padding: '2rem',
-            background: 'white',
-            borderRadius: '1rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
-            Loading...
-          </div>
-        </div>
-    )
+    return <Loading />;
   }
 
   // Don't render the page if not authenticated
