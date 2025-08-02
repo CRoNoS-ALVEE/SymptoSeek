@@ -18,11 +18,14 @@ import {
   Pill,
   Activity,
   Menu,
-  X
+  X,
+  Trash2
 } from "lucide-react"
 import styles from "./reminders.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
 import Loading from "../components/Loading/Loading";
+import ConfirmModal from "../components/Modal/ConfirmModal";
+import Toast from "../components/Toast/Toast";
 
 interface Reminder {
   _id: string
@@ -66,6 +69,19 @@ export default function RemindersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [reminderToDelete, setReminderToDelete] = useState<string | null>(null)
+  const [toast, setToast] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
   const [newReminder, setNewReminder] = useState<ReminderFormData>({
     title: "",
     time: "",
@@ -76,6 +92,15 @@ export default function RemindersPage() {
     daysOfWeek: []
   })
   const router = useRouter();
+  
+  const showToast = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    setToast({
+      isOpen: true,
+      title,
+      message,
+      type
+    });
+  };
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -149,24 +174,67 @@ export default function RemindersPage() {
     }
   };
 
+  const deleteReminder = async (id: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setReminderToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteReminder = async () => {
+    if (!reminderToDelete) return;
+    
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showToast('Error', 'Authentication required. Please log in again.', 'error');
+      setShowDeleteModal(false);
+      return;
+    }
+
+    try {
+      console.log('Deleting reminder with ID:', reminderToDelete);
+      console.log('Using endpoint:', getApiUrl(`${API_CONFIG.ENDPOINTS.REMINDERS.DELETE}/${reminderToDelete}`));
+      
+      const response = await axios.delete(
+        getApiUrl(`${API_CONFIG.ENDPOINTS.REMINDERS.DELETE}/${reminderToDelete}`),
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log('Delete response:', response);
+      setActiveReminders(prev => prev.filter(reminder => reminder._id !== reminderToDelete));
+      setReminderToDelete(null);
+      setShowDeleteModal(false);
+      showToast('Success', 'Reminder deleted successfully', 'success');
+    } catch (error: any) {
+      console.error("Error deleting reminder:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      
+      setShowDeleteModal(false);
+      const errorMessage = error.response?.data?.message || 'Failed to delete reminder. Please try again.';
+      showToast('Error', errorMessage, 'error');
+    }
+  };
+
   const addReminder = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     if (!newReminder.title || !newReminder.time || !newReminder.description) {
-      setError("Please fill all required fields");
+      showToast('Validation Error', 'Please fill all required fields', 'warning');
       return;
     }
 
     // Validate date for non-recurring reminders
     if (newReminder.recurring === "none" && !newReminder.date) {
-      setError("Please select a date for one-time reminders");
+      showToast('Validation Error', 'Please select a date for one-time reminders', 'warning');
       return;
     }
 
     // Validate days for weekly recurring reminders
     if (newReminder.recurring === "weekly" && newReminder.daysOfWeek.length === 0) {
-      setError("Please select at least one day for weekly reminders");
+      showToast('Validation Error', 'Please select at least one day for weekly reminders', 'warning');
       return;
     }
 
@@ -189,9 +257,10 @@ export default function RemindersPage() {
       });
       setIsAddModalOpen(false);
       setError("");
+      showToast('Success', 'Reminder added successfully', 'success');
     } catch (error) {
       console.error("Error adding reminder:", error);
-      setError("Failed to add reminder");
+      showToast('Error', 'Failed to add reminder. Please try again.', 'error');
     }
   };
 
@@ -315,6 +384,13 @@ export default function RemindersPage() {
                       <Clock size={16} />
                       {reminder.time}
                     </div>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => deleteReminder(reminder._id)}
+                      title="Delete reminder"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
 
                   <div className={styles.reminderContent}>
@@ -497,6 +573,28 @@ export default function RemindersPage() {
               </div>
           )}
         </main>
+
+        <ConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setReminderToDelete(null);
+          }}
+          onConfirm={confirmDeleteReminder}
+          title="Delete Reminder"
+          message="Are you sure you want to delete this reminder? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+        />
+
+        <Toast
+          isOpen={toast.isOpen}
+          onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+          title={toast.title}
+          message={toast.message}
+          type={toast.type}
+        />
       </div>
   )
 }

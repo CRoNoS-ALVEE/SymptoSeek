@@ -357,69 +357,112 @@ export default function DoctorsPage() {
             <button
               className={styles.closeButton}
               onClick={() => setSelectedDoctor(null)}
+              title="Close doctor profile"
             >
               <X size={24} />
             </button>
 
             <div className={styles.modalHeader}>
-              <img
-                src={selectedDoctor.image_source}
-                alt={selectedDoctor.name}
-                className={styles.modalImage}
-              />
+              <div className={styles.imageContainer}>
+                <img
+                  src={selectedDoctor.image_source}
+                  alt={selectedDoctor.name}
+                  className={styles.modalImage}
+                />
+                <div className={styles.imageOverlay}>
+                  <div className={styles.verifiedBadge}>
+                    <Award size={16} />
+                    Verified
+                  </div>
+                </div>
+              </div>
+              
               <div className={styles.modalHeaderContent}>
-                <h2>{selectedDoctor.name}</h2>
-                <p className={styles.specialty}>{selectedDoctor.speciality}</p>
+                <div className={styles.doctorTitle}>
+                  <h2>Dr. {selectedDoctor.name}</h2>
+                  <div className={styles.specialtyBadge}>
+                    <Stethoscope size={16} />
+                    {selectedDoctor.speciality}
+                  </div>
+                </div>
+                
+                <div className={styles.doctorMeta}>
+                  <div className={styles.rating}>
+                    <Star size={16} className={styles.starFilled} />
+                    <span>4.8</span>
+                    <span className={styles.reviewCount}>(127 reviews)</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className={styles.modalContent}>
-              <div className={styles.infoSection}>
-                <h3>
-                  <Award size={20} />
-                  Education & Training
-                </h3>
-                <ul>
-                  <li>{selectedDoctor.degree}</li>
-                </ul>
+              <div className={styles.contentGrid}>
+                <div className={styles.infoSection}>
+                  <div className={styles.sectionHeader}>
+                    <Award size={20} />
+                    <h3>Education & Qualifications</h3>
+                  </div>
+                  <div className={styles.qualificationItem}>
+                    <div className={styles.qualificationDot}></div>
+                    <span>{selectedDoctor.degree}</span>
+                  </div>
+                </div>
+
+                <div className={styles.infoSection}>
+                  <div className={styles.sectionHeader}>
+                    <Stethoscope size={20} />
+                    <h3>About Doctor</h3>
+                  </div>
+                  <p className={styles.aboutText}>{selectedDoctor.About}</p>
+                </div>
+
+                <div className={styles.infoSection}>
+                  <div className={styles.sectionHeader}>
+                    <Calendar size={20} />
+                    <h3>Consultation Hours</h3>
+                  </div>
+                  <div className={styles.availabilityCard}>
+                    <Clock size={16} />
+                    <span>{selectedDoctor.visiting_hours}</span>
+                  </div>
+                </div>
+
+                <div className={styles.infoSection}>
+                  <div className={styles.sectionHeader}>
+                    <Building size={20} />
+                    <h3>Chamber Information</h3>
+                  </div>
+                  <div className={styles.practiceInfo}>
+                    <div className={styles.practiceItem}>
+                      <Building size={16} />
+                      <span>{selectedDoctor.hospital_name}</span>
+                    </div>
+                    <div className={styles.practiceItem}>
+                      <MapPin size={16} />
+                      <span>{selectedDoctor.address}</span>
+                    </div>
+                    <div className={styles.practiceItem}>
+                      <Phone size={16} />
+                      <span>{selectedDoctor.number}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.infoSection}>
-                <h3>
-                  <Stethoscope size={20} />
-                  About
-                </h3>
-                <p>{selectedDoctor.About}</p>
+              <div className={styles.modalActions}>
+                <button className={styles.contactButton}>
+                  <Phone size={16} />
+                  Contact Doctor
+                </button>
+                <Link
+                  href={loggedIn ? `/doctors/${selectedDoctor._id}/book` : "/auth"}
+                  className={styles.modalBookButton}
+                >
+                  <Calendar size={16} />
+                  Book Appointment
+                </Link>
               </div>
-
-              <div className={styles.infoSection}>
-                <h3>
-                  <Calendar size={20} />
-                  Availability
-                </h3>
-                <p>{selectedDoctor.visiting_hours}</p>
-              </div>
-
-              <div className={styles.contactInfo}>
-                <div className={styles.contactItem}>
-                  <Building size={20} />
-                  <span>{selectedDoctor.hospital_name}</span>
-                </div>
-                <div className={styles.contactItem}>
-                  <MapPin size={20} />
-                  <span>{selectedDoctor.address}</span>
-                </div>
-                <div className={styles.contactItem}>
-                  <Phone size={20} />
-                  <span>{selectedDoctor.number}</span>
-                </div>
-              </div>
-              <Link
-                href={loggedIn ? `/doctors/${selectedDoctor._id}/book` : "/auth"}
-                className={styles.modalBookButton}
-              >
-                Book Appointment
-              </Link>
             </div>
           </div>
         </div>

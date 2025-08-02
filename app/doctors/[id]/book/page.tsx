@@ -7,6 +7,7 @@ import Link from "next/link"
 import axios from "axios"
 import styles from "./book.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
+import Toast from "../../../components/Toast/Toast";
 
 interface Doctor {
   _id: string
@@ -76,6 +77,26 @@ export default function BookAppointmentPage() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [bookingDetails, setBookingDetails] = useState<any>(null)
+  const [toast, setToast] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  const showToast = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    setToast({
+      isOpen: true,
+      title,
+      message,
+      type
+    });
+  };
 
   // Fetch user data and check authentication
   useEffect(() => {
@@ -324,12 +345,12 @@ export default function BookAppointmentPage() {
 
     // Validation checks
     if (!selectedDate || !selectedTime) {
-      alert("Please select both date and time for your appointment.")
+      showToast('Validation Error', 'Please select both date and time for your appointment.', 'warning');
       return
     }
 
     if (!isValidDate(selectedDate)) {
-      alert("Selected date is not within the doctor's visiting days. Please choose a valid date.")
+      showToast('Validation Error', "Selected date is not within the doctor's visiting days. Please choose a valid date.", 'warning');
       return
     }
 
@@ -338,7 +359,7 @@ export default function BookAppointmentPage() {
     try {
       const token = localStorage.getItem("token")
       if (!token) {
-        alert("Please log in to book an appointment.")
+        showToast('Authentication Required', 'Please log in to book an appointment.', 'warning');
         router.push("/auth")
         return
       }
@@ -384,25 +405,18 @@ export default function BookAppointmentPage() {
 
       // Enhanced error handling
       if (error.response?.status === 401) {
-        alert("Your session has expired. Please log in again to book an appointment.")
+        showToast('Session Expired', 'Your session has expired. Please log in again to book an appointment.', 'warning');
         router.push("/auth")
       } else if (error.response?.status === 400) {
         const errorMessage = error.response?.data?.message || "Invalid appointment details"
-        alert(`❌ Booking Failed: ${errorMessage}
-        
-Please check:
-• Selected date and time are valid
-• Doctor is available at this time
-• All required fields are filled`)
+        showToast('Booking Failed', `${errorMessage}. Please check: Selected date and time are valid, Doctor is available at this time, All required fields are filled.`, 'error');
       } else if (error.response?.status === 404) {
-        alert("❌ Doctor not found. Please try selecting a different doctor.")
+        showToast('Doctor Not Found', 'Doctor not found. Please try selecting a different doctor.', 'error');
       } else if (error.response?.status === 500) {
-        alert("❌ Server error occurred. Please try again later or contact support.")
+        showToast('Server Error', 'Server error occurred. Please try again later or contact support.', 'error');
       } else {
         const errorMessage = error.response?.data?.message || "Failed to book appointment"
-        alert(`❌ Booking Failed: ${errorMessage}
-        
-Please try again. If the problem persists, contact our support team.`)
+        showToast('Booking Failed', `${errorMessage}. Please try again. If the problem persists, contact our support team.`, 'error');
       }
     } finally {
       setSubmitLoading(false)

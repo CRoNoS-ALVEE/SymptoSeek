@@ -81,6 +81,7 @@ const NavItem = ({ href, children, className, onClick }: NavItemProps) => {
 export default function ProfilePage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<'chat' | 'other'>('chat');
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -361,58 +362,75 @@ export default function ProfilePage() {
             Recent Activities
           </h2>
 
-          {/* Chat Activities Section */}
-          <div className={styles.activitySection}>
-            <h3 className={styles.sectionTitle}>Chat Activities</h3>
-            <div className={styles.activityList}>
-              {chatActivities.length > 0 ? (
-                chatActivities.map((chat, index) => (
-                  <div key={index} className={styles.activityItem}>
-                    <div className={styles.activityIcon}>
-                      <Hash size={16} />
-                    </div>
-                    <div className={styles.activityContent}>
-                      <div className={styles.activityTitle}>{chat.title}</div>
-                      <div className={styles.activityMeta}>
-                        {chat.message_count} messages • {formatDate(chat.last_updated)}
-                      </div>
-                      <div className={styles.activityDescription}>
-                        {chat.last_message}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.emptyState}>No chat activities yet</div>
-              )}
-            </div>
+          {/* Activity Tabs */}
+          <div className={styles.activityTabs}>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'chat' ? styles.active : ''}`}
+              onClick={() => setActiveTab('chat')}
+            >
+              <Hash size={16} />
+              Chat Activities
+            </button>
+            <button 
+              className={`${styles.tabButton} ${activeTab === 'other' ? styles.active : ''}`}
+              onClick={() => setActiveTab('other')}
+            >
+              <Activity size={16} />
+              Other Activities
+            </button>
           </div>
 
-          {/* Other Activities Section */}
-          <div className={styles.activitySection}>
-            <h3 className={styles.sectionTitle}>Other Activities</h3>
-            <div className={styles.activityList}>
-              {otherActivities.length > 0 ? (
-                otherActivities.map((activity, index) => (
-                  <div key={index} className={styles.activityItem}>
-                    <div className={styles.activityIcon}>
-                      {activity.icon}
-                    </div>
-                    <div className={styles.activityContent}>
-                      <div className={styles.activityTitle}>{activity.title}</div>
-                      <div className={styles.activityMeta}>
-                        {formatDate(activity.timestamp)}
+          {/* Activity Content */}
+          <div className={styles.activityContent}>
+            {activeTab === 'chat' && (
+              <div className={styles.activityList}>
+                {chatActivities.length > 0 ? (
+                  chatActivities.map((chat, index) => (
+                    <div key={index} className={styles.activityItem}>
+                      <div className={styles.activityIcon}>
+                        <Hash size={16} />
                       </div>
-                      <div className={styles.activityDescription}>
-                        {activity.description}
+                      <div className={styles.activityContent}>
+                        <div className={styles.activityTitle}>{chat.title}</div>
+                        <div className={styles.activityMeta}>
+                          {chat.message_count} messages • {formatDate(chat.last_updated)}
+                        </div>
+                        <div className={styles.activityDescription}>
+                          {chat.last_message}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.emptyState}>No other activities yet</div>
-              )}
-            </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>No chat activities yet</div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'other' && (
+              <div className={styles.activityList}>
+                {otherActivities.length > 0 ? (
+                  otherActivities.map((activity, index) => (
+                    <div key={index} className={styles.activityItem}>
+                      <div className={styles.activityIcon}>
+                        {activity.icon}
+                      </div>
+                      <div className={styles.activityContent}>
+                        <div className={styles.activityTitle}>{activity.title}</div>
+                        <div className={styles.activityMeta}>
+                          {formatDate(activity.timestamp)}
+                        </div>
+                        <div className={styles.activityDescription}>
+                          {activity.description}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>No other activities yet</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>

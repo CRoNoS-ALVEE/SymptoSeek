@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import Link from "next/link"
 import Navbar from "../components/Navbar/Navbar"
+import Toast from "../components/Toast/Toast"
 import { API_CONFIG, getApiUrl, getFlaskUrl } from "../../config/api"
 
 // MapComponent for displaying doctor locations
@@ -296,9 +297,29 @@ export default function ChatbotPage() {
   const [isTyping, setIsTyping] = useState(false)
   const [isSidebarHovered, setIsSidebarHovered] = useState(false)
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [isMobile, setIsMobile] = useState(true) // Start as true to prevent flash
+  
+  // Toast state
+  const [toast, setToast] = useState<{
+    show: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info'
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  // Toast helper function
+  const showToast = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ show: true, title, message, type })
+  }
   
   // File upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -406,14 +427,14 @@ export default function ChatbotPage() {
     // Check file type
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/bmp', 'image/tiff']
     if (!allowedTypes.includes(file.type)) {
-      alert('Please upload only PDF or image files (JPEG, JPG, PNG, BMP, TIFF)')
+      showToast('Invalid File Type', 'Please upload only PDF or image files (JPEG, JPG, PNG, BMP, TIFF)', 'error')
       return
     }
     
     // Check file size (max 16MB)
     const maxSize = 16 * 1024 * 1024
     if (file.size > maxSize) {
-      alert('File size must be less than 16MB')
+      showToast('File Too Large', 'File size must be less than 16MB', 'error')
       return
     }
     
@@ -734,29 +755,72 @@ export default function ChatbotPage() {
     "Find doctors near me"
   ]
 
-  const notifications = [
-    {
-      id: 1,
-      title: "New health tip available",
-      message: "Check out our latest wellness recommendations",
-      time: "5 minutes ago",
-      unread: true
-    },
-    {
-      id: 2,
-      title: "Appointment reminder",
-      message: "You have an upcoming appointment tomorrow",
-      time: "1 hour ago",
-      unread: true
-    },
-    {
-      id: 3,
-      title: "Health report ready",
-      message: "Your latest health analysis is available",
-      time: "2 hours ago",
-      unread: false
+  // Fetch notifications for logged-in users
+  const fetchNotifications = async () => {
+    if (!loggedIn) return;
+    
+    setNotificationsLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        getApiUrl(API_CONFIG.ENDPOINTS.NOTIFICATIONS?.LIST || '/api/notifications'),
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      // Fallback to default notifications
+      setNotifications([
+        {
+          id: 1,
+          title: "Welcome to SymptoSeek",
+          message: "Start chatting to get personalized health insights",
+          time: "Just now",
+          unread: true
+        },
+        {
+          id: 2,
+          title: "Chat History Saved",
+          message: "Your conversations are securely stored",
+          time: "5 minutes ago",
+          unread: false
+        }
+      ]);
+    } finally {
+      setNotificationsLoading(false);
     }
-  ]
+  };
+
+  // Fetch notifications when user logs in
+  useEffect(() => {
+    if (loggedIn) {
+      fetchNotifications();
+    } else {
+      setNotifications([]);
+    }
+  }, [loggedIn]);
+
+  // Mark notification as read
+  const markNotificationAsRead = async (notificationId: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(
+        getApiUrl(`/api/notifications/${notificationId}/read`),
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, unread: false }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
+  };
 
   const formatTime = (dateInput: Date | string) => {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
@@ -874,10 +938,20 @@ export default function ChatbotPage() {
                             <h3>Notifications</h3>
                           </div>
                           <div className={styles.notificationList}>
-                            {notifications.map((notification) => (
+                            {notificationsLoading ? (
+                              <div className={styles.notificationLoading}>
+                                Loading notifications...
+                              </div>
+                            ) : notifications.length > 0 ? (
+                              notifications.map((notification) => (
                                 <div
                                     key={notification.id}
                                     className={`${styles.notificationItem} ${notification.unread ? styles.unread : ''}`}
+                                    onClick={() => {
+                                      if (notification.unread) {
+                                        markNotificationAsRead(notification.id);
+                                      }
+                                    }}
                                 >
                                   <div className={styles.notificationContent}>
                                     <div className={styles.notificationTitle}>
@@ -890,8 +964,16 @@ export default function ChatbotPage() {
                                       {notification.time}
                                     </div>
                                   </div>
+                                  {notification.unread && (
+                                    <div className={styles.unreadDot}></div>
+                                  )}
                                 </div>
-                            ))}
+                              ))
+                            ) : (
+                              <div className={styles.notificationEmpty}>
+                                No notifications yet
+                              </div>
+                            )}
                           </div>
                         </div>
                     )}
@@ -1334,6 +1416,15 @@ export default function ChatbotPage() {
           accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff"
           onChange={handleFileChange}
           style={{ display: 'none' }}
+        />
+
+        {/* Toast component */}
+        <Toast
+          isOpen={toast.show}
+          title={toast.title}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(prev => ({ ...prev, show: false }))}
         />
       </div>
   )

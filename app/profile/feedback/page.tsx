@@ -5,6 +5,8 @@ import { Star, Send, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
 import styles from './feedback.module.css'
 import { getApiUrl, API_CONFIG } from '@/config/api';
 import Loading from '../../components/Loading/Loading';
+import ConfirmModal from '../../components/Modal/ConfirmModal';
+import Toast from '../../components/Toast/Toast';
 
 interface Feedback {
   _id: string
@@ -29,6 +31,36 @@ export default function FeedbackPage() {
     isPublic: false,
     category: 'general'
   })
+
+  // Modal and Toast states
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  })
+  
+  const [toast, setToast] = useState<{
+    show: boolean
+    title: string
+    message: string
+    type: 'success' | 'error' | 'info'
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    type: 'info'
+  })
+
+  // Toast helper function
+  const showToast = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ show: true, title, message, type })
+  }
 
   const categories = [
     { value: 'general', label: 'General Feedback' },
@@ -145,12 +177,21 @@ export default function FeedbackPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this feedback?')) return
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Feedback',
+      message: 'Are you sure you want to delete this feedback? This action cannot be undone.',
+      onConfirm: () => confirmDelete(id)
+    })
+  }
 
+  const confirmDelete = async (id: string) => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }))
+    
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        setError('Please log in to delete feedback')
+        showToast('Authentication Error', 'Please log in to delete feedback', 'error')
         return
       }
 
@@ -162,16 +203,15 @@ export default function FeedbackPage() {
       })
 
       if (response.ok) {
-        setSuccess('Feedback deleted successfully!')
+        showToast('Success', 'Feedback deleted successfully!', 'success')
         await fetchMyFeedback()
-        setTimeout(() => setSuccess(null), 3000)
       } else {
         const errorData = await response.json()
-        setError(errorData.message || 'Failed to delete feedback')
+        showToast('Delete Failed', errorData.message || 'Failed to delete feedback', 'error')
       }
     } catch (error) {
       console.error('Error deleting feedback:', error)
-      setError('Network error. Please try again.')
+      showToast('Error', 'An error occurred while deleting feedback', 'error')
     }
   }
 
@@ -345,6 +385,24 @@ export default function FeedbackPage() {
           )}
         </div>
       </div>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* Toast */}
+      <Toast
+        isOpen={toast.show}
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast(prev => ({ ...prev, show: false }))}
+      />
     </div>
   )
 }
