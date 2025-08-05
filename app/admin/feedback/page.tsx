@@ -37,6 +37,7 @@ export default function AdminFeedbackPage() {
   const [user, setUser] = useState<any>(null)
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [feedbackLoading, setFeedbackLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
@@ -85,6 +86,7 @@ export default function AdminFeedbackPage() {
   }
 
   const fetchAllFeedback = async () => {
+    setFeedbackLoading(true)
     try {
       const token = localStorage.getItem('adminToken')
       const response = await fetch(getApiUrl(API_CONFIG.ENDPOINTS.FEEDBACK.ADMIN_ALL), {
@@ -104,6 +106,8 @@ export default function AdminFeedbackPage() {
     } catch (error) {
       console.error('Error fetching feedback:', error)
       setError('Network error. Please check your connection.')
+    } finally {
+      setFeedbackLoading(false)
     }
   }
 
@@ -282,79 +286,86 @@ export default function AdminFeedbackPage() {
 
         {/* Feedback Grid */}
         <div className={styles.feedbackGrid}>
-          {feedbacks.map((feedback) => (
-            <div key={feedback._id} className={styles.feedbackCard}>
-              <div className={styles.cardHeader}>
-                <div className={styles.userInfo}>
-                  <User size={16} />
-                  <span className={styles.userName}>{feedback.userName}</span>
-                </div>
-                <div className={styles.cardMeta}>
-                  {renderStars(feedback.rating)}
-                  <span className={styles.date}>
-                    <Calendar size={14} />
-                    {new Date(feedback.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
-
-              <div className={styles.category}>
-                {categories.find(c => c.value === feedback.category)?.label}
-              </div>
-
-              <p className={styles.feedbackText}>{feedback.feedback}</p>
-
-              <div className={styles.cardFooter}>
-                <div className={styles.status}>
-                  <span className={`${styles.statusBadge} ${getStatusColor(feedback.isPublic, feedback.isApproved)}`}>
-                    <Eye size={12} />
-                    {getStatusText(feedback.isPublic, feedback.isApproved)}
-                  </span>
+          {feedbackLoading ? (
+            <div className={styles.loadingContainer}>
+              <Loading />
+              <p style={{ textAlign: 'center', marginTop: '1rem', color: '#6b7280' }}>
+                Loading feedback submissions...
+              </p>
+            </div>
+          ) : feedbacks.length > 0 ? (
+            feedbacks.map((feedback) => (
+              <div key={feedback._id} className={styles.feedbackCard}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.userInfo}>
+                    <User size={16} />
+                    <span className={styles.userName}>{feedback.userName}</span>
+                  </div>
+                  <div className={styles.cardMeta}>
+                    {renderStars(feedback.rating)}
+                    <span className={styles.date}>
+                      <Calendar size={14} />
+                      {new Date(feedback.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
 
-                {feedback.isPublic && (
-                  <div className={styles.actions}>
-                    {!feedback.isApproved ? (
-                      <>
-                        <button
-                          onClick={() => handleApproval(feedback._id, true)}
-                          className={styles.approveBtn}
-                          title="Approve feedback"
-                        >
-                          <Check size={16} />
-                          Approve
-                        </button>
+                <div className={styles.category}>
+                  {categories.find(c => c.value === feedback.category)?.label}
+                </div>
+
+                <p className={styles.feedbackText}>{feedback.feedback}</p>
+
+                <div className={styles.cardFooter}>
+                  <div className={styles.status}>
+                    <span className={`${styles.statusBadge} ${getStatusColor(feedback.isPublic, feedback.isApproved)}`}>
+                      <Eye size={12} />
+                      {getStatusText(feedback.isPublic, feedback.isApproved)}
+                    </span>
+                  </div>
+
+                  {feedback.isPublic && (
+                    <div className={styles.actions}>
+                      {!feedback.isApproved ? (
+                        <>
+                          <button
+                            onClick={() => handleApproval(feedback._id, true)}
+                            className={styles.approveBtn}
+                            title="Approve feedback"
+                          >
+                            <Check size={16} />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleApproval(feedback._id, false)}
+                            className={styles.rejectBtn}
+                            title="Reject feedback"
+                          >
+                            <X size={16} />
+                            Reject
+                          </button>
+                        </>
+                      ) : (
                         <button
                           onClick={() => handleApproval(feedback._id, false)}
-                          className={styles.rejectBtn}
-                          title="Reject feedback"
+                          className={styles.unapproveBtn}
+                          title="Remove approval"
                         >
                           <X size={16} />
-                          Reject
+                          Unapprove
                         </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => handleApproval(feedback._id, false)}
-                        className={styles.unapproveBtn}
-                        title="Remove approval"
-                      >
-                        <X size={16} />
-                        Unapprove
-                      </button>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+            ))
+          ) : (
+            <div className={styles.noFeedback}>
+              <p>No feedback submissions yet.</p>
             </div>
-          ))}
+          )}
         </div>
-
-        {feedbacks.length === 0 && (
-          <div className={styles.noFeedback}>
-            <p>No feedback submissions yet.</p>
-          </div>
-        )}
       </main>
     </div>
   )

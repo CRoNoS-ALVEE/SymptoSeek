@@ -8,6 +8,7 @@ import axios from "axios"
 import styles from "./book.module.css"
 import { getApiUrl, API_CONFIG } from '@/config/api';
 import Toast from "../../../components/Toast/Toast";
+import Loading from "../../../components/Loading/Loading";
 
 interface Doctor {
   _id: string
@@ -431,7 +432,7 @@ export default function BookAppointmentPage() {
   }
 
   if (loading) {
-    return <div>Loading...</div>
+    return <Loading />;
   }
 
   if (!doctor) {
