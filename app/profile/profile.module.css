@@ -515,6 +515,8 @@
   background: #fefefe;
   position: relative;
   overflow: hidden;
+  height: 100px;
+  max-height: 100px;
 }
 
 .activityItem::before {
@@ -610,6 +612,7 @@
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -321,10 +321,35 @@
   overflow-x: hidden;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
   transform: translateX(-100%);
+  cursor: pointer;
 }
 
 .sidebar.sidebarExpanded {
   transform: translateX(0);
+}
+
+/* Sidebar hover area for desktop - invisible trigger zone */
+.sidebar::before {
+  content: '';
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 20px;
+  height: calc(100vh - 60px);
+  background: transparent;
+  z-index: 100;
+  cursor: pointer;
+}
+
+/* Show hover area on desktop when sidebar is collapsed */
+@media (min-width: 769px) {
+  .sidebar:not(.sidebarExpanded)::before {
+    display: block;
+  }
+  
+  .sidebar.sidebarExpanded::before {
+    display: none;
+  }
 }
 
 .sidebarOverlay {
@@ -335,6 +360,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 85;
+  -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
 }
 
@@ -727,6 +753,11 @@
   border-radius: 1rem;
   border-bottom-left-radius: 0.25rem;
   align-items: center;
+  min-height: 60px;
+}
+
+.typingLoader {
+  transform: scale(0.8);
 }
 
 .typingDot {
@@ -1214,6 +1245,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -1389,4 +1421,9 @@
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+/* Hidden file input */
+.hiddenFileInput {
+  display: none;
 }

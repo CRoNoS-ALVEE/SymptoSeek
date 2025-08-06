@@ -8,6 +8,8 @@ import axios from "axios"
 import Link from "next/link"
 import Navbar from "../components/Navbar/Navbar"
 import Toast from "../components/Toast/Toast"
+import NotificationDropdown from "../components/Notifications/NotificationDropdown"
+import Loading from "../components/Loading/Loading"
 import { API_CONFIG, getApiUrl, getFlaskUrl } from "../../config/api"
 
 // MapComponent for displaying doctor locations
@@ -146,6 +148,7 @@ export default function ChatbotPage() {
       if (!token) {
         setLoggedIn(false)
         setLoading(false)
+        setIsInitialLoading(false)
         return
       }
       try {
@@ -160,6 +163,7 @@ export default function ChatbotPage() {
         setLoggedIn(false)
       } finally {
         setLoading(false)
+        setIsInitialLoading(false)
       }
     }
 
@@ -297,11 +301,9 @@ export default function ChatbotPage() {
   const [isTyping, setIsTyping] = useState(false)
   const [isSidebarHovered, setIsSidebarHovered] = useState(false)
   const [isSidebarPinned, setIsSidebarPinned] = useState(false)
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [notificationsLoading, setNotificationsLoading] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [isMobile, setIsMobile] = useState(true) // Start as true to prevent flash
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
   
   // Toast state
   const [toast, setToast] = useState<{
@@ -330,7 +332,6 @@ export default function ChatbotPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<number | null>(null)
   const sidebarTimeoutRef = useRef<number | null>(null)
-  const notificationRef = useRef<HTMLDivElement>(null)
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -352,17 +353,31 @@ export default function ChatbotPage() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Handle click outside notifications
+  // Mouse area detection for sidebar auto-show/hide
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setShowNotifications(false)
+    if (isMobile || !loggedIn) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const sidebarTriggerZone = 20 // pixels from left edge
+      const sidebarWidth = 280
+      
+      // Show sidebar when mouse is near left edge or over sidebar
+      if (e.clientX <= sidebarTriggerZone || (e.clientX <= sidebarWidth && isSidebarHovered)) {
+        if (!isSidebarHovered && !isSidebarPinned) {
+          setIsSidebarHovered(true)
+        }
+      }
+      // Hide sidebar when mouse moves away (unless pinned)
+      else if (e.clientX > sidebarWidth + 50 && isSidebarHovered && !isSidebarPinned) {
+        setIsSidebarHovered(false)
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => document.removeEventListener('mousemove', handleMouseMove)
+  }, [isMobile, loggedIn, isSidebarHovered, isSidebarPinned])
+
+  // Handle click outside notifications - removed as using NotificationDropdown component
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -755,72 +770,7 @@ export default function ChatbotPage() {
     "Find doctors near me"
   ]
 
-  // Fetch notifications for logged-in users
-  const fetchNotifications = async () => {
-    if (!loggedIn) return;
-    
-    setNotificationsLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        getApiUrl(API_CONFIG.ENDPOINTS.NOTIFICATIONS?.LIST || '/api/notifications'),
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setNotifications(response.data);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      // Fallback to default notifications
-      setNotifications([
-        {
-          id: 1,
-          title: "Welcome to SymptoSeek",
-          message: "Start chatting to get personalized health insights",
-          time: "Just now",
-          unread: true
-        },
-        {
-          id: 2,
-          title: "Chat History Saved",
-          message: "Your conversations are securely stored",
-          time: "5 minutes ago",
-          unread: false
-        }
-      ]);
-    } finally {
-      setNotificationsLoading(false);
-    }
-  };
-
-  // Fetch notifications when user logs in
-  useEffect(() => {
-    if (loggedIn) {
-      fetchNotifications();
-    } else {
-      setNotifications([]);
-    }
-  }, [loggedIn]);
-
-  // Mark notification as read
-  const markNotificationAsRead = async (notificationId: number) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        getApiUrl(`/api/notifications/${notificationId}/read`),
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, unread: false }
-            : notification
-        )
-      );
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
-    }
-  };
+  // Notification functionality moved to NotificationDropdown component
 
   const formatTime = (dateInput: Date | string) => {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput
@@ -897,6 +847,11 @@ export default function ChatbotPage() {
     setMessages((prev: Message[]) => [...prev, botResponse])
   }
 
+  // Show loading spinner during initial load
+  if (isInitialLoading) {
+    return <Loading />
+  }
+
   return (
       <div className={styles.container}>
         {/* Always show navbar */}
@@ -919,65 +874,7 @@ export default function ChatbotPage() {
                   </div>
                 </div>
                 <div className={styles.navbarRight}>
-
-                  <div className={styles.notificationContainer} ref={notificationRef}>
-                    <button
-                        className={styles.navIconButton}
-                        onClick={() => setShowNotifications(!showNotifications)}
-                    >
-                      <Bell size={20} />
-                      {notifications.filter(n => n.unread).length > 0 && (
-                          <span className={styles.notificationBadge}>
-                          {notifications.filter(n => n.unread).length}
-                        </span>
-                      )}
-                    </button>
-                    {showNotifications && (
-                        <div className={styles.notificationDropdown}>
-                          <div className={styles.notificationHeader}>
-                            <h3>Notifications</h3>
-                          </div>
-                          <div className={styles.notificationList}>
-                            {notificationsLoading ? (
-                              <div className={styles.notificationLoading}>
-                                Loading notifications...
-                              </div>
-                            ) : notifications.length > 0 ? (
-                              notifications.map((notification) => (
-                                <div
-                                    key={notification.id}
-                                    className={`${styles.notificationItem} ${notification.unread ? styles.unread : ''}`}
-                                    onClick={() => {
-                                      if (notification.unread) {
-                                        markNotificationAsRead(notification.id);
-                                      }
-                                    }}
-                                >
-                                  <div className={styles.notificationContent}>
-                                    <div className={styles.notificationTitle}>
-                                      {notification.title}
-                                    </div>
-                                    <div className={styles.notificationMessage}>
-                                      {notification.message}
-                                    </div>
-                                    <div className={styles.notificationTime}>
-                                      {notification.time}
-                                    </div>
-                                  </div>
-                                  {notification.unread && (
-                                    <div className={styles.unreadDot}></div>
-                                  )}
-                                </div>
-                              ))
-                            ) : (
-                              <div className={styles.notificationEmpty}>
-                                No notifications yet
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                    )}
-                  </div>
+                  <NotificationDropdown />
                   <Link href="/profile" className={styles.userProfile}>
                     <img
                         src={user?.profile_pic || "https://img.freepik.com/premium-vector/male-face-avatar-icon-set-flat-design-social-media-profiles_1281173-3806.jpg?w=740"}
@@ -1176,13 +1073,18 @@ export default function ChatbotPage() {
                         >
                           <Paperclip size={18} />
                         </button>
-                        <button type="button" className={styles.actionButton}>
+                        <button 
+                          type="button" 
+                          className={styles.actionButton}
+                          title="Voice input (coming soon)"
+                        >
                           <Mic size={18} />
                         </button>
                         <button 
                           type="submit" 
                           className={styles.sendButton} 
                           disabled={(!inputMessage.trim() && !stagedFile) || isTyping}
+                          title="Send message"
                         >
                           <Send size={18} />
                         </button>
@@ -1227,7 +1129,7 @@ export default function ChatbotPage() {
                                   return <h4 key={lineIndex} className={styles.messageSubheading}>{line.slice(3)}</h4>
                                 }
                                 if (line.startsWith('• ')) {
-                                  return <li key={lineIndex} className={styles.messageBullet}>{line.slice(2)}</li>
+                                  return <div key={lineIndex} className={styles.messageBullet}>• {line.slice(2)}</div>
                                 }
                                 if (line.includes('🔗') || line.includes('[') && line.includes('](')) {
                                   // Handle markdown links
@@ -1269,9 +1171,7 @@ export default function ChatbotPage() {
                           <Stethoscope size={20} />
                         </div>
                         <div className={styles.typing}>
-                          <div className={styles.typingDot}></div>
-                          <div className={styles.typingDot}></div>
-                          <div className={styles.typingDot}></div>
+                          <Loading fullScreen={false} className={styles.typingLoader} />
                         </div>
                       </div>
                   )}
@@ -1325,13 +1225,18 @@ export default function ChatbotPage() {
                         >
                           <Paperclip size={18} />
                         </button>
-                        <button type="button" className={styles.actionButton}>
+                        <button 
+                          type="button" 
+                          className={styles.actionButton}
+                          title="Voice input (coming soon)"
+                        >
                           <Mic size={18} />
                         </button>
                         <button 
                           type="submit" 
                           className={styles.sendButton} 
                           disabled={(!inputMessage.trim() && !stagedFile) || isTyping}
+                          title="Send message"
                         >
                           <Send size={18} />
                         </button>
@@ -1415,7 +1320,9 @@ export default function ChatbotPage() {
           type="file"
           accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff"
           onChange={handleFileChange}
-          style={{ display: 'none' }}
+          className={styles.hiddenFileInput}
+          title="Select medical report file"
+          aria-label="Select medical report file for upload"
         />
 
         {/* Toast component */}
