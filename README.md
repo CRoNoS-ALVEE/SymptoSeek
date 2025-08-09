@@ -75,6 +75,5 @@ Customize according to your backend setup.
 4. Push to your fork: `git push origin feature/my-feature`
 5. Open a Pull Request for review
 
-## License
-
-[Specify a license, e.g., MIT] – ensure to include the LICENSE file if applicable.
+## Have a look
+symptoseek.me
