@@ -76,4 +76,5 @@ Customize according to your backend setup.
 5. Open a Pull Request for review
 
 ## Have a look
-symptoseek.me
+
+[symptoseek.me](https://www.symptoseek.me/)
