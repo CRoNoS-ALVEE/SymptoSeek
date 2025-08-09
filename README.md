@@ -1,37 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SymptoSeek
+
+An intelligent **Next.js**‑based frontend application for SymptomSeek—a modern healthcare assistant that allows users to log symptoms, interact via chat, and access medical insights in real time.
+
+## Features
+
+- Built with **Next.js** (TypeScript) using **create‑next‑app**
+- Responsive UI framework powered by **Tailwind CSS**
+- Clean project structure with configuration files: `next.config.ts`, `tailwind.config.ts`, ESLint, PostCSS, and more
+- Seamless interaction with backend APIs handling symptom analysis, doctor recommendations, appointment bookings, user authentication, and health report generation
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- **Node.js** (LTS recommended)
+- **Yarn** or **npm**
+- Running backend server (ensure your SymptoSeek-Backend is accessible and configured)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/CRoNoS-ALVEE/SymptoSeek.git
+cd SymptoSeek
+npm install   # or yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Running Locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run dev   # or yarn dev
+```
+Visit `http://localhost:3000` to explore the interface. UI auto‑reloads on changes—especially if you modify `app/page.tsx`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Building for Production
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
+Deploy easily to platforms like **Vercel**—the project appears live at `sympto-seek.vercel.app`.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure (Key Files & Folders)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+SymptoSeek/
+├── app/                 # Next.js app routes/components
+├── public/              # Static assets
+├── .env                 # Environment variables (e.g., API_BASE_URL)
+├── next.config.ts       # Next.js configuration
+├── tailwind.config.ts   # Tailwind CSS configuration
+├── package.json         # NPM scripts and dependencies
+├── postcss.config.js    # PostCSS setup
+├── eslint.config.mjs    # ESLint rules
+├── tsconfig.json        # TypeScript settings
+└── README.md            # This documentation
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment Variables
 
+Add a `.env.local` file with:
 
-## Deployed on Vercel
+```env
+NEXT_PUBLIC_API_URL=https://your-backend.api
+# Other necessary variables here
+```
 
-Have a look. 
+Customize according to your backend setup.
 
-https://sympto-seek.vercel.app/
+## How to Contribute
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/my-feature`
+3. Make changes and commit: `git commit -m "Add my feature"`
+4. Push to your fork: `git push origin feature/my-feature`
+5. Open a Pull Request for review
+
+## License
+
+[Specify a license, e.g., MIT] – ensure to include the LICENSE file if applicable.
