@@ -753,11 +753,6 @@
   border-radius: 1rem;
   border-bottom-left-radius: 0.25rem;
   align-items: center;
-  min-height: 60px;
-}
-
-.typingLoader {
-  transform: scale(0.8);
 }
 
 .typingDot {

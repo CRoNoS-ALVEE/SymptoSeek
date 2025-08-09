@@ -1171,7 +1171,9 @@ export default function ChatbotPage() {
                           <Stethoscope size={20} />
                         </div>
                         <div className={styles.typing}>
-                          <Loading fullScreen={false} className={styles.typingLoader} />
+                          <div className={styles.typingDot}></div>
+                          <div className={styles.typingDot}></div>
+                          <div className={styles.typingDot}></div>
                         </div>
                       </div>
                   )}
